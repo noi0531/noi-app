@@ -687,29 +687,51 @@ $('#mSave').onclick = () => {
   $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); }
   };
 
-  // ====== Init & Boot ======
-function boot(){ // settings
-  const fs = parseInt(localStorage.getItem(KEYS.settings + '_fs') || '16', 10);
-  setFont(fs); // UIは無いので適用だけ
-  const savedTheme = localStorage.getItem(KEYS.settings + '_theme') || 'dark';
-  applyTheme(savedTheme);
-  $('#themeBtn').onclick = () =>
-    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');}
+<!-- ====== Init & Boot ====== -->
+<script>
+  // ...（ここまで同じ）
+
+  function boot(){ 
+    // settings
+    const fs = parseInt(localStorage.getItem(KEYS.settings + '_fs') || '16', 10);
+    setFont(fs);
+    const savedTheme = localStorage.getItem(KEYS.settings + '_theme') || 'dark';
+    applyTheme(savedTheme);
+    $('#themeBtn').onclick = () =>
+      applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+
     // tabs
-    $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
+    $$('#mainTabs .tab').forEach(b=> b.onclick = () => switchTab(b.dataset.tab));
+    switchTab(localStorage.getItem('noi_tab') || 'tpl');
 
     // templates
-    renderTplApps(); renderTplEditor();
-    $$('#modeSeg button').forEach(btn=>{ btn.onclick=()=>{ DB.templates.mode=btn.dataset.mode; DB.templates.app=''; DB.templates.step=0; saveDB(); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode)); renderTplApps(); renderTplEditor(); }; }); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
-    $('#prevBtn').onclick=()=>{ if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
-    $('#nextBtn').onclick=()=>{ const t=tplList(); if(DB.templates.step<t.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
-    ['#copyBtn','#copyBtn2'].forEach(s=> $(s).onclick=doCopy); ['#shareBtn','#shareBtn2'].forEach(s=> $(s).onclick=doShare);
-    // edit toggle
-    let editing=false; $('#tplEditToggle').onclick=()=>{ editing=!editing; enableTplEdit(editing); }; $('#tplSave').onclick=()=>{ saveDB(); editing=false; enableTplEdit(false); showToast('テンプレを保存しました'); renderTplEditor(); }; $('#tplDiscard').onclick=()=>{ loadDB(); editing=false; enableTplEdit(false); renderTplEditor(); };
-    $('#tplAdd').onclick=()=>{ const list=tplList(); list.push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
+    renderTplApps(); 
+    renderTplEditor();
+    $$('#modeSeg button').forEach(btn=>{
+      btn.onclick=()=>{
+        DB.templates.mode = btn.dataset.mode;
+        DB.templates.app = '';
+        DB.templates.step = 0;
+        saveDB();
+        $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
+        renderTplApps();
+        renderTplEditor();
+      };
+    });
+    $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
+    $('#prevBtn').onclick = ()=>{ if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
+    $('#nextBtn').onclick = ()=>{ const t = tplList(); if(DB.templates.step < t.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
+    ['#copyBtn','#copyBtn2'].forEach(s=> $(s).onclick = doCopy);
+    ['#shareBtn','#shareBtn2'].forEach(s=> $(s).onclick = doShare);
+    let editing = false;
+    $('#tplEditToggle').onclick = ()=>{ editing = !editing; enableTplEdit(editing); };
+    $('#tplSave').onclick = ()=>{ saveDB(); editing=false; enableTplEdit(false); showToast('テンプレを保存しました'); renderTplEditor(); };
+    $('#tplDiscard').onclick = ()=>{ loadDB(); editing=false; enableTplEdit(false); renderTplEditor(); };
+    $('#tplAdd').onclick = ()=>{ const list = tplList(); list.push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
 
     // members
-    renderMemberApps(); renderMemberResults();
+    renderMemberApps();
+    renderMemberResults();
 
     // perf
     updatePerfSelectors();
@@ -718,9 +740,23 @@ function boot(){ // settings
     renderAccTable();
 
     // sales
-    renderSalesOptions(); renderSales();
+    renderSalesOptions();
+    renderSales();
   }
 
+  // Gate setup（そのまま）
+  expectedHash = getFromHashOrQuery('h');
+  function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); }
+  tickGate();
+  gateBtn?.addEventListener('click', tryUnlock);
+  gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+
+  // Boot（順序はこのまま）
+  attachManifest();
+  registerSW();
+  loadDB();
+  boot();
+    
   // Gate setup
   expectedHash = getFromHashOrQuery('h'); function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); } tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
 
