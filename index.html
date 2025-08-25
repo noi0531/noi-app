@@ -279,6 +279,9 @@
 <script>
 (() => {
   // ====== Utils ======
+window.addEventListener('error', e => showToast('ERR: ' + e.message));
+window.addEventListener('unhandledrejection', e => showToast('PJ: ' + (e.reason && e.reason.message || e.reason)));
+
     // ひらがな/カタカナ同一視のための正規化
 function toHiragana(str){
   const s = (str || '').normalize('NFKC'); // 半角→全角など
