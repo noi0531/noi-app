@@ -688,8 +688,14 @@ $('#mSave').onclick = () => {
   };
 
   // ====== Init & Boot ======
-  function boot(){ // settings
-    setFont(parseInt(localStorage.getItem(KEYS.settings+'_fs')||'16',10)); $('#fontSelect').value=localStorage.getItem(KEYS.settings+'_fs')||'16'; $('#fontSelect').onchange=()=> setFont(parseInt($('#fontSelect').value,10)); const savedTheme=localStorage.getItem(KEYS.settings+'_theme')||'dark'; applyTheme(savedTheme); $('#themeBtn').onclick=()=> applyTheme(document.body.classList.contains('light')?'dark':'light');
+function boot(){ // settings
+  const fs = parseInt(localStorage.getItem(KEYS.settings+'_fs')||'16',10);
+  setFont(fs); // フォントUIが無いのでこれだけでOK
+  const savedTheme = localStorage.getItem(KEYS.settings+'_theme')||'dark';
+  applyTheme(savedTheme);
+  $('#themeBtn').onclick = ()=> applyTheme(document.body.classList.contains('light')?'dark':'light');
+  // ...
+}
     // tabs
     $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
 
