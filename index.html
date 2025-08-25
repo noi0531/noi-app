@@ -689,13 +689,12 @@ $('#mSave').onclick = () => {
 
   // ====== Init & Boot ======
 function boot(){ // settings
-  const fs = parseInt(localStorage.getItem(KEYS.settings+'_fs')||'16',10);
-  setFont(fs); // フォントUIは無いので値を適用するだけ
-  const savedTheme = localStorage.getItem(KEYS.settings+'_theme')||'dark';
+  const fs = parseInt(localStorage.getItem(KEYS.settings + '_fs') || '16', 10);
+  setFont(fs); // UIは無いので適用だけ
+  const savedTheme = localStorage.getItem(KEYS.settings + '_theme') || 'dark';
   applyTheme(savedTheme);
   $('#themeBtn').onclick = () =>
-    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
-}
+    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');}
     // tabs
     $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
 
