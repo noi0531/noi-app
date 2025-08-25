@@ -687,7 +687,6 @@ $('#mSave').onclick = () => {
   $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); }
   };
 
-<!-- ====== Init & Boot ====== -->
 <script>
   // ...（ここまで同じ）
 
