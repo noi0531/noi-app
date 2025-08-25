@@ -279,55 +279,139 @@
 <script>
 (() => {
   // ====== Utils ======
-window.addEventListener('error', e => showToast('ERR: ' + e.message));
-window.addEventListener('unhandledrejection', e => showToast('PJ: ' + (e.reason && e.reason.message || e.reason)));
-
-    // ひらがな/カタカナ同一視のための正規化
-function toHiragana(str){
-  const s = (str || '').normalize('NFKC'); // 半角→全角など
-  let out = '';
-  for (const ch of s){
-    const c = ch.charCodeAt(0);
-    // カタカナ → ひらがな（ァ〜ヶ）
-    if (c >= 0x30A1 && c <= 0x30F6) out += String.fromCharCode(c - 0x60);
-    else out += ch;
+  // ひらがな/カタカナ同一視のための正規化
+  function toHiragana(str){
+    const s = (str || '').normalize('NFKC'); // 半角→全角など
+    let out = '';
+    for (const ch of s){
+      const c = ch.charCodeAt(0);
+      // カタカナ → ひらがな（ァ〜ヶ）
+      if (c >= 0x30A1 && c <= 0x30F6) out += String.fromCharCode(c - 0x60);
+      else out += ch;
+    }
+    return out;
   }
-  return out;
-}
-function jpBase(str){
-  return toHiragana(str).toLowerCase().replace(/\s+/g,'').trim();
-}
-  const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
+  function jpBase(str){
+    return toHiragana(str).toLowerCase().replace(/\s+/g,'').trim();
+  }
+  const $ = s => document.querySelector(s); 
+  const $$ = s => Array.from(document.querySelectorAll(s));
   const toast = $('#toast');
   const hex = (buf) => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
   const toB64 = a => btoa(String.fromCharCode(...new Uint8Array(a)));
   const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-  async function sha256(text){ const data = new TextEncoder().encode(text); const digest = await crypto.subtle.digest('SHA-256', data); return hex(digest); }
-  function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1300); }
-  function getFromHashOrQuery(name){ const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); if(h) return h; return new URLSearchParams(location.search).get(name); }
+  async function sha256(text){ 
+    const data = new TextEncoder().encode(text); 
+    const digest = await crypto.subtle.digest('SHA-256', data); 
+    return hex(digest); 
+  }
+  function showToast(msg){ 
+    toast.textContent = msg; 
+    toast.classList.add('show'); 
+    setTimeout(()=>toast.classList.remove('show'), 1300); 
+  }
+  function getFromHashOrQuery(name){ 
+    const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); 
+    if(h) return h; 
+    return new URLSearchParams(location.search).get(name); 
+  }
     
   // ====== PWA manifest & SW ======
   function makeIcon(size, bg = '#4f46e5', fg = '#ffffff', text = 'N'){
-    const c = document.createElement('canvas'); c.width = c.height = size; const ctx = c.getContext('2d');
-    ctx.fillStyle = bg; ctx.fillRect(0,0,size,size); ctx.fillStyle = fg; ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, size/2, size/2+size*0.05); return c.toDataURL('image/png');
+    const c = document.createElement('canvas'); 
+    c.width = c.height = size; 
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = bg; 
+    ctx.fillRect(0,0,size,size); 
+    ctx.fillStyle = fg; 
+    ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; 
+    ctx.textAlign='center'; 
+    ctx.textBaseline='middle'; 
+    ctx.fillText(text, size/2, size/2+size*0.05); 
+    return c.toDataURL('image/png');
   }
-  function attachManifest(){ const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' })); const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons}; const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'}); const url = URL.createObjectURL(blob); const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link); const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple); }
-  async function registerSW(){ if(!('serviceWorker' in navigator)) return; const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v1').then(c=>c.addAll(['./'])));self.skipWaiting();});self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v1').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg = await navigator.serviceWorker.register(url); reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); showToast('オフラインでも使えます'); }catch(e){ console.warn('SW registration failed', e); } }
+  function attachManifest(){ 
+    const icons = [192,512].map(sz => ({ 
+      src: makeIcon(sz), 
+      sizes: `${sz}x${sz}`, 
+      type: 'image/png', 
+      purpose:'any maskable' 
+    })); 
+    const manifest = { 
+      name:'NOI 管理アプリ', 
+      short_name:'NOI', 
+      start_url:'.', 
+      scope:'.', 
+      display:'standalone', 
+      background_color:'#0b1220', 
+      theme_color:'#4f46e5', 
+      icons
+    }; 
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'}); 
+    const url = URL.createObjectURL(blob); 
+    const link = document.createElement('link'); 
+    link.rel='manifest'; 
+    link.href=url; 
+    document.head.appendChild(link); 
+    const apple = document.createElement('link'); 
+    apple.rel='apple-touch-icon'; 
+    apple.href = icons[0].src; 
+    document.head.appendChild(apple); 
+  }
+  async function registerSW(){ 
+    if(!('serviceWorker' in navigator)) return; 
+    const swCode = `
+      self.addEventListener('install', e=>{
+        e.waitUntil(caches.open('noi-v1').then(c=>c.addAll(['./''])));
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', e=>{
+        e.waitUntil(self.clients.claim());
+      });
+      self.addEventListener('fetch', e=>{
+        const req=e.request; 
+        e.respondWith(
+          caches.match(req).then(c=>
+            c||fetch(req).then(res=>{
+              const copy=res.clone(); 
+              caches.open('noi-v1').then(cc=>cc.put(req,copy)); 
+              return res;
+            }).catch(()=>caches.match('./'))
+          )
+        );
+      });
+    `; 
+    const blob=new Blob([swCode],{type:'text/javascript'}); 
+    const url=URL.createObjectURL(blob); 
+    try{ 
+      const reg = await navigator.serviceWorker.register(url); 
+      reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); 
+      showToast('オフラインでも使えます'); 
+    }catch(e){ 
+      console.warn('SW registration failed', e); 
+    } 
+  }
 
   // ====== Storage (local) ======
   const KEYS = { db:'noi_db_v1', acc:'noi_accounts_enc_v1', settings:'noi_settings_v1' };
   const DefaultDB = { templates:null, members:[], perf:{}, sales:{}, accountsIndex:[] };
   let DB = null; // runtime
-  function loadDB(){ DB = JSON.parse(localStorage.getItem(KEYS.db)||'null')||structuredClone(DefaultDB); if(!DB.templates) DB.templates = seedTemplates(); }
-  function saveDB(){ localStorage.setItem(KEYS.db, JSON.stringify(DB)); }
+  function loadDB(){ 
+    DB = JSON.parse(localStorage.getItem(KEYS.db)||'null')||structuredClone(DefaultDB); 
+    if(!DB.templates) DB.templates = seedTemplates(); 
+  }
+  function saveDB(){ 
+    localStorage.setItem(KEYS.db, JSON.stringify(DB)); 
+  }
 
   // ====== Templates (seed) ======
-  function seedTemplates(){ return {
-    mode:'face', app:'', step:0,
-    data:{
-      face:{
-        TikTok:[
-          {title:'① 初回スカウトDM', explain:'TikTokで配信に興味がありそうな方へ最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
+  function seedTemplates(){ 
+    return {
+      mode:'face', app:'', step:0,
+      data:{
+        face:{
+          TikTok:[
+            {title:'① 初回スカウトDM', explain:'TikTokで配信に興味がありそうな方へ最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
 
 配信活動に関心がある方をTikTokで探していて、ご連絡しました。
 もしライブ配信での活躍に興味があれば、サポート内容をご案内します！
@@ -337,330 +421,625 @@ function jpBase(str){
 ・収益化の目安 など
 
 まずは気軽にお話どうですか？`},
-          {title:'② 反応後の一次返信', explain:'「どんな内容ですか？」への返答', text:`ありがとうございます！
+            {title:'② 反応後の一次返信', explain:'「どんな内容ですか？」への返答', text:`ありがとうございます！
 弊社は配信アプリ公認の事務所で、配信スタートから収益化まで伴走します。
 
 TikTok Liveの場合：
-・顔出しで“雑談/歌/ゲーム”など内容自由
+・顔出しで"雑談/歌/ゲーム"など内容自由
 ・初月は目標と配信頻度を一緒に設定
 ・スケジュール/台本の雛形も共有
 
 よければ {{date}} {{time}} に15分だけオンラインで説明します。ご都合いかがでしょう？`},
-          {title:'③ エントリー案内', explain:'フォームで情報回収し、審査を楽に', text:`ありがとうございます！下記フォームにご入力ください。
+            {title:'③ エントリー案内', explain:'フォームで情報回収し、審査を楽に', text:`ありがとうございます！下記フォームにご入力ください。
 確認後、面談リンクをお送りします。
 
 エントリーフォーム：{{link}}
 
-※お名前は“配信で使う予定の名前”でもOKです。`},
-          {title:'④ 面談日程調整', explain:'候補日を投げて確定まで', text:`面談候補です。いずれかご都合よい時間をお知らせください！
+※お名前は"配信で使う予定の名前"でもOKです。`},
+            {title:'④ 面談日程調整', explain:'候補日を投げて確定まで', text:`面談候補です。いずれかご都合よい時間をお知らせください！
 
 ・{{date}} {{time}}
 ・別日/別時間もOKです
 
 確定後、Zoomリンクをお送りします。`},
-          {title:'⑤ 当日リマインド', explain:'直前の抜け漏れを防ぐ', text:`本日 {{time}} から15分、面談でお世話になります。
+            {title:'⑤ 当日リマインド', explain:'直前の抜け漏れを防ぐ', text:`本日 {{time}} から15分、面談でお世話になります。
 
 ・通信の安定する場所
 ・カメラ/マイク動作確認
 
 Zoomリンク：{{link}}
 よろしくお願いします！`}
-        ],
-        '17LIVE':[ {title:'① 初回スカウトDM', explain:'17LIVE志望者向けの導入文', text:`{{name}} さん、こんにちは。NOIの山本です。
-17LIVEでの“顔出し配信”に挑戦してみませんか？
+          ],
+          '17LIVE':[
+            {title:'① 初回スカウトDM', explain:'17LIVE志望者向けの導入文', text:`{{name}} さん、こんにちは。NOIの山本です。
+17LIVEでの"顔出し配信"に挑戦してみませんか？
 
 ・新人期間の伸ばし方
 ・おすすめジャンル（歌/雑談/コラボ）
 ・事務所サポート（企画/サムネ/台本）
 
-まずは15分の説明から。{{date}} {{time}} ご都合どうでしょう？`}, {title:'② 反応後の一次返信', explain:'ルールや還元の概要を軽く', text:`ありがとうございます！
+まずは15分の説明から。{{date}} {{time}} ご都合どうでしょう？`}, 
+            {title:'② 反応後の一次返信', explain:'ルールや還元の概要を軽く', text:`ありがとうございます！
 17LIVEはイベント参加で露出を作り、定期枠で固定ファン化する流れです。
 
 初期は週3〜5回/1〜2時間から無理なく始めます。
 収益の目安やギフト率も当日資料でご説明します。
 
-{{date}} {{time}} で仮押さえしても良いですか？`}, {title:'③ エントリー案内', explain:'フォーム送付', text:`下記フォームよりエントリーをお願いします。
+{{date}} {{time}} で仮押さえしても良いですか？`}, 
+            {title:'③ エントリー案内', explain:'フォーム送付', text:`下記フォームよりエントリーをお願いします。
 
 エントリーフォーム：{{link}}
 
-入力後、当日のZoomリンクをお送りします。`}, {title:'④ 面談日程調整', explain:'候補日提示', text:`以下候補から選択ください。
+入力後、当日のZoomリンクをお送りします。`}, 
+            {title:'④ 面談日程調整', explain:'候補日提示', text:`以下候補から選択ください。
 ・{{date}} {{time}}
 ・別日でもOKです。
 
-確定後、資料一式とリンクをお送りします。`}, {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談予定です。
+確定後、資料一式とリンクをお送りします。`}, 
+            {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談予定です。
 5分前を目安に入室お願いします。
 
-Zoom：{{link}}`} ],
-        'ポコチャ':[ {title:'① 初回スカウトDM', explain:'ポコチャは“時間/盛り上がり”評価の文化を前提に', text:`{{name}} さん、こんにちは。NOIの山本です。
+Zoom：{{link}}`} 
+          ],
+          'ポコチャ':[
+            {title:'① 初回スカウトDM', explain:'ポコチャは"時間/盛り上がり"評価の文化を前提に', text:`{{name}} さん、こんにちは。NOIの山本です。
 ポコチャでの配信に興味はありますか？
 
 ・顔出し雑談/歌/趣味トークが相性◎
 ・ランク制度/盛り上がり指標の解説
 ・毎月の目標設計と振り返りまでサポート
 
-15分の説明を {{date}} {{time}} ご用意できます。`}, {title:'② 反応後の一次返信', explain:'ポコチャ特有のランク説明を軽く', text:`ありがとうございます！
-ポコチャは“時間×盛り上がり”でランクが決まり、露出が変わります。
+15分の説明を {{date}} {{time}} ご用意できます。`}, 
+            {title:'② 反応後の一次返信', explain:'ポコチャ特有のランク説明を軽く', text:`ありがとうございます！
+ポコチャは"時間×盛り上がり"でランクが決まり、露出が変わります。
 はじめは無理なく習慣化→固定ファンづくりを一緒にやります。
 
-{{date}} {{time}} のご都合いかがでしょう？`}, {title:'③ エントリー案内', explain:'フォーム', text:`下記フォームに入力ください。確認後、日程確定します。
+{{date}} {{time}} のご都合いかがでしょう？`}, 
+            {title:'③ エントリー案内', explain:'フォーム', text:`下記フォームに入力ください。確認後、日程確定します。
 
-フォーム：{{link}}`}, {title:'④ 面談日程調整', explain:'候補', text:`候補日です。
+フォーム：{{link}}`}, 
+            {title:'④ 面談日程調整', explain:'候補', text:`候補日です。
 ・{{date}} {{time}}
-ほか希望あれば遠慮なく！`}, {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から面談です。
+ほか希望あれば遠慮なく！`}, 
+            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から面談です。
 入室用リンク：{{link}}
-よろしくお願いします！`} ],
-        'BIGOLIVE':[ {title:'① 初回スカウトDM', explain:'海外ユーザーも多いBIGO、言語や企画の幅を強調', text:`{{name}} さん、こんにちは。NOIの山本です。
+よろしくお願いします！`} 
+          ],
+          'BIGOLIVE':[
+            {title:'① 初回スカウトDM', explain:'海外ユーザーも多いBIGO、言語や企画の幅を強調', text:`{{name}} さん、こんにちは。NOIの山本です。
 BIGOLIVEでの配信サポートを行っています。
 
 ・日本/海外向けどちらも可
 ・顔出しで雑談/歌/コラボが中心
 ・イベント活用で露出UP
 
-まずは15分で概要をご説明します。`}, {title:'② 反応後の一次返信', explain:'BIGO特性の説明', text:`ありがとうございます！
+まずは15分で概要をご説明します。`}, 
+            {title:'② 反応後の一次返信', explain:'BIGO特性の説明', text:`ありがとうございます！
 BIGOは多言語リスナーが入りやすく、
 配信時間とイベント活用が成長の鍵です。
 
-{{date}} {{time}} にてオンライン説明いかがでしょう？`}, {title:'③ エントリー案内', explain:'フォーム', text:`下記よりエントリーお願いします。
-フォーム：{{link}}`}, {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
+{{date}} {{time}} にてオンライン説明いかがでしょう？`}, 
+            {title:'③ エントリー案内', explain:'フォーム', text:`下記よりエントリーお願いします。
+フォーム：{{link}}`}, 
+            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
 ・{{date}} {{time}}
-・別日でも柔軟に対応します。`}, {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。
-Zoomリンク：{{link}}`} ]
-      },
-      'no-face':{ WAVE:[ {title:'① 初回スカウトDM', explain:'WAVEは顔出し不要・音声特化を強調', text:`{{name}} さん、はじめまして。NOIの山本です。
-“顔出しなし”の音声配信アプリ WAVE で活動しませんか？
+・別日でも柔軟に対応します。`}, 
+            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。
+Zoomリンク：{{link}}`} 
+          ]
+        },
+        'no-face':{
+          WAVE:[
+            {title:'① 初回スカウトDM', explain:'WAVEは顔出し不要・音声特化を強調', text:`{{name}} さん、はじめまして。NOIの山本です。
+"顔出しなし"の音声配信アプリ WAVE で活動しませんか？
 
 ・ラジオ感覚でOK（雑談/朗読/歌/お悩み相談 等）
 ・機材はスマホとマイクでOK
 ・収益化と番組づくりをサポート
 
-まずは15分でご説明します。`}, {title:'② 反応後の一次返信', explain:'緊張ハードルの低さと継続しやすさを提示', text:`ありがとうございます！
+まずは15分でご説明します。`}, 
+            {title:'② 反応後の一次返信', explain:'緊張ハードルの低さと継続しやすさを提示', text:`ありがとうございます！
 WAVEは音声のみなので、準備が楽で継続しやすいのが特徴です。
 番組タイトル/構成/初回トーク案もご提案します。
 
-{{date}} {{time}} にオンラインでいかがでしょう？`}, {title:'③ エントリー案内', explain:'フォーム', text:`こちらからエントリーお願いします。
+{{date}} {{time}} にオンラインでいかがでしょう？`}, 
+            {title:'③ エントリー案内', explain:'フォーム', text:`こちらからエントリーお願いします。
 フォーム：{{link}}
 
-入力後、日程とガイドをお送りします。`}, {title:'④ 面談日程調整', explain:'候補', text:`以下の候補からご選択ください。
+入力後、日程とガイドをお送りします。`}, 
+            {title:'④ 面談日程調整', explain:'候補', text:`以下の候補からご選択ください。
 ・{{date}} {{time}}
-・他希望も歓迎です。`}, {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から15分説明です。
+・他希望も歓迎です。`}, 
+            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から15分説明です。
 入室リンク：{{link}}
-気軽にお越しください！`} ] }
-    }
-  }; }
+気軽にお越しください！`} 
+          ]
+        }
+      }
+    }; 
+  }
 
   // ====== Settings & theme ======
-  function setFont(px){ document.documentElement.style.setProperty('--fs', px + 'px'); localStorage.setItem(KEYS.settings+'_fs', px); }
-  function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); localStorage.setItem(KEYS.settings+'_theme', theme); $('#themeBtn').textContent = theme === 'light' ? '暗く' : '明るく'; $('#themeBtn').setAttribute('aria-pressed', theme === 'light' ? 'true':'false'); }
+  function setFont(px){ 
+    document.documentElement.style.setProperty('--fs', px + 'px'); 
+    localStorage.setItem(KEYS.settings+'_fs', px); 
+  }
+  function applyTheme(theme){ 
+    document.body.classList.toggle('light', theme === 'light'); 
+    localStorage.setItem(KEYS.settings+'_theme', theme); 
+    const btn = $('#themeBtn');
+    if (btn) {
+      btn.textContent = theme === 'light' ? '暗く' : '明るく'; 
+      btn.setAttribute('aria-pressed', theme === 'light' ? 'true':'false');
+    }
+  }
 
   // ====== Gate ======
-  const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
+  const gate = $('#gate'); 
+  const gatePass=$('#gatePass'); 
+  const gateBtn=$('#gateBtn');
   let expectedHash = null;
-  function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
-  function updateGate(){ gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
-  async function tryUnlock(){ const pass = (gatePass.value||'').trim(); if(!pass) return; const h = await sha256('noi-v1:'+pass); if(h === expectedHash){ sessionStorage.setItem('noi_unlocked_'+h, '1'); updateGate(); showToast('解除しました'); } else { showToast('合言葉が違います'); } }
+  function gateNeeded(){ 
+    return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; 
+  }
+  function updateGate(){ 
+    if (gate) {
+      gate.style.display = gateNeeded() ? 'flex' : 'none'; 
+      if(gateNeeded()){ 
+        setTimeout(()=>gatePass && gatePass.focus(), 50); 
+      }
+    }
+  }
+  async function tryUnlock(){ 
+    const pass = (gatePass.value||'').trim(); 
+    if(!pass) return; 
+    const h = await sha256('noi-v1:'+pass); 
+    if(h === expectedHash){ 
+      sessionStorage.setItem('noi_unlocked_'+h, '1'); 
+      updateGate(); 
+      showToast('解除しました'); 
+    } else { 
+      showToast('合言葉が違います'); 
+    } 
+  }
 
   // ====== Accounts Encryption ======
-  async function deriveKey(pass, salt){ const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); }
-  async function accEncrypt(pass, obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(pass, salt); const data=new TextEncoder().encode(JSON.stringify(obj)); const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data); const out={iv:toB64(iv), salt:toB64(salt), ct:toB64(ct)}; localStorage.setItem(KEYS.acc, JSON.stringify(out)); showToast('暗号化して保存しました'); }
-  async function accDecrypt(pass){ const raw=localStorage.getItem(KEYS.acc); if(!raw) return {items:[]}; const {iv,salt,ct}=JSON.parse(raw); const key=await deriveKey(pass, fromB64(salt)); const data=await crypto.subtle.decrypt({name:'AES-GCM', iv:fromB64(iv)}, key, fromB64(ct)); return JSON.parse(new TextDecoder().decode(data)); }
+  async function deriveKey(pass, salt){ 
+    const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']); 
+    return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); 
+  }
+  async function accEncrypt(pass, obj){ 
+    const iv=crypto.getRandomValues(new Uint8Array(12)); 
+    const salt=crypto.getRandomValues(new Uint8Array(16)); 
+    const key=await deriveKey(pass, salt); 
+    const data=new TextEncoder().encode(JSON.stringify(obj)); 
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data); 
+    const out={iv:toB64(iv), salt:toB64(salt), ct:toB64(ct)}; 
+    localStorage.setItem(KEYS.acc, JSON.stringify(out)); 
+    showToast('暗号化して保存しました'); 
+  }
+  async function accDecrypt(pass){ 
+    const raw=localStorage.getItem(KEYS.acc); 
+    if(!raw) return {items:[]}; 
+    const {iv,salt,ct}=JSON.parse(raw); 
+    const key=await deriveKey(pass, fromB64(salt)); 
+    const data=await crypto.subtle.decrypt({name:'AES-GCM', iv:fromB64(iv)}, key, fromB64(ct)); 
+    return JSON.parse(new TextDecoder().decode(data)); 
+  }
 
   // ====== UI Refs (Template) ======
-  const appList=$('#appList'); const editorText=$('#textArea'); const stepTitle=$('#stepTitle'); const explainEl=$('#explain'); const progress=$('#progress');
-  const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
+  const appList=$('#appList'); 
+  const editorText=$('#textArea'); 
+  const stepTitle=$('#stepTitle'); 
+  const explainEl=$('#explain'); 
+  const progress=$('#progress');
+  const appNameEl=$('#appName'); 
+  const stepIndexEl=$('#stepIndex'); 
+  const stepTotalEl=$('#stepTotal');
 
   // ====== Tabs ======
-  function switchTab(tab){ $$('#mainTabs .tab').forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false');}); ['tpl','members','perf','accounts','sales'].forEach(id=> $('#tab_'+id).style.display = id===tab ? 'block':'none'); localStorage.setItem('noi_tab', tab); }
+  function switchTab(tab){ 
+    $('#mainTabs .tab').forEach(b=>{
+      const on=b.dataset.tab===tab; 
+      b.classList.toggle('active', on); 
+      b.setAttribute('aria-selected', on?'true':'false');
+    }); 
+    ['tpl','members','perf','accounts','sales'].forEach(id=> {
+      const el = $('#tab_'+id);
+      if (el) el.style.display = id===tab ? 'block':'none';
+    }); 
+    localStorage.setItem('noi_tab', tab); 
+  }
 
   // ====== Template Render & Edit ======
-  function tplAppsByMode(){ return Object.keys(DB.templates.data[DB.templates.mode]); }
-  function tplList(){ const apps=DB.templates.data[DB.templates.mode]; if(!DB.templates.app||!apps[DB.templates.app]) return []; return apps[DB.templates.app]; }
-  function renderTplApps(){ appList.innerHTML=''; tplAppsByMode().forEach(name=>{ const b=document.createElement('button'); b.className='app'+(DB.templates.app===name?' selected':''); b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':'選択'}</span>`; b.onclick=()=>{ DB.templates.app=name; DB.templates.step=0; saveDB(); renderTplApps(); renderTplEditor(); }; appList.appendChild(b); }); }
-  function renderTplEditor(){ const list=tplList(); if(!DB.templates.app){ appNameEl.textContent='未選択'; editorText.value=''; stepTitle.textContent=''; explainEl.textContent=''; stepIndexEl.textContent='-'; stepTotalEl.textContent='-'; return; } appNameEl.textContent=DB.templates.app; stepTotalEl.textContent=list.length; DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1)); stepIndexEl.textContent=DB.templates.step+1; const cur=list[DB.templates.step]; stepTitle.textContent=cur.title; explainEl.textContent=cur.explain; editorText.value=cur.text; $('#prevBtn').disabled=DB.templates.step===0; $('#nextBtn').disabled=DB.templates.step>=list.length-1; // progress
-    progress.innerHTML=''; list.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'+(i===DB.templates.step?' on':''); d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; progress.appendChild(d); });
+  function tplAppsByMode(){ 
+    return Object.keys(DB.templates.data[DB.templates.mode]); 
+  }
+  function tplList(){ 
+    const apps=DB.templates.data[DB.templates.mode]; 
+    if(!DB.templates.app||!apps[DB.templates.app]) return []; 
+    return apps[DB.templates.app]; 
+  }
+  function renderTplApps(){ 
+    if (!appList) return;
+    appList.innerHTML=''; 
+    tplAppsByMode().forEach(name=>{ 
+      const b=document.createElement('button'); 
+      b.className='app'+(DB.templates.app===name?' selected':''); 
+      b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':'選択'}</span>`; 
+      b.onclick=()=>{ 
+        DB.templates.app=name; 
+        DB.templates.step=0; 
+        saveDB(); 
+        renderTplApps(); 
+        renderTplEditor(); 
+      }; 
+      appList.appendChild(b); 
+    }); 
+  }
+  function renderTplEditor(){ 
+    const list=tplList(); 
+    if(!DB.templates.app){ 
+      if (appNameEl) appNameEl.textContent='未選択'; 
+      if (editorText) editorText.value=''; 
+      if (stepTitle) stepTitle.textContent=''; 
+      if (explainEl) explainEl.textContent=''; 
+      if (stepIndexEl) stepIndexEl.textContent='-'; 
+      if (stepTotalEl) stepTotalEl.textContent='-'; 
+      return; 
+    } 
+    if (appNameEl) appNameEl.textContent=DB.templates.app; 
+    if (stepTotalEl) stepTotalEl.textContent=list.length; 
+    DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1)); 
+    if (stepIndexEl) stepIndexEl.textContent=DB.templates.step+1; 
+    
+    const cur=list[DB.templates.step]; 
+    if (stepTitle) stepTitle.textContent=cur.title; 
+    if (explainEl) explainEl.textContent=cur.explain; 
+    if (editorText) editorText.value=cur.text; 
+    
+    const prevBtn = $('#prevBtn');
+    const nextBtn = $('#nextBtn');
+    if (prevBtn) prevBtn.disabled=DB.templates.step===0; 
+    if (nextBtn) nextBtn.disabled=DB.templates.step>=list.length-1; 
+    
+    // progress
+    if (progress) {
+      progress.innerHTML=''; 
+      list.forEach((_,i)=>{ 
+        const d=document.createElement('div'); 
+        d.className='dot'+(i===DB.templates.step?' on':''); 
+        d.onclick=()=>{
+          DB.templates.step=i; 
+          saveDB(); 
+          renderTplEditor();
+        }; 
+        progress.appendChild(d); 
+      });
+    }
+    
     // jump list
-    const jump=$('#jumpList'); jump.innerHTML=''; list.forEach((t,i)=>{ const b=document.createElement('button'); b.className='tab'; b.textContent=t.title; b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active'); jump.appendChild(b); });
+    const jump=$('#jumpList'); 
+    if (jump) {
+      jump.innerHTML=''; 
+      list.forEach((t,i)=>{ 
+        const b=document.createElement('button'); 
+        b.className='tab'; 
+        b.textContent=t.title; 
+        b.onclick=()=>{
+          DB.templates.step=i; 
+          saveDB(); 
+          renderTplEditor();
+        }; 
+        if(i===DB.templates.step) b.classList.add('active'); 
+        jump.appendChild(b); 
+      });
+    }
+    
     // editor list
-    const wrap=$('#tplList'); wrap.innerHTML=''; list.forEach((t,i)=>{ const row=document.createElement('div'); row.className='panel'; row.innerHTML=`<div class="grid2"><input data-k="title" value="${t.title.replace(/"/g,'&quot;')}"/><input data-k="explain" value="${t.explain.replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${t.text.replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button><span class="muted">長押しでドラッグ並び替え（モバイル）</span></div>`; wrap.appendChild(row); // bind later
-      row.querySelectorAll('input,textarea').forEach(el=>{ el.oninput=()=>{ t[el.dataset.k]=el.value; }; }); row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); }); });
-  }
-  function enableTplEdit(on){ $('#tplEditor').style.display= on ? 'block':'none'; editorText.toggleAttribute('readonly', !on?true:false); $('#tplSave').style.display= on ? 'inline-flex':'none'; $('#tplDiscard').style.display= on ? 'inline-flex':'none'; }
-
-// ====== Members ======
-let MEMBER_APP = null;
-
-function renderMemberApps(){
-  const wrap = $('#memberAppList');
-  wrap.innerHTML = '';
-
-  // 空や未定義を除外して正規化
-  const apps = [...new Set(DB.members.map(m => (m.app || '').trim()))]
-    .filter(Boolean)
-    .sort();
-
-  if (apps.length === 0) {
-    wrap.innerHTML = '<p class="muted">まだ所属者が登録されていません。下のフォームから追加してください。</p>';
-    return;
-  }
-
-  apps.forEach(a => {
-    const b = document.createElement('button');
-    const count = DB.members.filter(m => (m.app || '').trim() === a).length;
-    b.className = 'app' + (MEMBER_APP === a ? ' selected' : '');
-    b.innerHTML = `<span>${a}</span><span class="badge">${count}</span>`;
-    b.onclick = () => {
-      MEMBER_APP = a;
-      $('#memberSearch').value = '';
-      renderMemberApps();
-      renderMemberResults();
-    };
-    wrap.appendChild(b);
-  });
-}
-
-// 一覧セル用：SNSリンク表示（@id を URL に変換）
-function snsCell(m){
-  const parts = [];
-
-  const x = (m.sns?.x || '').trim();
-  if (x){
-    const isUrl = /^https?:\/\//i.test(x);
-    const id = x.replace(/^@/,'').replace(/^https?:\/\/(www\.)?x\.com\//i,'').split(/[/?#]/)[0];
-    const url = isUrl ? x : `https://x.com/${id}`;
-    parts.push(`<a href="${url}" target="_blank" rel="noopener">X:@${id}</a>`);
-  }
-
-  const ig = (m.sns?.ig || '').trim();
-  if (ig){
-    const isUrl = /^https?:\/\//i.test(ig);
-    const id = ig.replace(/^@/,'').replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/\/$/,'').split(/[/?#]/)[0];
-    const url = isUrl ? ig : `https://www.instagram.com/${id}`;
-    parts.push(`<a href="${url}" target="_blank" rel="noopener">IG:@${id}</a>`);
-  }
-
-  const other = (m.sns?.other || '').trim();
-  if (other){
-    if (/^https?:\/\//i.test(other)){
-      parts.push(`<a href="${other}" target="_blank" rel="noopener">他</a>`);
-    } else {
-      const id = other.replace(/^@/,'');
-      parts.push(`他:@${id}`);
+    const wrap=$('#tplList'); 
+    if (wrap) {
+      wrap.innerHTML=''; 
+      list.forEach((t,i)=>{ 
+        const row=document.createElement('div'); 
+        row.className='panel'; 
+        row.innerHTML=`<div class="grid2"><input data-k="title" value="${t.title.replace(/"/g,'&quot;')}"/><input data-k="explain" value="${t.explain.replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${t.text.replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button><span class="muted">長押しでドラッグ並び替え（モバイル）</span></div>`; 
+        wrap.appendChild(row); 
+        // bind later
+        row.querySelectorAll('input,textarea').forEach(el=>{ 
+          el.oninput=()=>{ 
+            t[el.dataset.k]=el.value; 
+          }; 
+        }); 
+        const delBtn = row.querySelector('[data-del]');
+        if (delBtn) {
+          delBtn.addEventListener('click',()=>{ 
+            list.splice(i,1); 
+            saveDB(); 
+            renderTplEditor(); 
+          });
+        }
+      });
     }
   }
-
-  return parts.join(' / ') || '';
-}
-
-function renderMemberResults(){
-  const box = $('#memberResults');
-  if(!MEMBER_APP){
-    box.innerHTML = '<p class="muted">アプリを選択してください。</p>';
-    return;
+  function enableTplEdit(on){ 
+    const tplEditor = $('#tplEditor');
+    const tplSave = $('#tplSave');
+    const tplDiscard = $('#tplDiscard');
+    
+    if (tplEditor) tplEditor.style.display= on ? 'block':'none'; 
+    if (editorText) editorText.toggleAttribute('readonly', !on); 
+    if (tplSave) tplSave.style.display= on ? 'inline-flex':'none'; 
+    if (tplDiscard) tplDiscard.style.display= on ? 'inline-flex':'none'; 
   }
 
-  const qBase = jpBase($('#memberSearch').value || '');
+  // ====== Members ======
+  let MEMBER_APP = null;
 
-  // ❶ アプリ配下のみ ❷ 名前＋SNS を正規化して部分一致
-  const hit = DB.members.filter(m => {
-    if ((m.app || '').trim() !== MEMBER_APP) return false;
-    const base = jpBase([
-      m.appName || '',
-      m.realName || '',
-      m.sns?.x || '',
-      m.sns?.ig || '',
-      m.sns?.other || ''
-    ].join(' '));
-    return base.includes(qBase);
-  });
+  function renderMemberApps(){
+    const wrap = $('#memberAppList');
+    if (!wrap) return;
+    
+    wrap.innerHTML = '';
 
-  if(hit.length===0){ box.innerHTML = '<p class="muted">該当なし</p>'; return; }
+    // 空や未定義を除外して正規化
+    const apps = [...new Set(DB.members.map(m => (m.app || '').trim()))]
+      .filter(Boolean)
+      .sort();
 
-  const tbl = document.createElement('table');
-  tbl.innerHTML = '<thead><tr><th>アプリ内名</th><th>本名</th><th>SNS</th><th>実績</th></tr></thead>';
-  const tb = document.createElement('tbody');
+    if (apps.length === 0) {
+      wrap.innerHTML = '<p class="muted">まだ所属者が登録されていません。下のフォームから追加してください。</p>';
+      return;
+    }
 
-  hit.forEach(m=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${m.appName||''}</td>
-      <td>${m.realName||''}</td>
-      <td>${snsCell(m)}</td>
-      <td><button class="btn ghost" data-ach="${m.ach||''}">開く</button></td>`;
-    tb.appendChild(tr);
-  });
-
-  tbl.appendChild(tb);
-  box.innerHTML = '';
-  box.appendChild(tbl);
-
-  // 実績へジャンプ or 直URL
-  box.querySelectorAll('[data-ach]').forEach(b=> b.onclick = ()=>{
-    const url = b.dataset.ach;
-    if(url) location.href = url;
-    else { switchTab('perf'); $('#perfApp').value = MEMBER_APP; updatePerfSelectors(); }
-  });
-} // ←←← ここが抜けて固まってました
-
-// 検索インプットでの再描画
-$('#memberSearch').addEventListener('input', ()=> renderMemberResults());
-
-// 入力されたID/URLを統一形式に
-const normX  = s => (s||'').trim()
-  .replace(/^https?:\/\/(www\.)?x\.com\//i,'')
-  .replace(/^@/,'')
-  .split(/[/?#]/)[0];
-const normIG = s => (s||'').trim()
-  .replace(/^https?:\/\/(www\.)?instagram\.com\//i,'')
-  .replace(/^@/,'')
-  .replace(/\/$/,'')
-  .split(/[/?#]/)[0];
-const normOther = s => (s||'').trim(); // 種別不明なのでそのまま
-
-// Save member form
-$('#mSave').onclick = () => {
-  const rec = {
-    app: $('#mApp').value.trim(),
-    appName: $('#mNick').value.trim(),
-    realName: $('#mReal').value.trim(),
-    sns: {
-      x:  normX($('#mSNSx').value),
-      ig: normIG($('#mSNSig').value),
-      other: normOther($('#mSNSother').value)
-    },
-    ach: $('#mAch').value.trim()
-  };
-
-  if (!rec.app || !rec.appName) {
-    showToast('アプリ名とアプリ内名は必須');
-    return;
+    apps.forEach(a => {
+      const b = document.createElement('button');
+      const count = DB.members.filter(m => (m.app || '').trim() === a).length;
+      b.className = 'app' + (MEMBER_APP === a ? ' selected' : '');
+      b.innerHTML = `<span>${a}</span><span class="badge">${count}</span>`;
+      b.onclick = () => {
+        MEMBER_APP = a;
+        const searchInput = $('#memberSearch');
+        if (searchInput) searchInput.value = '';
+        renderMemberApps();
+        renderMemberResults();
+      };
+      wrap.appendChild(b);
+    });
   }
 
-  const idx = DB.members.findIndex(x => x.app === rec.app && x.appName === rec.appName);
-  if (idx >= 0) DB.members[idx] = rec; else DB.members.push(rec);
+  // 一覧セル用：SNSリンク表示（@id を URL に変換）
+  function snsCell(m){
+    const parts = [];
 
-  saveDB();
-  showToast('保存しました');
+    const x = (m.sns?.x || '').trim();
+    if (x){
+      const isUrl = /^https?:\/\//i.test(x);
+      const id = x.replace(/^@/,'').replace(/^https?:\/\/(www\.)?x\.com\//i,'').split(/[/?#]/)[0];
+      const url = isUrl ? x : `https://x.com/${id}`;
+      parts.push(`<a href="${url}" target="_blank" rel="noopener">X:@${id}</a>`);
+    }
 
-  MEMBER_APP = rec.app.trim();
-  renderMemberApps();
-  renderMemberResults();
-};
+    const ig = (m.sns?.ig || '').trim();
+    if (ig){
+      const isUrl = /^https?:\/\//i.test(ig);
+      const id = ig.replace(/^@/,'').replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/\/$/,'').split(/[/?#]/)[0];
+      const url = isUrl ? ig : `https://www.instagram.com/${id}`;
+      parts.push(`<a href="${url}" target="_blank" rel="noopener">IG:@${id}</a>`);
+    }
 
+    const other = (m.sns?.other || '').trim();
+    if (other){
+      if (/^https?:\/\//i.test(other)){
+        parts.push(`<a href="${other}" target="_blank" rel="noopener">他</a>`);
+      } else {
+        const id = other.replace(/^@/,'');
+        parts.push(`他:@${id}`);
+      }
+    }
+
+    return parts.join(' / ') || '';
+  }
+
+  function renderMemberResults(){
+    const box = $('#memberResults');
+    if (!box) return;
+    
+    if(!MEMBER_APP){
+      box.innerHTML = '<p class="muted">アプリを選択してください。</p>';
+      return;
+    }
+
+    const searchInput = $('#memberSearch');
+    const qBase = jpBase((searchInput?.value || ''));
+
+    // ❶ アプリ配下のみ ❷ 名前＋SNS を正規化して部分一致
+    const hit = DB.members.filter(m => {
+      if ((m.app || '').trim() !== MEMBER_APP) return false;
+      const base = jpBase([
+        m.appName || '',
+        m.realName || '',
+        m.sns?.x || '',
+        m.sns?.ig || '',
+        m.sns?.other || ''
+      ].join(' '));
+      return base.includes(qBase);
+    });
+
+    if(hit.length===0){ 
+      box.innerHTML = '<p class="muted">該当なし</p>'; 
+      return; 
+    }
+
+    const tbl = document.createElement('table');
+    tbl.innerHTML = '<thead><tr><th>アプリ内名</th><th>本名</th><th>SNS</th><th>実績</th></tr></thead>';
+    const tb = document.createElement('tbody');
+
+    hit.forEach(m=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m.appName||''}</td>
+        <td>${m.realName||''}</td>
+        <td>${snsCell(m)}</td>
+        <td><button class="btn ghost" data-ach="${m.ach||''}">開く</button></td>`;
+      tb.appendChild(tr);
+    });
+
+    tbl.appendChild(tb);
+    box.innerHTML = '';
+    box.appendChild(tbl);
+
+    // 実績へジャンプ or 直URL
+    box.querySelectorAll('[data-ach]').forEach(b=> b.onclick = ()=>{
+      const url = b.dataset.ach;
+      if(url) {
+        location.href = url;
+      } else { 
+        switchTab('perf'); 
+        const perfApp = $('#perfApp');
+        if (perfApp) {
+          perfApp.value = MEMBER_APP; 
+          updatePerfSelectors(); 
+        }
+      }
+    });
+  }
+
+  // 入力されたID/URLを統一形式に
+  const normX  = s => (s||'').trim()
+    .replace(/^https?:\/\/(www\.)?x\.com\//i,'')
+    .replace(/^@/,'')
+    .split(/[/?#]/)[0];
+  const normIG = s => (s||'').trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i,'')
+    .replace(/^@/,'')
+    .replace(/\/$/,'')
+    .split(/[/?#]/)[0];
+  const normOther = s => (s||'').trim(); // 種別不明なのでそのまま
 
   // ====== Performance (実績) ======
-  function perfApps(){ const apps=[...new Set(Object.keys(DB.templates.data.face).concat(Object.keys(DB.templates.data['no-face'])) )]; return apps; }
-  function updatePerfSelectors(){ const appSel=$('#perfApp'); appSel.innerHTML = perfApps().map(a=>`<option>${a}</option>`).join(''); const scope=$('#perfScope').value; const whenSel=$('#perfWhen'); const now=new Date(); whenSel.innerHTML=''; if(scope==='year'){ const y=now.getFullYear(); for(let i=0;i<5;i++){ const yy=String(y-i); whenSel.innerHTML += `<option value="${yy}">${yy}年</option>`; } }
-    if(scope==='month'){ const y=now.getFullYear(); const m=now.getMonth()+1; for(let i=0;i<12;i++){ let mm=m-i; let yy=y; while(mm<=0){ mm+=12; yy--; } whenSel.innerHTML += `<option value="${yy}-${String(mm).padStart(2,'0')}">${yy}/${mm}</option>`; } }
-    if(scope==='week'){ // ISO week approx: show last 12 weeks
-      const base=new Date(now); for(let i=0;i<12;i++){ const d=new Date(base); d.setDate(d.getDate()-7*i); const label=`~ ${d.getMonth()+1}/${d.getDate()}`; const val=`${d.getFullYear()}-W${i}`; whenSel.innerHTML += `<option value="${val}">${label}</option>`; }
+  function perfApps(){ 
+    const apps=[...new Set(Object.keys(DB.templates.data.face).concat(Object.keys(DB.templates.data['no-face'])) )]; 
+    return apps; 
+  }
+  function updatePerfSelectors(){ 
+    const appSel=$('#perfApp'); 
+    if (appSel) {
+      appSel.innerHTML = perfApps().map(a=>`<option>${a}</option>`).join(''); 
     }
-    renderPerf(); }
-  function getPerfRecord(app, scope, when){ DB.perf[app]=DB.perf[app]||{ goals:{year:{coin:0,days:0,hours:0}, month:{coin:0,days:0,hours:0}, week:{coin:0,days:0,hours:0}}, data:{} }; const rec=DB.perf[app]; rec.data[scope]=rec.data[scope]||{}; rec.data[scope][when]=rec.data[scope][when]||{coin:0,days:0,hours:0}; return rec; }
-  function donut(el, value, goal, label){ const size=220; const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d'); const center=size/2; const r=size*0.38; // bg
-    ctx.lineWidth=22; ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.arc(center,center,r,0,Math.PI*2); ctx.stroke(); // val
-    const ratio = goal>0 ? Math.min(value/goal,1) : 0; ctx.strokeStyle='#60a5fa'; ctx.beginPath(); ctx.arc(center,center,r,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio); ctx.stroke(); // text
-    ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--ink'); ctx.textAlign='center'; ctx.font='700 18px system-ui,Segoe UI,Roboto'; ctx.fillText(label, center, center-6); ctx.font='900 22px system-ui,Segoe UI,Roboto'; ctx.fillText(value.toString(), center, center+22); el.innerHTML=''; el.appendChild(c); }
-  function renderPerf(){ const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value; const rec=getPerfRecord(app, scope, when); $('#goalCoin').textContent=rec.goals[scope].coin||0; $('#goalDays').textContent=rec.goals[scope].days||0; $('#goalHours').textContent=rec.goals[scope].hours||0; const cur=rec.data[scope][when]||{coin:0,days:0,hours:0}; const charts=$('#charts'); charts.innerHTML=''; const items=[['取得コイン',cur.coin,rec.goals[scope].coin],['平均配信日数',cur.days,rec.goals[scope].days],['平均配信時間(h)',cur.hours,rec.goals[scope].hours]]; items.forEach(([label,val,goal])=>{ const box=document.createElement('div'); donut(box, Number(val||0), Number(goal||0), label); charts.appendChild(box); }); // 簡易比較
-    const cmp=$('#perfCompare'); cmp.innerHTML=''; cmp.innerHTML = `<span class="pill">前期間比（概算）: 準備中</span>`; }
+    
+    const scope=$('#perfScope')?.value || 'year'; 
+    const whenSel=$('#perfWhen'); 
+    const now=new Date(); 
+    if (whenSel) {
+      whenSel.innerHTML=''; 
+      if(scope==='year'){ 
+        const y=now.getFullYear(); 
+        for(let i=0;i<5;i++){ 
+          const yy=String(y-i); 
+          whenSel.innerHTML += `<option value="${yy}">${yy}年</option>`; 
+        } 
+      }
+      if(scope==='month'){ 
+        const y=now.getFullYear(); 
+        const m=now.getMonth()+1; 
+        for(let i=0;i<12;i++){ 
+          let mm=m-i; 
+          let yy=y; 
+          while(mm<=0){ mm+=12; yy--; } 
+          whenSel.innerHTML += `<option value="${yy}-${String(mm).padStart(2,'0')}">${yy}/${mm}</option>`; 
+        } 
+      }
+      if(scope==='week'){ // ISO week approx: show last 12 weeks
+        const base=new Date(now); 
+        for(let i=0;i<12;i++){ 
+          const d=new Date(base); 
+          d.setDate(d.getDate()-7*i); 
+          const label=`~ ${d.getMonth()+1}/${d.getDate()}`; 
+          const val=`${d.getFullYear()}-W${i}`; 
+          whenSel.innerHTML += `<option value="${val}">${label}</option>`; 
+        }
+      }
+    }
+    renderPerf(); 
+  }
+  function getPerfRecord(app, scope, when){ 
+    DB.perf[app]=DB.perf[app]||{ 
+      goals:{year:{coin:0,days:0,hours:0}, month:{coin:0,days:0,hours:0}, week:{coin:0,days:0,hours:0}}, 
+      data:{} 
+    }; 
+    const rec=DB.perf[app]; 
+    rec.data[scope]=rec.data[scope]||{}; 
+    rec.data[scope][when]=rec.data[scope][when]||{coin:0,days:0,hours:0}; 
+    return rec; 
+  }
+  function donut(el, value, goal, label){ 
+    const size=220; 
+    const c=document.createElement('canvas'); 
+    c.width=c.height=size; 
+    const ctx=c.getContext('2d'); 
+    const center=size/2; 
+    const r=size*0.38; // bg
+    ctx.lineWidth=22; 
+    ctx.strokeStyle='rgba(255,255,255,0.12)'; 
+    ctx.beginPath(); 
+    ctx.arc(center,center,r,0,Math.PI*2); 
+    ctx.stroke(); // val
+    const ratio = goal>0 ? Math.min(value/goal,1) : 0; 
+    ctx.strokeStyle='#60a5fa'; 
+    ctx.beginPath(); 
+    ctx.arc(center,center,r,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio); 
+    ctx.stroke(); // text
+    ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--ink'); 
+    ctx.textAlign='center'; 
+    ctx.font='700 18px system-ui,Segoe UI,Roboto'; 
+    ctx.fillText(label, center, center-6); 
+    ctx.font='900 22px system-ui,Segoe UI,Roboto'; 
+    ctx.fillText(value.toString(), center, center+22); 
+    el.innerHTML=''; 
+    el.appendChild(c); 
+  }
+  function renderPerf(){ 
+    const appSel = $('#perfApp');
+    const scopeSel = $('#perfScope');
+    const whenSel = $('#perfWhen');
+    
+    const app = appSel?.value || '';
+    const scope = scopeSel?.value || 'year'; 
+    const when = whenSel?.value || ''; 
+    
+    const rec=getPerfRecord(app, scope, when); 
+    
+    const goalCoin = $('#goalCoin');
+    const goalDays = $('#goalDays');
+    const goalHours = $('#goalHours');
+    
+    if (goalCoin) goalCoin.textContent=rec.goals[scope].coin||0; 
+    if (goalDays) goalDays.textContent=rec.goals[scope].days||0; 
+    if (goalHours) goalHours.textContent=rec.goals[scope].hours||0; 
+    
+    const cur=rec.data[scope][when]||{coin:0,days:0,hours:0}; 
+    const charts=$('#charts'); 
+    
+    if (charts) {
+      charts.innerHTML=''; 
+      const items=[
+        ['取得コイン',cur.coin,rec.goals[scope].coin],
+        ['平均配信日数',cur.days,rec.goals[scope].days],
+        ['平均配信時間(h)',cur.hours,rec.goals[scope].hours]
+      ]; 
+      items.forEach(([label,val,goal])=>{ 
+        const box=document.createElement('div'); 
+        donut(box, Number(val||0), Number(goal||0), label); 
+        charts.appendChild(box); 
+      });
+    }
+    
+    // 簡易比較
+    const cmp=$('#perfCompare'); 
+    if (cmp) {
+      cmp.innerHTML=''; 
+      cmp.innerHTML = `<span class="pill">前期間比（概算）: 準備中</span>`;}
   $('#perfScope').onchange = updatePerfSelectors; $('#perfApp').onchange = renderPerf; $('#perfWhen').onchange = renderPerf;
   $('#perfEditGoals').onclick = () => { const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value; const rec=getPerfRecord(app, scope, when); const coin=prompt('目標コイン', rec.goals[scope].coin||0); const days=prompt('目標 配信日数', rec.goals[scope].days||0); const hours=prompt('目標 配信時間(h)', rec.goals[scope].hours||0); rec.goals[scope]={coin:Number(coin||0),days:Number(days||0),hours:Number(hours||0)}; saveDB(); renderPerf(); };
   $('#perfSave').onclick = () => { const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value; const rec=getPerfRecord(app, scope, when); rec.data[scope][when]={ coin:Number($('#perfCoin').value||0), days:Number($('#perfDays').value||0), hours:Number($('#perfHours').value||0) }; saveDB(); showToast('保存しました'); renderPerf(); };
