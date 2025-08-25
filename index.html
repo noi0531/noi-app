@@ -158,6 +158,25 @@
         </div>
         <div style="min-width:220px" class="row">
           <input id="memberSearch" placeholder="名前/アプリ内名/SNS で検索" />
+            <section class="panel" id="tab_members" style="display:none">
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <div class="row" style="gap:8px;flex:1">
+      <div class="apps" id="memberAppList" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))"></div>
+    </div>
+
+    <!-- ここが検索入力の行 -->
+    <div style="min-width:220px" class="row">
+      <input id="memberSearch" placeholder="名前/アプリ内名/SNS で検索" />
+
+      <!-- ▼ この3行を “直後” に追加 -->
+      <button class="btn" id="memberImportBtn">CSVインポート</button>
+      <button class="btn ghost" id="memberExportBtn">CSVエクスポート</button>
+      <input type="file" id="memberCSV" accept=".csv,text/csv" style="display:none" />
+      <!-- ▲ 追加ここまで -->
+    </div>
+  </div>
+  ...
+</section>
         </div>
       </div>
       <div class="hr"></div>
@@ -622,6 +641,200 @@ WAVEは音声のみなので、準備が楽で継続しやすいのが特徴で�
     }
 
     // ====== Members ======
+      // ====== Members CSV Import/Export ======
+
+// 文字コードをUTF-8優先、ダメならShift_JISで読んでみる
+async function readFileTextSmart(file){
+  const buf = await file.arrayBuffer();
+  try {
+    return new TextDecoder('utf-8', {fatal:false}).decode(buf);
+  } catch {
+    try { return new TextDecoder('shift_jis').decode(buf); }
+    catch { return new TextDecoder().decode(buf); }
+  }
+}
+
+// ヘッダー正規化（全角→半角、空白削除、小文字化）
+function normHeader(h){
+  return (h||'').normalize('NFKC')
+    .replace(/\s+/g,'')
+    .toLowerCase();
+}
+
+// ヘッダー別名テーブル
+const MEMBER_HEADER_ALIASES = {
+  app:      ['app','アプリ','アプリ名','appname','app_name'],
+  appName:  ['app内名','アプリ内名','配信名','活動名','appnickname','nickname','appnick','appnickame','appdisplayname','appname2','appname'],
+  realName: ['realname','本名','氏名','名前','name','お名前'],
+  x:        ['x','twitter','xid','twitterid','xアカウント','twitterアカウント'],
+  ig:       ['instagram','ig','instagramid','igid','igアカウント'],
+  other:    ['その他','other','snsother','line','tiktok','url','link'],
+  ach:      ['実績','実績url','実績URL','achievement','portfolio','ach','実績リンク']
+};
+
+// 列インデックスのマッピングを作成
+function mapHeaderIndexes(headers){
+  const idx = {};
+  const normalized = headers.map(normHeader);
+  function findIndex(keys){
+    const cands = keys.map(normHeader);
+    for (let i=0;i<normalized.length;i++){
+      if (cands.includes(normalized[i])) return i;
+    }
+    return -1;
+  }
+  idx.app      = findIndex(MEMBER_HEADER_ALIASES.app);
+  idx.appName  = findIndex(MEMBER_HEADER_ALIASES.appName);
+  idx.realName = findIndex(MEMBER_HEADER_ALIASES.realName);
+  idx.x        = findIndex(MEMBER_HEADER_ALIASES.x);
+  idx.ig       = findIndex(MEMBER_HEADER_ALIASES.ig);
+  idx.other    = findIndex(MEMBER_HEADER_ALIASES.other);
+  idx.ach      = findIndex(MEMBER_HEADER_ALIASES.ach);
+  return idx;
+}
+
+// シンプルCSVパーサ（ダブルクォート対応）
+function parseCSV(text){
+  const rows = [];
+  let i=0, field='', row=[], inQ=false;
+  const pushField = ()=>{ row.push(field); field=''; };
+  const pushRow = ()=>{ rows.push(row); row=[]; };
+  while(i < text.length){
+    const ch = text[i];
+    if (inQ){
+      if (ch === '"'){
+        if (text[i+1] === '"'){ field += '"'; i+=2; continue; } // エスケープ ""
+        inQ = false; i++; continue;
+      }
+      field += ch; i++; continue;
+    } else {
+      if (ch === '"'){ inQ = true; i++; continue; }
+      if (ch === ','){ pushField(); i++; continue; }
+      if (ch === '\r'){
+        // \r\n or 単独\r
+        if (text[i+1] === '\n'){ pushField(); pushRow(); i+=2; continue; }
+        pushField(); pushRow(); i++; continue;
+      }
+      if (ch === '\n'){ pushField(); pushRow(); i++; continue; }
+      field += ch; i++; continue;
+    }
+  }
+  // 末尾フィールド
+  pushField();
+  // 末尾行（空行対策）
+  if (row.length === 1 && row[0] === '' && rows.length) {
+    // 何もしない
+  } else {
+    pushRow();
+  }
+  // 末尾の空配列を削る
+  while(rows.length && rows[rows.length-1].every(c=>c==='')) rows.pop();
+  return rows;
+}
+
+// 既存の正規化関数を活用
+//   normX / normIG / normOther は既に上で定義済み（このファイル内）
+function buildMemberFromRow(row, idxMap){
+  const pick = (i) => (i>=0 && i<row.length) ? (row[i]||'').trim() : '';
+  return {
+    app: pick(idxMap.app),
+    appName: pick(idxMap.appName),
+    realName: pick(idxMap.realName),
+    sns: {
+      x:  normX(pick(idxMap.x)),
+      ig: normIG(pick(idxMap.ig)),
+      other: normOther(pick(idxMap.other))
+    },
+    ach: pick(idxMap.ach)
+  };
+}
+
+// インポート本体
+async function importMembersFromCSV(file){
+  const text = await readFileTextSmart(file);
+  const rows = parseCSV(text);
+  if (!rows.length) throw new Error('CSVにデータがありません');
+
+  const headers = rows[0];
+  const idxMap = mapHeaderIndexes(headers);
+
+  if (idxMap.app < 0 || idxMap.appName < 0){
+    throw new Error('必須列（app / appName または アプリ / アプリ内名）が見つかりません');
+  }
+
+  // 全消去→取り込み？
+  let doWipe = false;
+  if (DB.members?.length){
+    doWipe = confirm('既存メンバーを「全消去」してから取り込みますか？\nOK:全消去して取り込み / キャンセル:追加・上書き');
+  }
+  if (doWipe) DB.members = DB.members || [];
+
+  let added=0, updated=0, skipped=0;
+  const startIdx = 1;
+  for (let r = startIdx; r < rows.length; r++){
+    const rec = buildMemberFromRow(rows[r], idxMap);
+    if (!rec.app || !rec.appName){
+      skipped++; continue;
+    }
+    // 追加 or 上書き
+    const i = DB.members.findIndex(x => (x.app||'').trim() === rec.app && (x.appName||'').trim() === rec.appName);
+    if (i >= 0){ DB.members[i] = rec; updated++; }
+    else { DB.members.push(rec); added++; }
+  }
+
+  saveDB();
+  renderMemberApps();
+  renderMemberResults();
+
+  showToast(`読込: 追加${added} / 更新${updated} / スキップ${skipped}`);
+}
+
+// エクスポート
+function exportMembersToCSV(){
+  const headers = ['app','appName','realName','x','ig','other','ach'];
+  const lines = [headers.join(',')];
+  (DB.members || []).forEach(m=>{
+    const row = [
+      m.app||'',
+      m.appName||'',
+      m.realName||'',
+      m.sns?.x||'',
+      m.sns?.ig||'',
+      m.sns?.other||'',
+      m.ach||''
+    ].map(v=>{
+      const s = String(v??'');
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    });
+    lines.push(row.join(','));
+  });
+  const csv = '\uFEFF' + lines.join('\r\n'); // BOM付きでExcel想定
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'members.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSVを書き出しました');
+}
+
+// ボタンとハンドラの結びつけ
+$('#memberImportBtn')?.addEventListener('click', ()=> $('#memberCSV').click());
+$('#memberCSV')?.addEventListener('change', async (e)=>{
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try{
+    await importMembersFromCSV(f);
+  }catch(err){
+    console.error(err);
+    showToast('CSVの読み込みに失敗: ' + (err?.message || '不明なエラー'));
+  }finally{
+    e.target.value = ''; // 同じファイル再選択できるように
+  }
+});
+$('#memberExportBtn')?.addEventListener('click', exportMembersToCSV);
+
     let MEMBER_APP = null;
 
     function renderMemberApps(){
