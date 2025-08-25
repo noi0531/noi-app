@@ -690,11 +690,11 @@ $('#mSave').onclick = () => {
   // ====== Init & Boot ======
 function boot(){ // settings
   const fs = parseInt(localStorage.getItem(KEYS.settings+'_fs')||'16',10);
-  setFont(fs); // フォントUIが無いのでこれだけでOK
+  setFont(fs); // フォントUIは無いので値を適用するだけ
   const savedTheme = localStorage.getItem(KEYS.settings+'_theme')||'dark';
   applyTheme(savedTheme);
-  $('#themeBtn').onclick = ()=> applyTheme(document.body.classList.contains('light')?'dark':'light');
-  // ...
+  $('#themeBtn').onclick = () =>
+    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
 }
     // tabs
     $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
