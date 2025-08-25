@@ -151,33 +151,32 @@
     </section>
 
     <!-- ========= 所属者管理 ========= -->
-    <section class="panel" id="tab_members" style="display:none">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div class="row" style="gap:8px;flex:1">
-          <div class="apps" id="memberAppList" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))"></div>
-        </div>
-        <div style="min-width:220px" class="row">
-          <input id="memberSearch" placeholder="名前/アプリ内名/SNS で検索" />
-            <section class="panel" id="tab_members" style="display:none">
+<section class="panel" id="tab_members" style="display:none">
   <div class="row" style="justify-content:space-between;align-items:center">
     <div class="row" style="gap:8px;flex:1">
       <div class="apps" id="memberAppList" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))"></div>
     </div>
 
-    <!-- ここが検索入力の行 -->
+    <!-- 検索＋CSVボタンはこの行の中に置く -->
     <div style="min-width:220px" class="row">
       <input id="memberSearch" placeholder="名前/アプリ内名/SNS で検索" />
-
-      <!-- ▼ この3行を “直後” に追加 -->
       <button class="btn" id="memberImportBtn">CSVインポート</button>
       <button class="btn ghost" id="memberExportBtn">CSVエクスポート</button>
       <input type="file" id="memberCSV" accept=".csv,text/csv" style="display:none" />
-      <!-- ▲ 追加ここまで -->
     </div>
   </div>
-  ...
+
+  <div class="hr"></div>
+  <div id="memberResults"></div>
+  <!-- 以下は元のまま -->
+  <details style="margin-top:10px">
+    <summary class="muted">所属者の追加/編集（誰でもOK）</summary>
+    ...
+  </details>
 </section>
-        </div>
+
+  
+  </div>
       </div>
       <div class="hr"></div>
       <div id="memberResults"></div>
