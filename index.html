@@ -1146,7 +1146,7 @@ $('#memberExportBtn')?.addEventListener('click', exportMembersToCSV);
 
       // members
       $('#memberSearch')?.addEventListener('input', ()=> renderMemberResults());
-    $('#mSave').onclick = async () => {
+  $('#mSave').onclick = async () => {
   const rec = {
     app: $('#mApp').value.trim(),
     appName: $('#mNick').value.trim(),
@@ -1156,19 +1156,26 @@ $('#memberExportBtn')?.addEventListener('click', exportMembersToCSV);
   };
   if (!rec.app || !rec.appName) { showToast('アプリ名とアプリ内名は必須'); return; }
 
-  // ローカル更新（これまで通り）
+  // ローカル更新
   const idx = DB.members.findIndex(x => x.app === rec.app && x.appName === rec.appName);
   if (idx >= 0) DB.members[idx] = rec; else DB.members.push(rec);
   saveDB(); showToast('保存しました');
-
   MEMBER_APP = rec.app.trim();
   renderMemberApps(); renderMemberResults();
 
-  // ★ クラウドへも反映（wsId は後述）
-  const wsId = (window._WS_ID || 'public');
+  // クラウドへも反映
   if (window.firebaseReady) {
-    try { await window.firebaseReady; await cloudUpsertMember(wsId, rec); }
-    catch(e){ console.error(e); showToast('クラウド保存に失敗'); }
+    try {
+-     const wsId = (window._WS_ID || 'public');         // ← NG: firebaseReady前に決めるとpublicになることがある
+-     await window.firebaseReady;
++     await window.firebaseReady;
++     const wsId = (window._WS_ID || expectedHash || 'public'); // ← OK: 準備完了後に確定。expectedHashも使う
+      await cloudUpsertMember(wsId, rec);
+      showToast('クラウド保存しました');
+    } catch(e){
+      console.error(e);
+      showToast('クラウド保存に失敗');
+    }
   }
 };
       renderMemberApps(); renderMemberResults();
