@@ -416,10 +416,13 @@ Zoom：{{link}}`} ]
     ivSheetBtn.onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); };
     ivCopyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(rec.manual||''); showToast('コピーしました'); }catch{} };
   }
-  function ivParseColumns(text){
-    if(!text) return [];
-    const lines = String(text).split(/
-?
+function ivParseColumns(text){
+  if(!text) return [];
+  const first = String(text).split(/\r?\n/).find(s => s.trim().length) || '';
+  const parts = first.includes('\t') ? first.split('\t') : first.split(',');
+  return parts.map(s=>s.trim()).filter(Boolean);
+}
+
 /).filter(s=>s.trim().length);
     const first = lines[0] || '';
     // タブ優先、なければカンマ
@@ -427,26 +430,81 @@ Zoom：{{link}}`} ]
     if (parts.length===1) parts = first.split(',');
     return parts.map(s=>s.trim()).filter(Boolean);
   }
-  function renderIvForm(){
-    const box = $('#ivFormBox');
-    if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
-    const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[]});
+ function renderIvForm(){
+  const box = $('#ivFormBox');
+  if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
+  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[]});
 
-    // 初期UI（列未設定）
-    if (!rec.columns || !rec.columns.length){
-      box.innerHTML = `
-        <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
-        <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
-        <div class="row" style="margin-top:8px">
-          <button class="btn" id="ivColsApply">列を設定</button>
-        </div>`;
-      $('#ivColsApply').onclick = ()=>{
-        const cols = ivParseColumns($('#ivColsRaw').value);
-        if(!cols.length){ showToast('列が読み取れませんでした'); return; }
-        rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
-      };
-      return;
-    }
+  // 初期UI（列未設定）
+  if (!rec.columns || !rec.columns.length){
+    box.innerHTML = `
+      <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
+      <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="ivColsApply">列を設定</button>
+      </div>`;
+    $('#ivColsApply').onclick = ()=>{
+      const cols = ivParseColumns($('#ivColsRaw').value);
+      if(!cols.length){ showToast('列が読み取れませんでした'); return; }
+      rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+    };
+    return;
+  }
+
+  // 列がある場合のUI
+  box.innerHTML = '';
+  const pillWrap = document.createElement('div'); pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
+  rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
+
+  const inputs = document.createElement('div'); inputs.id='ivInputs';
+  rec.columns.forEach(c=>{
+    const row=document.createElement('div');
+    row.className='panel';
+    row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`;
+    inputs.appendChild(row);
+  });
+
+  const controls = document.createElement('div'); controls.className='row'; controls.style.marginTop='8px';
+  controls.innerHTML = `
+    <label class="pill"><select id="ivDelim"><option value="tsv">TSV(タブ)</option><option value="csv">CSV(カンマ)</option></select></label>
+    <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
+    <button class="btn copy" id="ivCopyRow">行をコピー</button>
+    <button class="btn ghost" id="ivResetCols">列を再設定</button>`;
+
+  box.appendChild(pillWrap);
+  box.appendChild(inputs);
+  box.appendChild(controls);
+
+  $('#ivCopyRow').onclick = async ()=>{
+    const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
+    const delim = $('#ivDelim').value;
+    const withHeader = $('#ivWithHeader').checked;
+
+    const joinTsv = arr => arr.join('\t');
+    const escCsv  = v => {
+      const s = String(v ?? '');
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+
+    const textRow   = (delim === 'tsv') ? joinTsv(values) : values.map(escCsv).join(',');
+    const headerRow = (delim === 'tsv') ? joinTsv(rec.columns) : rec.columns.map(escCsv).join(',');
+    const final = withHeader ? (headerRow + '\n' + textRow) : textRow;
+
+    try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }
+    catch{ showToast('コピーに失敗'); }
+  };
+
+  $('#ivResetCols').onclick = ()=>{
+    box.innerHTML = `
+      <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
+    $('#ivColsApply').onclick = ()=>{
+      const cols = ivParseColumns($('#ivColsRaw').value);
+      if(!cols.length){ showToast('列が読み取れませんでした'); return; }
+      rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+    };
+  };
+}
 
     // 列がある場合のUI
     box.innerHTML = '';
