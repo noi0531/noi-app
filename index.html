@@ -1166,10 +1166,8 @@ $('#memberExportBtn')?.addEventListener('click', exportMembersToCSV);
   // クラウドへも反映
   if (window.firebaseReady) {
     try {
--     const wsId = (window._WS_ID || 'public');         // ← NG: firebaseReady前に決めるとpublicになることがある
--     await window.firebaseReady;
-+     await window.firebaseReady;
-+     const wsId = (window._WS_ID || expectedHash || 'public'); // ← OK: 準備完了後に確定。expectedHashも使う
+        await window.firebaseReady;
+        const wsId = (window._WS_ID || expectedHash || 'public'); // ← OK: 準備完了後に確定。expectedHashも使う
       await cloudUpsertMember(wsId, rec);
       showToast('クラウド保存しました');
     } catch(e){
