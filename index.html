@@ -14,9 +14,9 @@
     h1{margin:6px 0 10px;font-size:clamp(18px,5.2vw,22px);font-weight:800}
 
     .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-    .btn{appearance:none;border:none;border-radius:14px;padding:10px 14px;font-weight:800;color:#0b1220;background:#e5e7eb}
-    .btn.primary{background:linear-gradient(135deg,#16a34a,#22c55e)}
-    .btn.copy{background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#051225}
+    .btn{appearance:none;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:800;color:var(--ink);background:color-mix(in oklab, var(--panel) 90%, transparent)}
+    .btn.primary{background:color-mix(in oklab, var(--panel) 85%, transparent);color:var(--ink);border:1px solid var(--line)}
+    .btn.copy{background:color-mix(in oklab, var(--panel) 85%, transparent);color:var(--ink);border:1px solid var(--line)}
     .btn.ghost{background:rgba(127,132,152,.16);color:var(--ink);border:1px solid var(--line)}
 
     .tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-top:6px}
@@ -53,9 +53,15 @@
     .pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05)}
     .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:color-mix(in oklab, var(--panel) 86%, transparent);border:1px solid var(--line);padding:2px 6px;border-radius:6px;color:var(--ink)}
     .hr{height:1px;background:var(--line);margin:10px 0}
-    .danger{background:linear-gradient(135deg,#ef4444,#f87171)}
+    .danger{background:color-mix(in oklab, var(--panel) 80%, transparent);color:var(--ink);border:1px solid var(--line)}
     #tab_tpl .pill { font-size:12px; padding:4px 8px; line-height:1.4; }
     #tab_tpl .pill strong { font-weight:700; }
+    a{color:#93c5fd;text-decoration:none}
+  a:hover{text-decoration:underline}
+  input::placeholder,textarea::placeholder{color:color-mix(in oklab, var(--ink) 70%, transparent)}
+    /* Q&AのQ一覧を白文字に */
+  #tab_qa #qaList .app{ color:#fff; }
+  #tab_qa #qaList .app .badge{ color:#e5e7eb; background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.35); }
   </style>
 </head>
 <body>
@@ -178,6 +184,17 @@
         <button class="btn" id="ivOpenSheet">スプレッドシートを開く</button>
         <button class="btn copy" id="ivCopyManual">本文をコピー</button>
       </div>
+
+      <div class="hr"></div>
+      <h3 style="margin:6px 0">スプレッドシート貼付用 行ジェネレーター</h3>
+      <div id="ivFormBox" class="panel">
+        <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
+        <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="ivColsApply">列を設定</button>
+        </div>
+      </div>
+
       <div id="ivEditor" style="display:none;margin-top:10px">
         <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
         <textarea id="ivManual" placeholder="面談マニュアル本文"></textarea>
@@ -201,7 +218,10 @@
   <div class="toast" id="toast">OK</div>
 
 <script>
-(() => {
+(()=>{ 
+  // ===== Debug hooks: 端末で原因を把握しやすくする =====
+  window.addEventListener('error', (e)=>{ try{ const t=document.getElementById('toast'); if(t){ t.textContent = 'Error: '+ e.message; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000);} }catch{} });
+  window.addEventListener('unhandledrejection', (e)=>{ try{ const t=document.getElementById('toast'); if(t){ t.textContent = 'Promise: '+ (e.reason?.message||e.reason||'rejected'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000);} }catch{} });
   // ====== Utils ======
   const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
   const toast = $('#toast');
@@ -216,7 +236,9 @@
     ctx.fillStyle = bg; ctx.fillRect(0,0,size,size); ctx.fillStyle = fg; ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, size/2, size/2+size*0.05); return c.toDataURL('image/png');
   }
   function attachManifest(){ const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' })); const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons}; const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'}); const url = URL.createObjectURL(blob); const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link); const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple); }
-  async function registerSW(){ if(!('serviceWorker' in navigator)) return; const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v4').then(c=>c.addAll(['./'])));self.skipWaiting();});self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v4').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg = await navigator.serviceWorker.register(url); reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); showToast('オフラインでも使えます'); }catch(e){ console.warn('SW registration failed', e); } }
+  async function registerSW(){ if(!('serviceWorker' in navigator)) return; const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v4').then(c=>c.addAll(['./'])));self.skipWaiting();});
+self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});
+self.addEventListener('fetch', e=>{const req=e.request; if(req.method!=='GET'){ return; } e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v4').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg = await navigator.serviceWorker.register(url); reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); showToast('オフラインでも使えます'); }catch(e){ console.warn('SW registration failed', e); } }
 
   // ====== Storage (local) ======
   const KEYS = { db:'noi_db_v2' };
@@ -376,11 +398,109 @@ Zoom：{{link}}`} ]
   // ====== Interview ======
   let IV_APP = null;
   function ivApps(){ return Object.keys(DB.interview||{}); }
-  function renderIvApps(){ ivAppList.innerHTML=''; const apps=ivApps(); if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。編集モードで追加してください。</p>'; return; } if(!IV_APP) IV_APP=apps[0]; apps.forEach(a=>{ const b=document.createElement('button'); b.className='app'+(IV_APP===a?' selected':''); b.innerHTML=`<span>${a}</span>`; b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvView(); }; ivAppList.appendChild(b); }); }
-  function renderIvView(){ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; ivManualBox.textContent = rec.manual||'（未入力）'; ivSheetBtn.onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); }; ivCopyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(rec.manual||''); showToast('コピーしました'); }catch{} } }
-  function enableIvEdit(on){ ivEditor.style.display= on ? 'block':'none'; $('#ivSave').style.display= on ? 'inline-flex':'none'; $('#ivDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; $('#ivSheetUrl').value = rec.sheet||''; $('#ivManual').value = rec.manual||''; } }
+  function renderIvApps(){
+    ivAppList.innerHTML='';
+    const apps=ivApps();
+    if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。編集モードで追加してください。</p>'; return; }
+    if(!IV_APP) IV_APP=apps[0];
+    apps.forEach(a=>{
+      const b=document.createElement('button');
+      b.className='app'+(IV_APP===a?' selected':'');
+      b.innerHTML=`<span>${a}</span>`; b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvView(); renderIvForm(); };
+      ivAppList.appendChild(b);
+    });
+  }
+  function renderIvView(){
+    const rec=DB.interview[IV_APP]||{sheet:'',manual:'',columns:[]};
+    ivManualBox.textContent = rec.manual||'（未入力）';
+    ivSheetBtn.onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); };
+    ivCopyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(rec.manual||''); showToast('コピーしました'); }catch{} };
+  }
+  function ivParseColumns(text){
+    if(!text) return [];
+    const lines = String(text).split(/
+?
+/).filter(s=>s.trim().length);
+    const first = lines[0] || '';
+    // タブ優先、なければカンマ
+    let parts = first.split('	');
+    if (parts.length===1) parts = first.split(',');
+    return parts.map(s=>s.trim()).filter(Boolean);
+  }
+  function renderIvForm(){
+    const box = $('#ivFormBox');
+    if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
+    const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[]});
 
-  // ====== Copy & Share for template ======
+    // 初期UI（列未設定）
+    if (!rec.columns || !rec.columns.length){
+      box.innerHTML = `
+        <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
+        <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="ivColsApply">列を設定</button>
+        </div>`;
+      $('#ivColsApply').onclick = ()=>{
+        const cols = ivParseColumns($('#ivColsRaw').value);
+        if(!cols.length){ showToast('列が読み取れませんでした'); return; }
+        rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+      };
+      return;
+    }
+
+    // 列がある場合のUI
+    box.innerHTML = '';
+    const pillWrap = document.createElement('div'); pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
+    rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
+    const inputs = document.createElement('div'); inputs.id='ivInputs';
+    rec.columns.forEach(c=>{ const row=document.createElement('div'); row.className='panel'; row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`; inputs.appendChild(row); });
+    const controls = document.createElement('div'); controls.className='row'; controls.style.marginTop='8px';
+    controls.innerHTML = `
+      <label class="pill"><select id="ivDelim"><option value="tsv">TSV(タブ)</option><option value="csv">CSV(カンマ)</option></select></label>
+      <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
+      <button class="btn copy" id="ivCopyRow">行をコピー</button>
+      <button class="btn ghost" id="ivResetCols">列を再設定</button>`;
+    box.appendChild(pillWrap); box.appendChild(inputs); box.appendChild(controls);
+
+    $('#ivCopyRow').onclick = async ()=>{
+      const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
+      const delim = $('#ivDelim').value;
+      const withHeader = $('#ivWithHeader').checked;
+      let textRow = '';
+      if (delim==='tsv'){
+        textRow = values.join('	');
+      } else {
+        const esc = v => { const s=String(v??''); return /[",
+
+]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+        textRow = values.map(esc).join(',');
+      }
+      const headerRow = (delim==='tsv') ? rec.columns.join('	') : rec.columns.map(h=>(/[",
+
+]/.test(h)? '"'+h.replace(/"/g,'""')+'"' : h)).join(',');
+      const final = withHeader ? (headerRow + '
+' + textRow) : textRow;
+      try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
+    };
+        textRow = values.map(esc).join(',');
+      }
+      const headerRow = (delim==='tsv') ? rec.columns.join('	') : rec.columns.map(h=>(/[",
+
+]/.test(h)? '"'+h.replace(/"/g,'""')+'"' : h)).join(',');
+      const final = withHeader ? (headerRow + '
+' + textRow) : textRow;
+      try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
+    };
+    $('#ivResetCols').onclick = ()=>{
+      box.innerHTML = `
+        <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
+      $('#ivColsApply').onclick = ()=>{ const cols = ivParseColumns($('#ivColsRaw').value); if(!cols.length){ showToast('列が読み取れませんでした'); return; } rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm(); };
+    };
+  }
+
+  function enableIvEdit(on){ ivEditor.style.display= on ? 'block':'none'; $('#ivSave').style.display= on ? 'inline-flex':'none'; $('#ivDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const rec=DB.interview[IV_APP]||{sheet:'',manual:'',columns:[]}; $('#ivSheetUrl').value = rec.sheet||''; $('#ivManual').value = rec.manual||''; } }
+// ====== Copy & Share for template ======
   function applyTags(str){ const map={ '{{name}}':$('#tagName').value, '{{date}}':$('#tagDate').value, '{{time}}':$('#tagTime').value, '{{link}}':$('#tagLink').value }; for(const k in map){ if(map[k]) str=str.split(k).join(map[k]); } return str; }
   async function doCopy(){ const txt=applyTags($('#textArea').value); try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }catch(e){ const ta=$('#textArea'); ta.readOnly=false; ta.select(); document.execCommand('copy'); ta.readOnly=true; showToast('コピーしました（互換）'); } }
   async function doShare(){ const txt=applyTags($('#textArea').value); if(navigator.share){ try{ await navigator.share({text: txt}); }catch(e){} } else { showToast('共有に未対応の端末です'); } }
@@ -397,7 +517,7 @@ Zoom：{{link}}`} ]
   // ====== Init & Boot ======
   function boot(){
     // tabs
-    $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
+    $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); { const _savedTab = localStorage.getItem('noi_tab'); const _ok = ['tpl','qa','interview']; switchTab(_ok.includes(_savedTab) ? _savedTab : 'tpl'); }
 
     // templates
     renderTplApps(); renderTplGroupSeg(); renderTplEditor();
