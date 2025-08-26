@@ -7,7 +7,6 @@
   <title>NOI 管理アプリ（PWA・オフライン対応）</title>
   <style>
     :root{ --bg:#0b1220; --panel:#101826; --ink:#e5e7eb; --muted:#9aa4b2; --line:rgba(255,255,255,.12); --brand:#7c3aed; --ok:#22c55e; --warn:#f59e0b; --fs:16px; }
-    body.light{ --bg:#f7fafc; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:rgba(15,23,42,.12); }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,var(--bg) 0,#0f172a 40%);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial;font-size:var(--fs);line-height:1.75;letter-spacing:.2px}
     .wrap{max-width:880px;margin:0 auto;padding:14px}
@@ -15,8 +14,6 @@
     h1{margin:6px 0 10px;font-size:clamp(18px,5.2vw,22px);font-weight:800}
 
     .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-    .chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:8px 12px;border-radius:999px;background:color-mix(in oklab, var(--panel) 92%, transparent)}
-    .chip select{border:none;background:transparent;color:var(--ink);font-weight:700}
     .btn{appearance:none;border:none;border-radius:14px;padding:10px 14px;font-weight:800;color:#0b1220;background:#e5e7eb}
     .btn.primary{background:linear-gradient(135deg,#16a34a,#22c55e)}
     .btn.copy{background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#051225}
@@ -64,16 +61,13 @@
 <body>
   <header>
     <div class="wrap">
-      <h1>NOI 管理アプリ <span class="muted"></span></h1>
+      <h1>NOI 管理アプリ <span class="muted">（テンプレ／Q&A／面談）</span></h1>
       <div class="tabs" id="mainTabs" role="tablist" aria-label="メインタブ">
         <button class="tab active" data-tab="tpl" role="tab" aria-selected="true">テンプレ</button>
-        <button class="tab" data-tab="members" role="tab" aria-selected="false">所属者管理</button>
-        <button class="tab" data-tab="perf" role="tab" aria-selected="false">実績</button>
-        <button class="tab" data-tab="accounts" role="tab" aria-selected="false">アカウント</button>
-        <button class="tab" data-tab="sales" role="tab" aria-selected="false">売上</button>
+        <button class="tab" data-tab="qa" role="tab" aria-selected="false">Q&A</button>
+        <button class="tab" data-tab="interview" role="tab" aria-selected="false">面談</button>
       </div>
       <div class="controls">
-        <button class="btn ghost" id="themeBtn" aria-pressed="false">明るく</button>
         <button class="btn ghost" id="installBtn">ホームに追加</button>
         <button class="btn" id="protectBtn" title="共有リンクを作成">共有リンク作成</button>
         <button class="btn" id="backupBtn" title="JSONにエクスポート">バックアップ</button>
@@ -89,7 +83,7 @@
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row" style="gap:8px">
           <span class="pill">表示：<strong id="appName"></strong>｜<span id="stepIndex">1</span>/<span id="stepTotal">-</span></span>
-          <span class="muted">（アプリ選択）</span>
+          <span class="muted">（アプリ→カテゴリ選択）</span>
         </div>
         <div class="row">
           <button class="btn ghost" id="prevBtn">前</button>
@@ -110,6 +104,7 @@
       </div>
 
       <div class="apps" id="appList"></div>
+      <div id="groupSegWrap" style="margin-top:8px;display:none"></div>
 
       <div class="hr"></div>
 
@@ -149,112 +144,44 @@
         <button class="btn" id="shareBtn2">共有…</button>
       </div>
     </section>
-      
-<!-- ========= 所属者管理 ========= -->
-<section class="panel" id="tab_members" style="display:none">
-  <div class="row" style="justify-content:space-between;align-items:center">
-    <div class="row" style="gap:8px;flex:1">
-      <div class="apps" id="memberAppList" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))"></div>
-    </div>
-    <div style="min-width:220px" class="row">
-      <input id="memberSearch" placeholder="名前/アプリ内名/SNS で検索" />
-      <button class="btn" id="memberImportBtn">CSVインポート</button>
-      <button class="btn ghost" id="memberExportBtn">CSVエクスポート</button>
-      <input type="file" id="memberCSV" accept=".csv,text/csv" style="display:none" />
-    </div>
-  </div>
 
-  <div class="hr"></div>
-  <div id="memberResults"></div>
-
-  <details style="margin-top:10px">
-    <summary class="muted">所属者の追加/編集（誰でもOK）</summary>
-    <div class="grid3" style="margin-top:8px">
-      <input id="mApp"  placeholder="アプリ例: TikTok" />
-      <input id="mNick" placeholder="アプリ内名" />
-      <input id="mReal" placeholder="本名" />
-    </div>
-    <div class="grid3" style="margin-top:8px">
-      <input id="mSNSx"     placeholder="X ID（例：@chama）" />
-      <input id="mSNSig"    placeholder="Instagram ID（例：@chama）" />
-      <input id="mSNSother" placeholder="その他ID/URL（任意）" />
-    </div>
-    <div class="grid2" style="margin-top:8px">
-      <input id="mAch" placeholder="実績ページURL" />
-      <button class="btn primary" id="mSave">登録/更新</button>
-    </div>
-    <div class="muted" style="margin-top:6px">既存レコードとアプリ内名が一致すれば上書き。新規は追加されます。</div>
-  </details>
-</section>
-
-    <!-- ========= 実績 ========= -->
-    <section class="panel" id="tab_perf" style="display:none">
-      <div class="grid3">
-        <select id="perfApp"></select>
-        <select id="perfScope">
-          <option value="year">年</option>
-          <option value="month">月</option>
-          <option value="week">週</option>
-        </select>
-        <select id="perfWhen"></select>
-      </div>
-      <div class="row" style="margin-top:10px;gap:8px">
-        <span class="pill">目標：<span id="goalCoin">-</span> コイン / <span id="goalDays">-</span> 日 / <span id="goalHours">-</span> 時間</span>
-        <button class="btn" id="perfEditGoals">目標編集</button>
-      </div>
-      <div id="charts" class="grid3" style="margin-top:10px"></div>
-      <div id="perfCompare" class="row" style="gap:8px;margin-top:8px"></div>
-      <details style="margin-top:10px">
-        <summary class="muted">実績データの入力/更新（CSV/手入力）</summary>
-        <div class="grid3" style="margin-top:8px">
-          <input id="perfCoin" placeholder="取得コイン" />
-          <input id="perfDays" placeholder="平均配信日数" />
-          <input id="perfHours" placeholder="平均配信時間(h)" />
+    <!-- ========= Q&A ========= -->
+    <section class="panel" id="tab_qa" style="display:none">
+      <div class="grid2">
+        <div class="apps" id="qaAppList"></div>
+        <div class="row" style="justify-content:flex-end;gap:8px">
+          <button class="btn" id="qaEditToggle">編集モード</button>
+          <button class="btn primary" id="qaSave" style="display:none">保存</button>
+          <button class="btn danger" id="qaDiscard" style="display:none">取消</button>
         </div>
-        <div class="row" style="margin-top:8px">
-          <button class="btn primary" id="perfSave">保存</button>
-          <input type="file" id="perfCSV" accept="text/csv" />
-        </div>
-      </details>
+      </div>
+      <div id="qaSegWrap" style="margin-top:8px;display:none"></div>
+      <div class="hr"></div>
+      <div id="qaList"></div>
+      <div id="qaView" style="margin-top:8px"></div>
+      <div id="qaEditor" style="display:none;margin-top:10px"></div>
     </section>
 
-    <!-- ========= アカウント ========= -->
-    <section class="panel" id="tab_accounts" style="display:none">
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <button class="btn" id="accUnlock">鍵を開く</button>
-        <button class="btn danger" id="accLock">鍵を閉じる</button>
-        <span class="muted">※ ローカルに<strong>暗号化</strong>保存。共有時は同じ鍵が必要です。</span>
-      </div>
-      <div class="grid3" style="margin-top:8px">
-        <input id="accApp" placeholder="アプリ名" />
-        <input id="accUser" placeholder="アカウント（ID/メール）" />
-        <input id="accPass" placeholder="パスワード" />
-      </div>
-      <div class="grid2" style="margin-top:8px">
-        <input id="accStaff" placeholder="スタッフ名（例：華妃/HALU/ちゃま）" />
-        <input id="accNote" placeholder="メモ/用途" />
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn primary" id="accSave">登録/更新</button>
+    <!-- ========= 面談 ========= -->
+    <section class="panel" id="tab_interview" style="display:none">
+      <div class="grid2">
+        <div class="apps" id="ivAppList"></div>
+        <div class="row" style="justify-content:flex-end;gap:8px">
+          <button class="btn" id="ivEditToggle">編集モード</button>
+          <button class="btn primary" id="ivSave" style="display:none">保存</button>
+          <button class="btn danger" id="ivDiscard" style="display:none">取消</button>
+        </div>
       </div>
       <div class="hr"></div>
-      <div id="accTableWrap"></div>
-    </section>
-
-    <!-- ========= 売上 ========= -->
-    <section class="panel" id="tab_sales" style="display:none">
-      <div class="grid3">
-        <select id="salesScope">
-          <option value="all">全体</option>
-          <option value="year">年</option>
-          <option value="month">月</option>
-        </select>
-        <select id="salesWhen"></select>
-        <button class="btn" id="salesImportBtn">CSVインポート</button>
-        <input type="file" id="salesCSV" accept="text/csv" style="display:none" />
+      <div id="ivManualBox" class="note">アプリを選択すると面談マニュアルを表示します。</div>
+      <div class="row" style="margin-top:8px;gap:8px">
+        <button class="btn" id="ivOpenSheet">スプレッドシートを開く</button>
+        <button class="btn copy" id="ivCopyManual">本文をコピー</button>
       </div>
-      <div id="salesChart" style="margin-top:10px"></div>
-      <div id="salesSummary" class="row" style="gap:8px;margin-top:8px"></div>
+      <div id="ivEditor" style="display:none;margin-top:10px">
+        <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
+        <textarea id="ivManual" placeholder="面談マニュアル本文"></textarea>
+      </div>
     </section>
   </main>
 
@@ -272,972 +199,226 @@
   </div>
 
   <div class="toast" id="toast">OK</div>
-      <!-- ▼ 1) Firebase SDK（compat 版）-->
-<!-- ▼ Firebase（モジュラーSDK / type="module"）-->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-  import {
-    getFirestore,
-    collection, doc, onSnapshot,
-    setDoc, writeBatch, deleteDoc,
-    serverTimestamp, enableIndexedDbPersistence
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDQ5yueHMrX9pMmde5fQ9ZE8njSKYiWmAA",
-    authDomain: "noiapp-580ef.firebaseapp.com",
-    projectId: "noiapp-580ef",
-    storageBucket: "noiapp-580ef.firebasestorage.app",
-    messagingSenderId: "979560644681",
-    appId: "1:979560644681:web:9e9d3ea0cff29b52a4bf98"
-  };
-
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  // オフライン永続化（電波切れても後で自動反映）
-  enableIndexedDbPersistence(db).catch(console.warn);
-
-  // 匿名ログイン
-  signInAnonymously(auth).catch(console.error);
-
-  // 非モジュール側で使えるよう window に載せる
-  window.firebaseApp  = app;
-  window.firebaseAuth = auth;
-  window.firebaseDB   = db;
-  window.fs = { collection, doc, onSnapshot, setDoc, writeBatch, deleteDoc, serverTimestamp };
-
-  // サインイン完了待ち
-  window.firebaseReady = new Promise((resolve) => {
-    const un = onAuthStateChanged(auth, () => { un(); resolve(); });
-  });
-</script>
-
-<!-- ▼ この下があなたの本体スクリプト -->
 <script>
-  (function(){
-    // ...
-    // ====== Utils ======
-    function toHiragana(str){
-      const s = (str || '').normalize('NFKC');
-      let out = '';
-      for (const ch of s){
-        const c = ch.charCodeAt(0);
-        if (c >= 0x30A1 && c <= 0x30F6) out += String.fromCharCode(c - 0x60);
-        else out += ch;
-      }
-      return out;
-    }
-    function jpBase(str){ return toHiragana(str).toLowerCase().replace(/\s+/g,'').trim(); }
-    const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
-    const toast = $('#toast');
-    const hex = (buf) => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const toB64 = a => btoa(String.fromCharCode(...new Uint8Array(a)));
-    const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-    async function sha256(text){ const data = new TextEncoder().encode(text); const digest = await crypto.subtle.digest('SHA-256', data); return hex(digest); }
-    function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1300); }
-    function getFromHashOrQuery(name){ const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); if(h) return h; return new URLSearchParams(location.search).get(name); }
+(() => {
+  // ====== Utils ======
+  const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
+  const toast = $('#toast');
+  const hex = (buf) => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  async function sha256(text){ const data = new TextEncoder().encode(text); const digest = await crypto.subtle.digest('SHA-256', data); return hex(digest); }
+  function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1300); }
+  function getFromHashOrQuery(name){ const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); if(h) return h; return new URLSearchParams(location.search).get(name); }
 
-    // ====== PWA manifest & SW ======
-    function makeIcon(size, bg = '#4f46e5', fg = '#ffffff', text = 'N'){
-      const c = document.createElement('canvas'); c.width = c.height = size; const ctx = c.getContext('2d');
-      ctx.fillStyle = bg; ctx.fillRect(0,0,size,size);
-      ctx.fillStyle = fg; ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(text, size/2, size/2+size*0.05);
-      return c.toDataURL('image/png');
-    }
-    function attachManifest(){
-      const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' }));
-      const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons};
-      const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
-      const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple);
-    }
-    async function registerSW(){
-      if(!('serviceWorker' in navigator)) return;
-      const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v3').then(c=>c.addAll(['./'])));self.skipWaiting();});
-self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});
-self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v3').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`;
-      const blob=new Blob([swCode],{type:'text/javascript'});
-      const url=URL.createObjectURL(blob);
-      try{
-        const reg = await navigator.serviceWorker.register(url);
-        reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…'));
-        showToast('オフラインでも使えます');
-      }catch(e){ console.warn('SW registration failed', e); }
-    }
+  // ====== PWA manifest & SW ======
+  function makeIcon(size, bg = '#4f46e5', fg = '#ffffff', text = 'N'){
+    const c = document.createElement('canvas'); c.width = c.height = size; const ctx = c.getContext('2d');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,size,size); ctx.fillStyle = fg; ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, size/2, size/2+size*0.05); return c.toDataURL('image/png');
+  }
+  function attachManifest(){ const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' })); const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons}; const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'}); const url = URL.createObjectURL(blob); const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link); const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple); }
+  async function registerSW(){ if(!('serviceWorker' in navigator)) return; const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v4').then(c=>c.addAll(['./'])));self.skipWaiting();});self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v4').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg = await navigator.serviceWorker.register(url); reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); showToast('オフラインでも使えます'); }catch(e){ console.warn('SW registration failed', e); } }
 
-    // ====== Storage (local) ======
-    const KEYS = { db:'noi_db_v1', acc:'noi_accounts_enc_v1', settings:'noi_settings_v1' };
-    const DefaultDB = { templates:null, members:[], perf:{}, sales:{}, accountsIndex:[] };
-    let DB = null;
-    function loadDB(){ DB = JSON.parse(localStorage.getItem(KEYS.db)||'null')||structuredClone(DefaultDB); if(!DB.templates) DB.templates = seedTemplates(); }
-    function saveDB(){ localStorage.setItem(KEYS.db, JSON.stringify(DB)); }
+  // ====== Storage (local) ======
+  const KEYS = { db:'noi_db_v2' };
+  const DefaultDB = { templates:null, qa:{}, interview:{} };
+  let DB = null; // runtime
+  function loadDB(){ DB = JSON.parse(localStorage.getItem(KEYS.db)||'null')||structuredClone(DefaultDB); if(!DB.templates) DB.templates = seedTemplates(); if(!DB.qa || !Object.keys(DB.qa).length) DB.qa = seedQA(); if(!DB.interview || !Object.keys(DB.interview).length) DB.interview = seedInterview(); }
+  function saveDB(){ localStorage.setItem(KEYS.db, JSON.stringify(DB)); }
 
-    // ====== Templates (seed) ======
-    function seedTemplates(){ return {
-      mode:'face', app:'', step:0,
+  // ====== Seed Data ======
+  function seedTemplates(){
+    // カテゴリ: スカウト / 登録 / end
+    return {
+      mode:'face', app:'', group:'スカウト', step:0,
       data:{
         face:{
-          TikTok:[
-            {title:'① 初回スカウトDM', explain:'TikTokで配信に興味がありそうな方へ最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
+          'TikTok':{
+            'スカウト':[ {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
 
-配信活動に関心がある方をTikTokで探していて、ご連絡しました。
-もしライブ配信での活躍に興味があれば、サポート内容をご案内します！
+配信活動に関心がありそうでご連絡しました。
+興味があればサポート内容をご案内します！
 
-・案件やギフト還元の仕組み
-・機材/企画サポート
-・収益化の目安 など
+まずは気軽にお話どうですか？`} , {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！
+事務所としてTikTok Liveのスタートから収益化まで伴走します。
+{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？` } ],
+            '登録':[ {title:'③ エントリー案内', explain:'フォームで情報回収', text:`ありがとうございます！下記フォームにご入力ください。
 
-まずは気軽にお話どうですか？`},
-            {title:'② 反応後の一次返信', explain:'「どんな内容ですか？」への返答', text:`ありがとうございます！
-弊社は配信アプリ公認の事務所で、配信スタートから収益化まで伴走します。
-
-TikTok Liveの場合：
-・顔出しで“雑談/歌/ゲーム”など内容自由
-・初月は目標と配信頻度を一緒に設定
-・スケジュール/台本の雛形も共有
-
-よければ {{date}} {{time}} に15分だけオンラインで説明します。ご都合いかがでしょう？`},
-            {title:'③ エントリー案内', explain:'フォームで情報回収し、審査を楽に', text:`ありがとうございます！下記フォームにご入力ください。
-確認後、面談リンクをお送りします。
-
-エントリーフォーム：{{link}}
-
-※お名前は“配信で使う予定の名前”でもOKです。`},
-            {title:'④ 面談日程調整', explain:'候補日を投げて確定まで', text:`面談候補です。いずれかご都合よい時間をお知らせください！
-
+エントリーフォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補日を提示', text:`面談候補です。
 ・{{date}} {{time}}
-・別日/別時間もOKです
-
-確定後、Zoomリンクをお送りします。`},
-            {title:'⑤ 当日リマインド', explain:'直前の抜け漏れを防ぐ', text:`本日 {{time}} から15分、面談でお世話になります。
-
-・通信の安定する場所
-・カメラ/マイク動作確認
-
-Zoomリンク：{{link}}
-よろしくお願いします！`}
-          ],
-          '17LIVE':[
-            {title:'① 初回スカウトDM', explain:'17LIVE志望者向けの導入文', text:`{{name}} さん、こんにちは。NOIの山本です。
-17LIVEでの“顔出し配信”に挑戦してみませんか？
-
-・新人期間の伸ばし方
-・おすすめジャンル（歌/雑談/コラボ）
-・事務所サポート（企画/サムネ/台本）
-
-まずは15分の説明から。{{date}} {{time}} ご都合どうでしょう？`},
-            {title:'② 反応後の一次返信', explain:'ルールや還元の概要を軽く', text:`ありがとうございます！
-17LIVEはイベント参加で露出を作り、定期枠で固定ファン化する流れです。
-
-初期は週3〜5回/1〜2時間から無理なく始めます。
-収益の目安やギフト率も当日資料でご説明します。
-
-{{date}} {{time}} で仮押さえしても良いですか？`},
-            {title:'③ エントリー案内', explain:'フォーム送付', text:`下記フォームよりエントリーをお願いします。
-
-エントリーフォーム：{{link}}
-
-入力後、当日のZoomリンクをお送りします。`},
-            {title:'④ 面談日程調整', explain:'候補日提示', text:`以下候補から選択ください。
-・{{date}} {{time}}
-・別日でもOKです。
-
-確定後、資料一式とリンクをお送りします。`},
-            {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談予定です。
-5分前を目安に入室お願いします。
-
-Zoom：{{link}}`}
-          ],
-          'ポコチャ':[
-            {title:'① 初回スカウトDM', explain:'ポコチャは“時間/盛り上がり”評価の文化を前提に', text:`{{name}} さん、こんにちは。NOIの山本です。
-ポコチャでの配信に興味はありますか？
-
-・顔出し雑談/歌/趣味トークが相性◎
-・ランク制度/盛り上がり指標の解説
-・毎月の目標設計と振り返りまでサポート
-
-15分の説明を {{date}} {{time}} ご用意できます。`},
-            {title:'② 反応後の一次返信', explain:'ポコチャ特有のランク説明を軽く', text:`ありがとうございます！
-ポコチャは“時間×盛り上がり”でランクが決まり、露出が変わります。
-はじめは無理なく習慣化→固定ファンづくりを一緒にやります。
-
-{{date}} {{time}} のご都合いかがでしょう？`},
-            {title:'③ エントリー案内', explain:'フォーム', text:`下記フォームに入力ください。確認後、日程確定します。
-
-フォーム：{{link}}`},
-            {title:'④ 面談日程調整', explain:'候補', text:`候補日です。
-・{{date}} {{time}}
-ほか希望あれば遠慮なく！`},
-            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から面談です。
-入室用リンク：{{link}}
-よろしくお願いします！`}
-          ],
-          'BIGOLIVE':[
-            {title:'① 初回スカウトDM', explain:'海外ユーザーも多いBIGO、言語や企画の幅を強調', text:`{{name}} さん、こんにちは。NOIの山本です。
-BIGOLIVEでの配信サポートを行っています。
-
-・日本/海外向けどちらも可
-・顔出しで雑談/歌/コラボが中心
-・イベント活用で露出UP
-
-まずは15分で概要をご説明します。`},
-            {title:'② 反応後の一次返信', explain:'BIGO特性の説明', text:`ありがとうございます！
-BIGOは多言語リスナーが入りやすく、
-配信時間とイベント活用が成長の鍵です。
-
-{{date}} {{time}} にてオンライン説明いかがでしょう？`},
-            {title:'③ エントリー案内', explain:'フォーム', text:`下記よりエントリーお願いします。
-フォーム：{{link}}`},
-            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
-・{{date}} {{time}}
-・別日でも柔軟に対応します。`},
-            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。
-Zoomリンク：{{link}}`}
-          ]
+・別日/別時間もOKです`} ],
+            'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。
+Zoom：{{link}}`} ]
+          },
+          '17LIVE':{
+            'スカウト':[ {title:'① 初回スカウトDM', explain:'導入', text:`{{name}} さん、こんにちは。17LIVEでの“顔出し配信”に挑戦しませんか？`} , {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。
+{{date}} {{time}} に15分の説明はいかがでしょう？`} ],
+            '登録':[ {title:'③ エントリー案内', explain:'フォーム送付', text:`エントリーフォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。
+・{{date}} {{time}}`} ],
+            'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。
+Zoom：{{link}}`} ]
+          },
+          'ポコチャ':{
+            'スカウト':[ {title:'① 初回スカウトDM', explain:'文化前提', text:`{{name}} さん、こんにちは。ポコチャでの配信に興味はありますか？`} , {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。
+{{date}} {{time}} に説明しますね。`} ],
+            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`フォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`候補日：{{date}} {{time}}`} ],
+            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}}、入室リンク：{{link}}`} ]
+          },
+          'BIGOLIVE':{
+            'スカウト':[ {title:'① 初回スカウトDM', explain:'幅の広さ', text:`{{name}} さん、こんにちは。BIGOLIVEでの配信サポートを行っています。`} , {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。
+{{date}} {{time}} に概要説明どうでしょう？`} ],
+            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
+・{{date}} {{time}}`} ],
+            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。Zoom：{{link}}`} ]
+          }
         },
         'no-face':{
-          WAVE:[
-            {title:'① 初回スカウトDM', explain:'WAVEは顔出し不要・音声特化を強調', text:`{{name}} さん、はじめまして。NOIの山本です。
-“顔出しなし”の音声配信アプリ WAVE で活動しませんか？
-
-・ラジオ感覚でOK（雑談/朗読/歌/お悩み相談 等）
-・機材はスマホとマイクでOK
-・収益化と番組づくりをサポート
-
-まずは15分でご説明します。`},
-            {title:'② 反応後の一次返信', explain:'緊張ハードルの低さと継続しやすさを提示', text:`ありがとうございます！
-WAVEは音声のみなので、準備が楽で継続しやすいのが特徴です。
-番組タイトル/構成/初回トーク案もご提案します。
-
-{{date}} {{time}} にオンラインでいかがでしょう？`},
-            {title:'③ エントリー案内', explain:'フォーム', text:`こちらからエントリーお願いします。
-フォーム：{{link}}
-
-入力後、日程とガイドをお送りします。`},
-            {title:'④ 面談日程調整', explain:'候補', text:`以下の候補からご選択ください。
-・{{date}} {{time}}
-・他希望も歓迎です。`},
-            {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} から15分説明です。
-入室リンク：{{link}}
-気軽にお越しください！`}
-          ]
+          'WAVE':{
+            'スカウト':[ {title:'① 初回スカウトDM', explain:'音声特化を強調', text:`{{name}} さん、はじめまして。音声配信アプリ WAVE で活動しませんか？`} , {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。
+{{date}} {{time}} にオンラインでいかがでしょう？`} ],
+            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`候補：{{date}} {{time}}`} ],
+            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。
+入室：{{link}}`} ]
+          }
         }
       }
-    }; }
-
-    // ====== Settings & theme ======
-    function setFont(px){ document.documentElement.style.setProperty('--fs', px + 'px'); localStorage.setItem(KEYS.settings+'_fs', px); }
-    function applyTheme(theme){
-      document.body.classList.toggle('light', theme === 'light');
-      localStorage.setItem(KEYS.settings+'_theme', theme);
-      const b = $('#themeBtn');
-      if (b){ b.textContent = theme === 'light' ? '暗く' : '明るく'; b.setAttribute('aria-pressed', theme === 'light' ? 'true':'false'); }
-    }
-
-    // ====== Gate ======
-    const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
-    let expectedHash = null;
-    function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
-    function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
-    async function tryUnlock(){ const pass = (gatePass?.value||'').trim(); if(!pass) return; const h = await sha256('noi-v1:'+pass); if(h === expectedHash){ sessionStorage.setItem('noi_unlocked_'+h, '1'); updateGate(); showToast('解除しました'); } else { showToast('合言葉が違います'); } }
-
-    // ====== Accounts Encryption ======
-    async function deriveKey(pass, salt){
-      const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
-      return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
-    }
-    async function accEncrypt(pass, obj){
-      const iv=crypto.getRandomValues(new Uint8Array(12));
-      const salt=crypto.getRandomValues(new Uint8Array(16));
-      const key=await deriveKey(pass, salt);
-      const data=new TextEncoder().encode(JSON.stringify(obj));
-      const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data);
-      const out={iv:toB64(iv), salt:toB64(salt), ct:toB64(ct)};
-      localStorage.setItem(KEYS.acc, JSON.stringify(out));
-      showToast('暗号化して保存しました');
-    }
-    async function accDecrypt(pass){
-      const raw=localStorage.getItem(KEYS.acc);
-      if(!raw) return {items:[]};
-      const {iv,salt,ct}=JSON.parse(raw);
-      const key=await deriveKey(pass, fromB64(salt));
-      const data=await crypto.subtle.decrypt({name:'AES-GCM', iv:fromB64(iv)}, key, fromB64(ct));
-      return JSON.parse(new TextDecoder().decode(data));
-    }
-
-    // ====== UI Refs (Template) ======
-    const appList=$('#appList'); const editorText=$('#textArea'); const stepTitle=$('#stepTitle'); const explainEl=$('#explain'); const progress=$('#progress');
-    const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
-
-    // ====== Tabs ======
-    function switchTab(tab){
-      $$('#mainTabs .tab').forEach(b=>{
-        const on=b.dataset.tab===tab;
-        b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false');
-      });
-      ['tpl','members','perf','accounts','sales'].forEach(id=> {
-        const el = $('#tab_'+id); if (el) el.style.display = id===tab ? 'block':'none';
-      });
-      localStorage.setItem('noi_tab', tab);
-    }
-
-    // ====== Template Render & Edit ======
-    function tplAppsByMode(){ return Object.keys(DB.templates.data[DB.templates.mode]||{}); }
-    function tplList(){
-      const apps=DB.templates.data[DB.templates.mode]||{};
-      if(!DB.templates.app||!apps[DB.templates.app]) return [];
-      return apps[DB.templates.app];
-    }
-    function renderTplApps(){
-      appList.innerHTML='';
-      tplAppsByMode().forEach(name=>{
-        const b=document.createElement('button');
-        b.className='app'+(DB.templates.app===name?' selected':'');
-        b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':'選択'}</span>`;
-        b.onclick=()=>{ DB.templates.app=name; DB.templates.step=0; saveDB(); renderTplApps(); renderTplEditor(); };
-        appList.appendChild(b);
-      });
-    }
-    function renderTplEditor(){
-      const list=tplList();
-
-      if(!DB.templates.app){
-        appNameEl.textContent='未選択'; editorText.value=''; stepTitle.textContent=''; explainEl.textContent='';
-        stepIndexEl.textContent='-'; stepTotalEl.textContent='-'; progress.innerHTML=''; $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
-        $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
-        return;
-      }
-
-      // 0件ガード
-      if(list.length===0){
-        appNameEl.textContent=DB.templates.app; stepTotalEl.textContent='0'; stepIndexEl.textContent='-';
-        stepTitle.textContent='テンプレなし'; explainEl.textContent='このアプリにはテンプレがありません。＋で追加してください。';
-        editorText.value=''; progress.innerHTML='';
-        $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
-        $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
-        return;
-      }
-
-      appNameEl.textContent=DB.templates.app;
-      stepTotalEl.textContent=list.length;
-      DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1));
-      stepIndexEl.textContent=DB.templates.step+1;
-
-      const cur=list[DB.templates.step];
-      stepTitle.textContent=cur.title; explainEl.textContent=cur.explain; editorText.value=cur.text;
-
-      $('#prevBtn').disabled=DB.templates.step===0;
-      $('#nextBtn').disabled=DB.templates.step>=list.length-1;
-
-      // progress
-      progress.innerHTML='';
-      list.forEach((_,i)=>{
-        const d=document.createElement('div');
-        d.className='dot'+(i===DB.templates.step?' on':'');
-        d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();};
-        progress.appendChild(d);
-      });
-
-      // jump list
-      const jump=$('#jumpList'); jump.innerHTML='';
-      list.forEach((t,i)=>{
-        const b=document.createElement('button'); b.className='tab'; b.textContent=t.title;
-        b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active');
-        jump.appendChild(b);
-      });
-
-      // editor list
-      const wrap=$('#tplList'); wrap.innerHTML='';
-      list.forEach((t,i)=>{
-        const row=document.createElement('div'); row.className='panel';
-        row.innerHTML=`<div class="grid2"><input data-k="title" value="${t.title.replace(/"/g,'&quot;')}"/><input data-k="explain" value="${t.explain.replace(/"/g,'&quot;')}"/></div>
-<textarea data-k="text">${t.text.replace(/</g,'&lt;')}</textarea>
-<div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button><span class="muted">長押しでドラッグ並び替え（モバイル）</span></div>`;
-        wrap.appendChild(row);
-        row.querySelectorAll('input,textarea').forEach(el=>{ el.oninput=()=>{ t[el.dataset.k]=el.value; }; });
-        row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); });
-      });
-    }
-    function enableTplEdit(on){
-      $('#tplEditor').style.display= on ? 'block':'none';
-      if (editorText) editorText.readOnly = !on;            // ← 修正ポイント
-      $('#tplSave').style.display= on ? 'inline-flex':'none';
-      $('#tplDiscard').style.display= on ? 'inline-flex':'none';
-    }
-
-    // ====== Members ======
-      // Firestore用の一意ID（app__appName）
-function memberDocId(m){
-  const raw = `${(m.app||'').trim()}__${(m.appName||'').trim()}`;
-  return raw.replace(/[\/.#$\[\]]/g, '_');
-}
-async function cloudUpsertMember(wsId, rec){
-  const { collection, doc, setDoc, serverTimestamp } = window.fs;
-  const col = collection(window.firebaseDB, 'workspaces', wsId, 'members');
-  const ref = doc(col, memberDocId(rec));
-  await setDoc(ref, { ...rec, _updatedAt: serverTimestamp() }, { merge: true });
-}
-
-async function cloudBulkUpsertMembers(wsId, records){
-  const { collection, doc, writeBatch, serverTimestamp } = window.fs;
-  const col = collection(window.firebaseDB, 'workspaces', wsId, 'members');
-  const batch = writeBatch(window.firebaseDB);
-  records.forEach(r=>{
-    const ref = doc(col, memberDocId(r));
-    batch.set(ref, { ...r, _updatedAt: serverTimestamp() }, { merge: true });
-  });
-  await batch.commit();
-}
-let unsubMembers = null;
-
-function startCloudSyncMembers(wsId){
-  const { collection, onSnapshot } = window.fs;
-  const col = collection(window.firebaseDB, 'workspaces', wsId, 'members');
-
-  if (unsubMembers) unsubMembers(); // 二重購読の解除
-
-  unsubMembers = onSnapshot(col, (snap)=>{
-    const list = [];
-    snap.forEach(d => list.push(d.data()));
-    DB.members = list;       // クラウドの内容をローカルに上書き
-    saveDB();
-    renderMemberApps();
-    renderMemberResults();
-    if (!startCloudSyncMembers._okShown) {
-      showToast('クラウド同期: 接続OK');
-      startCloudSyncMembers._okShown = true;
-    }
-  }, (err)=>{
-    console.error('members sync error', err);
-    showToast('クラウド同期エラー');
-  });
-}
-
-      // ====== Members CSV Import/Export ======
-
-// 文字コードをUTF-8優先、ダメならShift_JISで読んでみる
-async function readFileTextSmart(file){
-  const buf = await file.arrayBuffer();
-  try {
-    return new TextDecoder('utf-8', {fatal:false}).decode(buf);
-  } catch {
-    try { return new TextDecoder('shift_jis').decode(buf); }
-    catch { return new TextDecoder().decode(buf); }
-  }
-}
-
-// ヘッダー正規化（全角→半角、空白削除、小文字化）
-function normHeader(h){
-  return (h||'').normalize('NFKC')
-    .replace(/\s+/g,'')
-    .toLowerCase();
-}
-
-// ヘッダー別名テーブル
-const MEMBER_HEADER_ALIASES = {
-  app:      ['app','アプリ','アプリ名','appname','app_name'],
-  appName:  ['app内名','アプリ内名','配信名','活動名','appnickname','nickname','appnick','appnickame','appdisplayname','appname2','appname'],
-  realName: ['realname','本名','氏名','名前','name','お名前'],
-  x:        ['x','twitter','xid','twitterid','xアカウント','twitterアカウント'],
-  ig:       ['instagram','ig','instagramid','igid','igアカウント'],
-  other:    ['その他','other','snsother','line','tiktok','url','link'],
-  ach:      ['実績','実績url','実績URL','achievement','portfolio','ach','実績リンク']
-};
-
-// 列インデックスのマッピングを作成
-function mapHeaderIndexes(headers){
-  const idx = {};
-  const normalized = headers.map(normHeader);
-  function findIndex(keys){
-    const cands = keys.map(normHeader);
-    for (let i=0;i<normalized.length;i++){
-      if (cands.includes(normalized[i])) return i;
-    }
-    return -1;
-  }
-  idx.app      = findIndex(MEMBER_HEADER_ALIASES.app);
-  idx.appName  = findIndex(MEMBER_HEADER_ALIASES.appName);
-  idx.realName = findIndex(MEMBER_HEADER_ALIASES.realName);
-  idx.x        = findIndex(MEMBER_HEADER_ALIASES.x);
-  idx.ig       = findIndex(MEMBER_HEADER_ALIASES.ig);
-  idx.other    = findIndex(MEMBER_HEADER_ALIASES.other);
-  idx.ach      = findIndex(MEMBER_HEADER_ALIASES.ach);
-  return idx;
-}
-
-// シンプルCSVパーサ（ダブルクォート対応）
-function parseCSV(text){
-  const rows = [];
-  let i=0, field='', row=[], inQ=false;
-  const pushField = ()=>{ row.push(field); field=''; };
-  const pushRow = ()=>{ rows.push(row); row=[]; };
-  while(i < text.length){
-    const ch = text[i];
-    if (inQ){
-      if (ch === '"'){
-        if (text[i+1] === '"'){ field += '"'; i+=2; continue; } // エスケープ ""
-        inQ = false; i++; continue;
-      }
-      field += ch; i++; continue;
-    } else {
-      if (ch === '"'){ inQ = true; i++; continue; }
-      if (ch === ','){ pushField(); i++; continue; }
-      if (ch === '\r'){
-        // \r\n or 単独\r
-        if (text[i+1] === '\n'){ pushField(); pushRow(); i+=2; continue; }
-        pushField(); pushRow(); i++; continue;
-      }
-      if (ch === '\n'){ pushField(); pushRow(); i++; continue; }
-      field += ch; i++; continue;
-    }
-  }
-  // 末尾フィールド
-  pushField();
-  // 末尾行（空行対策）
-  if (row.length === 1 && row[0] === '' && rows.length) {
-    // 何もしない
-  } else {
-    pushRow();
-  }
-  // 末尾の空配列を削る
-  while(rows.length && rows[rows.length-1].every(c=>c==='')) rows.pop();
-  return rows;
-}
-
-// 既存の正規化関数を活用
-//   normX / normIG / normOther は既に上で定義済み（このファイル内）
-function buildMemberFromRow(row, idxMap){
-  const pick = (i) => (i>=0 && i<row.length) ? (row[i]||'').trim() : '';
-  return {
-    app: pick(idxMap.app),
-    appName: pick(idxMap.appName),
-    realName: pick(idxMap.realName),
-    sns: {
-      x:  normX(pick(idxMap.x)),
-      ig: normIG(pick(idxMap.ig)),
-      other: normOther(pick(idxMap.other))
-    },
-    ach: pick(idxMap.ach)
-  };
-}
-
-// インポート本体
-async function importMembersFromCSV(file){
-  const text = await readFileTextSmart(file);
-  const rows = parseCSV(text);
-  if (!rows.length) throw new Error('CSVにデータがありません');
-
-  const headers = rows[0];
-  const idxMap = mapHeaderIndexes(headers);
-
-  if (idxMap.app < 0 || idxMap.appName < 0){
-    throw new Error('必須列（app / appName または アプリ / アプリ内名）が見つかりません');
+    };
   }
 
-  let doWipe = false;
-  if (DB.members?.length){
-    doWipe = confirm('既存メンバーを「全消去」してから取り込みますか？\nOK:全消去して取り込み / キャンセル:追加・上書き');
+  function seedQA(){
+    return {
+      'TikTok':{
+        '回答':[ {q:'顔出しは必須？', a:'TikTokは顔出しが主流ですが、画角や演出で調整可能です。', explain:'最初は明るい場所・胸上の画角を推奨。顔出しが難しい場合は演出案を提示。'}, {q:'収益化の目安は？', a:'初月は企画・頻度次第。最初は目標を共有して進めます。', explain:'固定ファン化に向けたルーティン設計とイベント活用が鍵。'} ],
+        '送信':[ {q:'顔出しは必須？', text:`顔出しが基本ですが、演出で工夫できます。
+まずは一度、事例ベースでご紹介します！`} , {q:'収益化の目安', text:`企画と配信頻度で大きく変わります。
+初月の目標を一緒に設計しましょう！`} ]
+      },
+      '17LIVE':{
+        '回答':[ {q:'イベント参加の頻度', a:'月2〜3回を目安に案件や露出に合わせて調整。', explain:'無理のない頻度で経験値を積む。'}, ],
+        '送信':[ {q:'イベント頻度', text:`月2〜3回を目安に、露出や案件状況で調整します！`} ]
+      },
+      'ポコチャ':{
+        '回答':[ {q:'ランクはどう決まる？', a:'時間×盛り上がり指標で決まります。', explain:'盛り上がり=コメント/ギフト/視聴維持 などの総合。'} ],
+        '送信':[ {q:'ランクの仕組み', text:`時間×盛り上がりの合算で決まります。
+初期は習慣化→固定ファンづくりを一緒に！`} ]
+      },
+      'BIGOLIVE':{
+        '回答':[ {q:'海外リスナー対応', a:'英語/日本語のミックスでもOK。', explain:'翻訳と絵文字でのレスポンスも活用。'} ],
+        '送信':[ {q:'言語について', text:`海外リスナーも多いので、英語/日本語ミックスでOKです！`} ]
+      },
+      'WAVE':{
+        '回答':[ {q:'機材は必要？', a:'スマホ＋マイクでOK。', explain:'静かな環境とポップガードがあると尚良し。'} ],
+        '送信':[ {q:'機材について', text:`スマホとマイクがあれば始められます！`} ]
+      }
+    };
   }
-if (doWipe) DB.members = [];
 
-  let added=0, updated=0, skipped=0;
-  for (let r = 1; r < rows.length; r++){
-    const rec = buildMemberFromRow(rows[r], idxMap);
-    if (!rec.app || !rec.appName){ skipped++; continue; }
-    const i = DB.members.findIndex(x => (x.app||'').trim() === rec.app && (x.appName||'').trim() === rec.appName);
-    if (i >= 0){ DB.members[i] = rec; updated++; } else { DB.members.push(rec); added++; }
+  function seedInterview(){
+    return {
+      'TikTok':{ sheet:'', manual:`【面談マニュアル（TikTok）】
+1) アイスブレイク
+2) 配信経験/得意分野の確認
+3) スケジュール・頻度のすり合わせ
+4) 収益化までのロードマップ説明
+5) 次アクション（登録/日程）` },
+      '17LIVE':{ sheet:'', manual:`【面談マニュアル（17LIVE）】
+…` },
+      'ポコチャ':{ sheet:'', manual:`【面談マニュアル（ポコチャ）】
+…` },
+      'BIGOLIVE':{ sheet:'', manual:`【面談マニュアル（BIGO）】
+…` },
+      'WAVE':{ sheet:'', manual:`【面談マニュアル（WAVE）】
+…` }
+    };
   }
-    
-  saveDB();
-  renderMemberApps();
-  renderMemberResults();
 
-  showToast(`読込: 追加${added} / 更新${updated} / スキップ${skipped}`);
-}
+  // ====== Gate ======
+  const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
+  let expectedHash = null;
+  function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
+  function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
+  async function tryUnlock(){ const pass = (gatePass?.value||'').trim(); if(!pass) return; const h = await sha256('noi-v1:'+pass); if(h === expectedHash){ sessionStorage.setItem('noi_unlocked_'+h, '1'); updateGate(); showToast('解除しました'); } else { showToast('合言葉が違います'); } }
 
-// エクスポート
-function exportMembersToCSV(){
-  const headers = ['app','appName','realName','x','ig','other','ach'];
-  const lines = [headers.join(',')];
-  (DB.members || []).forEach(m=>{
-    const row = [
-      m.app||'',
-      m.appName||'',
-      m.realName||'',
-      m.sns?.x||'',
-      m.sns?.ig||'',
-      m.sns?.other||'',
-      m.ach||''
-    ].map(v=>{
-      const s = String(v??'');
-      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-    });
-    lines.push(row.join(','));
-  });
-  const csv = '\uFEFF' + lines.join('\r\n'); // BOM付きでExcel想定
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'members.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('CSVを書き出しました');
-}
+  // ====== UI Refs ======
+  // Template
+  const appList=$('#appList'); const editorText=$('#textArea'); const stepTitle=$('#stepTitle'); const explainEl=$('#explain'); const progress=$('#progress');
+  const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal'); const groupSegWrap=$('#groupSegWrap');
+  // Q&A
+  const qaAppList=$('#qaAppList'); const qaSegWrap=$('#qaSegWrap'); const qaList=$('#qaList'); const qaView=$('#qaView'); const qaEditor=$('#qaEditor');
+  // Interview
+  const ivAppList=$('#ivAppList'); const ivManualBox=$('#ivManualBox'); const ivSheetBtn=$('#ivOpenSheet'); const ivCopyBtn=$('#ivCopyManual'); const ivEditor=$('#ivEditor');
 
-// ボタンとハンドラの結びつけ
-$('#memberImportBtn')?.addEventListener('click', ()=> $('#memberCSV').click());
-$('#memberCSV')?.addEventListener('change', async (e)=>{
-  const f = e.target.files?.[0];
-  if (!f) return;
-  try{
-    await importMembersFromCSV(f);
-  }catch(err){
-    console.error(err);
-    showToast('CSVの読み込みに失敗: ' + (err?.message || '不明なエラー'));
-  }finally{
-    e.target.value = ''; // 同じファイル再選択できるように
+  // ====== Tabs ======
+  function switchTab(tab){ $$('#mainTabs .tab').forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false');}); ['tpl','qa','interview'].forEach(id=> $('#tab_'+id).style.display = id===tab ? 'block':'none'); localStorage.setItem('noi_tab', tab); }
+
+  // ====== Template helpers ======
+  const GROUPS = ['スカウト','登録','end'];
+  function tplAppsByMode(){ return Object.keys(DB.templates.data[DB.templates.mode]||{}); }
+  function tplGroupList(){ const m=DB.templates.data[DB.templates.mode]||{}; const a=m[DB.templates.app]||{}; return a[DB.templates.group]||[]; }
+  function renderTplApps(){ appList.innerHTML=''; const apps=tplAppsByMode(); apps.forEach(name=>{ const b=document.createElement('button'); b.className='app'+(DB.templates.app===name?' selected':''); b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':'選択'}</span>`; b.onclick=()=>{ DB.templates.app=name; DB.templates.group='スカウト'; DB.templates.step=0; saveDB(); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; appList.appendChild(b); }); }
+  function renderTplGroupSeg(){ const on=!!DB.templates.app; groupSegWrap.style.display = on? 'block':'none'; groupSegWrap.innerHTML=''; if(!on) return; const wrap=document.createElement('div'); wrap.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;'; GROUPS.forEach(g=>{ const btn=document.createElement('button'); const active=DB.templates.group===g; btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800'; btn.textContent=g; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; } btn.onclick=()=>{ DB.templates.group=g; DB.templates.step=0; saveDB(); renderTplGroupSeg(); renderTplEditor(); }; wrap.appendChild(btn); }); groupSegWrap.appendChild(wrap); }
+  function renderTplEditor(){ const list=tplGroupList(); if(!DB.templates.app){ appNameEl.textContent='未選択'; editorText.value=''; stepTitle.textContent=''; explainEl.textContent=''; stepIndexEl.textContent='-'; stepTotalEl.textContent='-'; progress.innerHTML=''; $('#jumpList').innerHTML=''; $('#tplList').innerHTML=''; return; } appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group; stepTotalEl.textContent=list.length; if(!list.length){ stepIndexEl.textContent='-'; stepTitle.textContent='テンプレなし'; explainEl.textContent='このカテゴリにはテンプレがありません。＋で追加してください。'; editorText.value=''; progress.innerHTML=''; $('#prevBtn').disabled=true; $('#nextBtn').disabled=true; $('#jumpList').innerHTML=''; $('#tplList').innerHTML=''; return; } DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1)); stepIndexEl.textContent=DB.templates.step+1; const cur=list[DB.templates.step]; stepTitle.textContent=cur.title; explainEl.textContent=cur.explain; editorText.value=cur.text; $('#prevBtn').disabled=DB.templates.step===0; $('#nextBtn').disabled=DB.templates.step>=list.length-1; progress.innerHTML=''; list.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'+(i===DB.templates.step?' on':''); d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; progress.appendChild(d); }); const jump=$('#jumpList'); jump.innerHTML=''; list.forEach((t,i)=>{ const b=document.createElement('button'); b.className='tab'; b.textContent=t.title; b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active'); jump.appendChild(b); }); const wrap=$('#tplList'); wrap.innerHTML=''; list.forEach((t,i)=>{ const row=document.createElement('div'); row.className='panel'; row.innerHTML=`<div class="grid2"><input data-k="title" value="${t.title.replace(/"/g,'&quot;')}"/><input data-k="explain" value="${t.explain.replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${t.text.replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; wrap.appendChild(row); row.querySelectorAll('input,textarea').forEach(el=>{ el.oninput=()=>{ t[el.dataset.k]=el.value; }; }); row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); }); }); }
+  function enableTplEdit(on){ $('#tplEditor').style.display= on ? 'block':'none'; if (editorText) editorText.readOnly = !on; $('#tplSave').style.display= on ? 'inline-flex':'none'; $('#tplDiscard').style.display= on ? 'inline-flex':'none'; }
+
+  // ====== Q&A ======
+  let QA_APP = null; let QA_KIND = '回答'; // or '送信'
+  function qaApps(){ return Object.keys(DB.qa||{}); }
+  function renderQaApps(){ qaAppList.innerHTML=''; const apps=qaApps(); if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。編集モードで追加してください。</p>'; return; } if(!QA_APP) QA_APP=apps[0]; apps.forEach(a=>{ const b=document.createElement('button'); const count=(DB.qa[a]['回答']?.length||0)+(DB.qa[a]['送信']?.length||0); b.className='app'+(QA_APP===a?' selected':''); b.innerHTML=`<span>${a}</span><span class="badge">${count}</span>`; b.onclick=()=>{ QA_APP=a; renderQaApps(); renderQaSeg(); renderQaList(); }; qaAppList.appendChild(b); }); }
+  function renderQaSeg(){ qaSegWrap.style.display= QA_APP? 'block':'none'; qaSegWrap.innerHTML=''; if(!QA_APP) return; const wrap=document.createElement('div'); wrap.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;'; ['回答','送信'].forEach(kind=>{ const btn=document.createElement('button'); const active=QA_KIND===kind; btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800'; btn.textContent=kind; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; } btn.onclick=()=>{ QA_KIND=kind; renderQaSeg(); renderQaList(); }; wrap.appendChild(btn); }); qaSegWrap.appendChild(wrap); }
+  function renderQaList(){ qaList.innerHTML=''; qaView.innerHTML=''; const items=DB.qa[QA_APP]?.[QA_KIND]||[]; if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。編集モードで追加してください。</p>'; return; } const ul=document.createElement('div'); ul.style.display='grid'; ul.style.gap='8px'; items.forEach((it,i)=>{ const b=document.createElement('button'); b.className='app'; b.innerHTML=`<span>${it.q}</span>`; b.onclick=()=>{ if(QA_KIND==='回答'){ qaView.innerHTML = `<div class="panel"><h3 style="margin:0 0 6px">回答</h3><div>${escapeHtml(it.a||'')}</div><div class="hr"></div><h4 style="margin:0 0 6px">解説</h4><div class="muted">${escapeHtml(it.explain||'')}</div></div>`; } else { qaView.innerHTML = `<div class="panel"><h3 style=\"margin:0 0 6px\">送信テンプレ</h3><textarea id=\"qaSendText\" readonly>${(it.text||'').replace(/</g,'&lt;')}</textarea><div class=\"row\" style=\"margin-top:8px\"><button class=\"btn copy\" id=\"qaCopyBtn\">コピー</button></div></div>`; $('#qaCopyBtn').onclick=async()=>{ try{ await navigator.clipboard.writeText(it.text||''); showToast('コピーしました'); }catch{} }; } }; ul.appendChild(b); }); qaList.appendChild(ul); }
+  function enableQaEdit(on){ $('#qaEditor').style.display= on ? 'block':'none'; $('#qaSave').style.display= on ? 'inline-flex':'none'; $('#qaDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const box=[]; qaEditor.innerHTML=''; // app選択 + 追加UI
+      const apps=qaApps(); const select=document.createElement('select'); select.innerHTML=apps.map(a=>`<option ${a===QA_APP?'selected':''}>${a}</option>`).join(''); select.onchange=()=>{ QA_APP=select.value; renderQaApps(); renderQaSeg(); renderQaList(); enableQaEdit(true); }; qaEditor.appendChild(select);
+      const kindSel=document.createElement('select'); kindSel.innerHTML=['回答','送信'].map(k=>`<option ${k===QA_KIND?'selected':''}>${k}</option>`).join(''); kindSel.onchange=()=>{ QA_KIND=kindSel.value; enableQaEdit(true); }; qaEditor.appendChild(kindSel);
+      const form=document.createElement('div'); form.className='panel'; if(QA_KIND==='回答'){ form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/><input id="qaA" placeholder="回答"/></div><textarea id="qaExplain" placeholder="解説（任意）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`; } else { form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/></div><textarea id="qaText" placeholder="送信テンプレ本文"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`; } qaEditor.appendChild(form); $('#qaAdd').onclick=()=>{ const rec = (QA_KIND==='回答')? {q:$('#qaQ').value, a:$('#qaA').value, explain:$('#qaExplain').value} : {q:$('#qaQ').value, text:$('#qaText').value}; if(!rec.q) return; DB.qa[QA_APP][QA_KIND].push(rec); saveDB(); showToast('追加しました'); renderQaList(); enableQaEdit(true); };
+      // 既存の一覧（編集/削除）
+      const items=DB.qa[QA_APP]?.[QA_KIND]||[]; const list=document.createElement('div'); list.style.marginTop='8px'; items.forEach((it,i)=>{ const row=document.createElement('div'); row.className='panel'; if(QA_KIND==='回答'){ row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/"/g,'&quot;')}"/><input data-k="a" value="${(it.a||'').replace(/"/g,'&quot;')}"/></div><textarea data-k="explain">${(it.explain||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; } else { row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${(it.text||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; } list.appendChild(row); row.querySelectorAll('input,textarea').forEach(el=> el.oninput = ()=>{ it[el.dataset.k]=el.value; }); row.querySelector('[data-del]')?.addEventListener('click',()=>{ items.splice(i,1); saveDB(); enableQaEdit(true); renderQaList(); }); }); qaEditor.appendChild(list); }
   }
-});
-$('#memberExportBtn')?.addEventListener('click', exportMembersToCSV);
 
-    let MEMBER_APP = null;
+  // ====== Interview ======
+  let IV_APP = null;
+  function ivApps(){ return Object.keys(DB.interview||{}); }
+  function renderIvApps(){ ivAppList.innerHTML=''; const apps=ivApps(); if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。編集モードで追加してください。</p>'; return; } if(!IV_APP) IV_APP=apps[0]; apps.forEach(a=>{ const b=document.createElement('button'); b.className='app'+(IV_APP===a?' selected':''); b.innerHTML=`<span>${a}</span>`; b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvView(); }; ivAppList.appendChild(b); }); }
+  function renderIvView(){ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; ivManualBox.textContent = rec.manual||'（未入力）'; ivSheetBtn.onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); }; ivCopyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(rec.manual||''); showToast('コピーしました'); }catch{} } }
+  function enableIvEdit(on){ ivEditor.style.display= on ? 'block':'none'; $('#ivSave').style.display= on ? 'inline-flex':'none'; $('#ivDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; $('#ivSheetUrl').value = rec.sheet||''; $('#ivManual').value = rec.manual||''; } }
 
-    function renderMemberApps(){
-      const wrap = $('#memberAppList');
-      wrap.innerHTML = '';
+  // ====== Copy & Share for template ======
+  function applyTags(str){ const map={ '{{name}}':$('#tagName').value, '{{date}}':$('#tagDate').value, '{{time}}':$('#tagTime').value, '{{link}}':$('#tagLink').value }; for(const k in map){ if(map[k]) str=str.split(k).join(map[k]); } return str; }
+  async function doCopy(){ const txt=applyTags($('#textArea').value); try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }catch(e){ const ta=$('#textArea'); ta.readOnly=false; ta.select(); document.execCommand('copy'); ta.readOnly=true; showToast('コピーしました（互換）'); } }
+  async function doShare(){ const txt=applyTags($('#textArea').value); if(navigator.share){ try{ await navigator.share({text: txt}); }catch(e){} } else { showToast('共有に未対応の端末です'); } }
 
-      const apps = [...new Set(DB.members.map(m => (m.app || '').trim()))]
-        .filter(Boolean)
-        .sort();
+  // ====== Header buttons ======
+  $('#installBtn').style.display='none'; let deferredPrompt=null; window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; }); $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
+  $('#backupBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(DB)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='noi-backup.json'; a.click(); };
+  $('#restoreBtn').onclick=()=> $('#restoreInput').click(); $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
+  $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); } };
 
-      if (apps.length === 0) {
-        wrap.innerHTML = '<p class="muted">まだ所属者が登録されていません。下のフォームから追加してください。</p>';
-        return;
-      }
+  // ====== HTML helpers ======
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
 
-      // 初回は先頭を自動選択（必要ならコメントアウト）
-      if (!MEMBER_APP) MEMBER_APP = apps[0];
+  // ====== Init & Boot ======
+  function boot(){
+    // tabs
+    $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); switchTab(localStorage.getItem('noi_tab')||'tpl');
 
-      apps.forEach(a => {
-        const b = document.createElement('button');
-        const count = DB.members.filter(m => (m.app || '').trim() === a).length;
-        b.className = 'app' + (MEMBER_APP === a ? ' selected' : '');
-        b.innerHTML = `<span>${a}</span><span class="badge">${count}</span>`;
-        b.onclick = () => {
-          MEMBER_APP = a;
-          const s = $('#memberSearch'); if (s) s.value = '';
-          renderMemberApps();
-          renderMemberResults();
-        };
-        wrap.appendChild(b);
-      });
-    }
+    // templates
+    renderTplApps(); renderTplGroupSeg(); renderTplEditor();
+    $$('#modeSeg button').forEach(btn=>{ btn.onclick=()=>{ DB.templates.mode=btn.dataset.mode; DB.templates.app=''; DB.templates.group='スカウト'; DB.templates.step=0; saveDB(); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode)); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; }); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
+    $('#prevBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
+    $('#nextBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step<list.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
+    ['#copyBtn','#copyBtn2'].forEach(s=> $(s).onclick=doCopy); ['#shareBtn','#shareBtn2'].forEach(s=> $(s).onclick=doShare);
+    let tplEditing=false; $('#tplEditToggle').onclick=()=>{ tplEditing=!tplEditing; enableTplEdit(tplEditing); }; $('#tplSave').onclick=()=>{ saveDB(); tplEditing=false; enableTplEdit(false); showToast('テンプレを保存しました'); renderTplEditor(); }; $('#tplDiscard').onclick=()=>{ loadDB(); tplEditing=false; enableTplEdit(false); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; $('#tplAdd').onclick=()=>{ const m=DB.templates.data[DB.templates.mode][DB.templates.app]; m[DB.templates.group]=m[DB.templates.group]||[]; m[DB.templates.group].push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
 
-    function snsCell(m){
-      const parts = [];
-      const x = (m.sns?.x || '').trim();
-      if (x){
-        const isUrl = /^https?:\/\//i.test(x);
-        const id = x.replace(/^@/,'').replace(/^https?:\/\/(www\.)?x\.com\//i,'').split(/[/?#]/)[0];
-        const url = isUrl ? x : `https://x.com/${id}`;
-        parts.push(`<a href="${url}" target="_blank" rel="noopener">X:@${id}</a>`);
-      }
-      const ig = (m.sns?.ig || '').trim();
-      if (ig){
-        const isUrl = /^https?:\/\//i.test(ig);
-        const id = ig.replace(/^@/,'').replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/\/$/,'').split(/[/?#]/)[0];
-        const url = isUrl ? ig : `https://www.instagram.com/${id}`;
-        parts.push(`<a href="${url}" target="_blank" rel="noopener">IG:@${id}</a>`);
-      }
-      const other = (m.sns?.other || '').trim();
-      if (other){
-        if (/^https?:\/\//i.test(other)){
-          parts.push(`<a href="${other}" target="_blank" rel="noopener">他</a>`);
-        } else {
-          const id = other.replace(/^@/,'');
-          parts.push(`他:@${id}`);
-        }
-      }
-      return parts.join(' / ') || '';
-    }
+    // Q&A
+    renderQaApps(); renderQaSeg(); renderQaList(); let qaEditing=false; $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); }; $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderQaApps(); renderQaSeg(); renderQaList(); }; $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderQaApps(); renderQaSeg(); renderQaList(); };
 
-    function renderMemberResults(){
-      const box = $('#memberResults');
-      if(!MEMBER_APP){
-        box.innerHTML = '<p class="muted">アプリを選択してください。</p>';
-        return;
-      }
-
-      const qBase = jpBase($('#memberSearch')?.value || '');
-
-      const hit = DB.members.filter(m => {
-        if ((m.app || '').trim() !== MEMBER_APP) return false;
-        const base = jpBase([
-          m.appName || '',
-          m.realName || '',
-          m.sns?.x || '',
-          m.sns?.ig || '',
-          m.sns?.other || ''
-        ].join(' '));
-        return base.includes(qBase);
-      });
-
-      if(hit.length===0){ box.innerHTML = '<p class="muted">該当なし</p>'; return; }
-
-      const tbl = document.createElement('table');
-      tbl.innerHTML = '<thead><tr><th>アプリ内名</th><th>本名</th><th>SNS</th><th>実績</th></tr></thead>';
-      const tb = document.createElement('tbody');
-
-      hit.forEach(m=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${m.appName||''}</td>
-          <td>${m.realName||''}</td>
-          <td>${snsCell(m)}</td>
-          <td><button class="btn ghost" data-ach="${m.ach||''}">開く</button></td>`;
-        tb.appendChild(tr);
-      });
-
-      tbl.appendChild(tb);
-      box.innerHTML = '';
-      box.appendChild(tbl);
-
-      box.querySelectorAll('[data-ach]').forEach(b=> b.onclick = ()=>{
-        const url = b.dataset.ach;
-        if(url) location.href = url;
-        else { switchTab('perf'); const ps = $('#perfApp'); if(ps){ ps.value = MEMBER_APP; } updatePerfSelectors(); }
-      });
-    } // ←←← ここが抜けて固まってました
-
-    const normX  = s => (s||'').trim().replace(/^https?:\/\/(www\.)?x\.com\//i,'').replace(/^@/,'').split(/[/?#]/)[0];
-    const normIG = s => (s||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').replace(/\/$/,'').split(/[/?#]/)[0];
-    const normOther = s => (s||'').trim();
-
-    // ====== Performance (実績) ======
-    function perfApps(){
-      const face = Object.keys(DB.templates?.data?.face||{});
-      const nf   = Object.keys(DB.templates?.data?.['no-face']||{});
-      return [...new Set(face.concat(nf))];
-    }
-    function updatePerfSelectors(){
-      const appSel=$('#perfApp'); if (!appSel) return;
-      const apps = perfApps();
-      appSel.innerHTML = apps.map(a=>`<option>${a}</option>`).join('');
-      const scope=$('#perfScope').value;
-      const whenSel=$('#perfWhen');
-      const now=new Date(); whenSel.innerHTML='';
-
-      if(scope==='year'){
-        const y=now.getFullYear();
-        for(let i=0;i<5;i++){ const yy=String(y-i); whenSel.innerHTML += `<option value="${yy}">${yy}年</option>`; }
-      }
-      if(scope==='month'){
-        const y=now.getFullYear(); const m=now.getMonth()+1;
-        for(let i=0;i<12;i++){ let mm=m-i; let yy=y; while(mm<=0){ mm+=12; yy--; } whenSel.innerHTML += `<option value="${yy}-${String(mm).padStart(2,'0')}">${yy}/${mm}</option>`; }
-      }
-      if(scope==='week'){
-        const base=new Date(now);
-        for(let i=0;i<12;i++){ const d=new Date(base); d.setDate(d.getDate()-7*i); const label=`~ ${d.getMonth()+1}/${d.getDate()}`; const val=`${d.getFullYear()}-W${i}`; whenSel.innerHTML += `<option value="${val}">${label}</option>`; }
-      }
-      renderPerf();
-    }
-    function getPerfRecord(app, scope, when){
-      DB.perf[app]=DB.perf[app]||{ goals:{year:{coin:0,days:0,hours:0}, month:{coin:0,days:0,hours:0}, week:{coin:0,days:0,hours:0}}, data:{} };
-      const rec=DB.perf[app];
-      rec.data[scope]=rec.data[scope]||{};
-      rec.data[scope][when]=rec.data[scope][when]||{coin:0,days:0,hours:0};
-      return rec;
-    }
-    function donut(el, value, goal, label){
-      const size=220; const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d'); const center=size/2; const r=size*0.38;
-      ctx.lineWidth=22; ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.arc(center,center,r,0,Math.PI*2); ctx.stroke();
-      const ratio = goal>0 ? Math.min(value/goal,1) : 0; ctx.strokeStyle='#60a5fa'; ctx.beginPath(); ctx.arc(center,center,r,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio); ctx.stroke();
-      ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--ink'); ctx.textAlign='center'; ctx.font='700 18px system-ui,Segoe UI,Roboto'; ctx.fillText(label, center, center-6); ctx.font='900 22px system-ui,Segoe UI,Roboto'; ctx.fillText((Number(value)||0).toString(), center, center+22);
-      el.innerHTML=''; el.appendChild(c);
-    }
-    function renderPerf(){
-      const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value;
-      const rec=getPerfRecord(app, scope, when);
-      $('#goalCoin').textContent=rec.goals[scope].coin||0; $('#goalDays').textContent=rec.goals[scope].days||0; $('#goalHours').textContent=rec.goals[scope].hours||0;
-      const cur=rec.data[scope][when]||{coin:0,days:0,hours:0};
-      const charts=$('#charts'); charts.innerHTML='';
-      const items=[['取得コイン',cur.coin,rec.goals[scope].coin],['平均配信日数',cur.days,rec.goals[scope].days],['平均配信時間(h)',cur.hours,rec.goals[scope].hours]];
-      items.forEach(([label,val,goal])=>{ const box=document.createElement('div'); donut(box, Number(val||0), Number(goal||0), label); charts.appendChild(box); });
-      const cmp=$('#perfCompare'); cmp.innerHTML=''; cmp.innerHTML = `<span class="pill">前期間比（概算）: 準備中</span>`;
-    }
-
-    // ====== Accounts ======
-    let ACC_CACHE = {items:[]}; let ACC_UNLOCKED=false; let ACC_PASS='';
-    function renderAccTable(){
-      const wrap=$('#accTableWrap');
-      if(!ACC_UNLOCKED){ wrap.innerHTML='<p class="muted">鍵を開いてください。</p>'; return; }
-      if(!ACC_CACHE.items.length){ wrap.innerHTML='<p class="muted">登録がありません。</p>'; return; }
-      const tbl=document.createElement('table');
-      tbl.innerHTML='<thead><tr><th>アプリ</th><th>アカウント</th><th>パスワード</th><th>スタッフ</th><th>メモ</th></tr></thead>';
-      const tb=document.createElement('tbody');
-      ACC_CACHE.items.forEach((r)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.app||''}</td><td><button class="btn copy" data-copy="${r.user}">コピー</button> <span>${r.user||''}</span></td><td><button class="btn copy" data-copy="${r.pass}">コピー</button> <span>••••••</span></td><td>${r.staff||''}</td><td>${r.note||''}</td>`; tb.appendChild(tr); });
-      tbl.appendChild(tb); wrap.innerHTML=''; wrap.appendChild(tbl);
-      wrap.querySelectorAll('[data-copy]').forEach(b=> b.onclick = async ()=>{ await navigator.clipboard.writeText(b.dataset.copy); showToast('コピーしました'); });
-    }
-
-    // ====== Sales (base) ======
-    function renderSalesOptions(){
-      const scope=$('#salesScope').value; const when=$('#salesWhen'); when.innerHTML='';
-      const now=new Date();
-      if(scope==='all'){ when.innerHTML='<option value="all">全期間</option>'; }
-      if(scope==='year'){ const y=now.getFullYear(); for(let i=0;i<5;i++){ when.innerHTML += `<option value="${y-i}">${y-i}年</option>`; } }
-      if(scope==='month'){ const y=now.getFullYear(); const m=now.getMonth()+1; for(let i=0;i<12;i++){ let mm=m-i; let yy=y; while(mm<=0){ mm+=12; yy--; } when.innerHTML += `<option value="${yy}-${String(mm).padStart(2,'0')}">${yy}/${mm}</option>`; } }
-    }
-    function renderSales(){ $('#salesChart').innerHTML='<div class="note">グラフは後で詳細化します（今はベースのみ）。</div>'; $('#salesSummary').innerHTML=''; }
-
-    // ====== Copy & Share for template ======
-    function applyTags(str){
-      const map={ '{{name}}':$('#tagName').value, '{{date}}':$('#tagDate').value, '{{time}}':$('#tagTime').value, '{{link}}':$('#tagLink').value };
-      for(const k in map){ if(map[k]) str=str.split(k).join(map[k]); }
-      return str;
-    }
-    async function doCopy(){
-      const txt=applyTags($('#textArea').value);
-      try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }
-      catch(e){ const ta=$('#textArea'); ta.readOnly=false; ta.select(); document.execCommand('copy'); ta.readOnly=true; showToast('コピーしました（互換）'); }
-    }
-    async function doShare(){
-      const txt=applyTags($('#textArea').value);
-      if(navigator.share){ try{ await navigator.share({text: txt}); }catch(e){} }
-      else { showToast('共有に未対応の端末です'); }
-    }
-
-    // ====== Boot ======
-    function boot(){
-      // settings
-      const fs = parseInt(localStorage.getItem(KEYS.settings + '_fs') || '16', 10); setFont(fs);
-      const savedTheme = localStorage.getItem(KEYS.settings + '_theme') || 'dark'; applyTheme(savedTheme);
-      $('#themeBtn')?.addEventListener('click', () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light'));
-
-      // tabs
-      $$('#mainTabs .tab').forEach(b=> b.onclick = () => switchTab(b.dataset.tab));
-      switchTab(localStorage.getItem('noi_tab') || 'tpl');
-
-      // templates
-      renderTplApps(); renderTplEditor();
-      $$('#modeSeg button').forEach(btn=>{
-        btn.onclick=()=>{
-          DB.templates.mode = btn.dataset.mode; DB.templates.app = ''; DB.templates.step = 0; saveDB();
-          $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
-          renderTplApps(); renderTplEditor();
-        };
-      });
-      $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
-      $('#prevBtn').onclick = ()=>{ if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
-      $('#nextBtn').onclick = ()=>{ const t = tplList(); if(DB.templates.step < t.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
-      ['#copyBtn','#copyBtn2'].forEach(s=> $(s).onclick = doCopy);
-      ['#shareBtn','#shareBtn2'].forEach(s=> $(s).onclick = doShare);
-      let editing = false;
-      $('#tplEditToggle').onclick = ()=>{ editing = !editing; enableTplEdit(editing); };
-      $('#tplSave').onclick = ()=>{ saveDB(); editing=false; enableTplEdit(false); showToast('テンプレを保存しました'); renderTplEditor(); };
-      $('#tplDiscard').onclick = ()=>{ loadDB(); editing=false; enableTplEdit(false); renderTplEditor(); };
-      $('#tplAdd').onclick = ()=>{ const list = tplList(); list.push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
-
-      // members
-      $('#memberSearch')?.addEventListener('input', ()=> renderMemberResults());
-  $('#mSave').onclick = async () => {
-  const rec = {
-    app: $('#mApp').value.trim(),
-    appName: $('#mNick').value.trim(),
-    realName: $('#mReal').value.trim(),
-    sns: { x:  normX($('#mSNSx').value), ig: normIG($('#mSNSig').value), other: normOther($('#mSNSother').value) },
-    ach: $('#mAch').value.trim()
-  };
-  if (!rec.app || !rec.appName) { showToast('アプリ名とアプリ内名は必須'); return; }
-
-  // ローカル更新
-  const idx = DB.members.findIndex(x => x.app === rec.app && x.appName === rec.appName);
-  if (idx >= 0) DB.members[idx] = rec; else DB.members.push(rec);
-  saveDB(); showToast('保存しました');
-  MEMBER_APP = rec.app.trim();
-  renderMemberApps(); renderMemberResults();
-
-  // クラウドへも反映
-  if (window.firebaseReady) {
-    try {
-        await window.firebaseReady;
-        const wsId = (window._WS_ID || expectedHash || 'public'); // ← OK: 準備完了後に確定。expectedHashも使う
-      await cloudUpsertMember(wsId, rec);
-      showToast('クラウド保存しました');
-    } catch(e){
-      console.error(e);
-      showToast('クラウド保存に失敗');
-    }
+    // Interview
+    renderIvApps(); renderIvView(); let ivEditing=false; $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); }; $('#ivSave').onclick=()=>{ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; rec.sheet=$('#ivSheetUrl').value; rec.manual=$('#ivManual').value; DB.interview[IV_APP]=rec; saveDB(); ivEditing=false; enableIvEdit(false); showToast('面談を保存しました'); renderIvView(); }; $('#ivDiscard').onclick=()=>{ loadDB(); ivEditing=false; enableIvEdit(false); renderIvView(); };
   }
-};
-      renderMemberApps(); renderMemberResults();
 
-      // perf
-      $('#perfScope').onchange = updatePerfSelectors; $('#perfApp').onchange = renderPerf; $('#perfWhen').onchange = renderPerf;
-      $('#perfEditGoals').onclick = () => {
-        const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value;
-        const rec=getPerfRecord(app, scope, when);
-        const coin=prompt('目標コイン', rec.goals[scope].coin||0);
-        const days=prompt('目標 配信日数', rec.goals[scope].days||0);
-        const hours=prompt('目標 配信時間(h)', rec.goals[scope].hours||0);
-        rec.goals[scope]={coin:Number(coin||0),days:Number(days||0),hours:Number(hours||0)}; saveDB(); renderPerf();
-      };
-      $('#perfSave').onclick = () => {
-        const app=$('#perfApp').value; const scope=$('#perfScope').value; const when=$('#perfWhen').value;
-        const rec=getPerfRecord(app, scope, when);
-        rec.data[scope][when]={ coin:Number($('#perfCoin').value||0), days:Number($('#perfDays').value||0), hours:Number($('#perfHours').value||0) };
-        saveDB(); showToast('保存しました'); renderPerf();
-      };
-      updatePerfSelectors();
+  // Gate setup & start
+  expectedHash = getFromHashOrQuery('h'); function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); } tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
 
-      // accounts
-      $('#accUnlock').onclick = async ()=>{ const p = prompt('共有の「鍵」を入力'); if(!p) return; try{ ACC_CACHE = await accDecrypt(p); ACC_UNLOCKED=true; ACC_PASS=p; renderAccTable(); showToast('解除しました'); }catch{ showToast('鍵が違います'); } };
-      $('#accLock').onclick = ()=>{ ACC_UNLOCKED=false; ACC_PASS=''; renderAccTable(); showToast('鍵を閉じました'); };
-      $('#accSave').onclick = async ()=>{ if(!ACC_UNLOCKED){ showToast('先に鍵を開いてください'); return; } const rec={ app:$('#accApp').value.trim(), user:$('#accUser').value.trim(), pass:$('#accPass').value.trim(), staff:$('#accStaff').value.trim(), note:$('#accNote').value.trim() }; if(!rec.app||!rec.user||!rec.pass){ showToast('必須項目が未入力'); return; } const idx=ACC_CACHE.items.findIndex(x=>x.app===rec.app&&x.user===rec.user); if(idx>=0) ACC_CACHE.items[idx]=rec; else ACC_CACHE.items.push(rec); await accEncrypt(ACC_PASS, ACC_CACHE); renderAccTable(); };
-
-      // sales
-      $('#salesScope').onchange = ()=>{ renderSalesOptions(); renderSales(); };
-      $('#salesImportBtn').onclick = ()=> $('#salesCSV').click();
-      renderSalesOptions(); renderSales();
-
-      // header buttons
-      $('#installBtn').style.display='none'; let deferredPrompt=null;
-      window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; });
-      $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
-      $('#backupBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(DB)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='noi-backup.json'; a.click(); };
-      $('#restoreBtn').onclick=()=> $('#restoreInput').click();
-      $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
-      $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); } };
-    }
-
-    // ====== Gate setup & App start ======
-    expectedHash = getFromHashOrQuery('h');
-      (async () => {
-  try {
-    if (window.firebaseReady) await window.firebaseReady;
-    window._WS_ID = expectedHash || 'public';
-    startCloudSyncMembers(window._WS_ID); // ← リアルタイム購読スタート
-  } catch (e){
-    console.error(e);
-  }
+  attachManifest(); registerSW(); loadDB(); boot();
 })();
-    function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); }
-    gateBtn?.addEventListener('click', tryUnlock);
-    gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
-
-    attachManifest();
-    registerSW();
-    loadDB();
-    boot();
-    tickGate();
-  })();
-  </script>
-    <!-- Firebase CDN（compat 版だと既存の非モジュールJSにそのまま使える） -->
+</script>
 </body>
 </html>
