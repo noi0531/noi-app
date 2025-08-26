@@ -360,7 +360,7 @@
       if(!('serviceWorker' in navigator)) return;
       const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v3').then(c=>c.addAll(['./'])));self.skipWaiting();});
 self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});
-self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v1').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`;
+self.addEventListener('fetch', e=>{const req=e.request; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v3').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`;
       const blob=new Blob([swCode],{type:'text/javascript'});
       const url=URL.createObjectURL(blob);
       try{
