@@ -334,24 +334,52 @@ Zoom：{{link}}`} ]
     };
   }
 
-  function seedInterview(){
-    return {
-      'TikTok':{ sheet:'', manual:`【面談マニュアル（TikTok）】
+function seedInterview(){
+  return {
+    'TikTok':{ sheet:'', manual:`【面談マニュアル（TikTok）】
 1) アイスブレイク
 2) 配信経験/得意分野の確認
 3) スケジュール・頻度のすり合わせ
 4) 収益化までのロードマップ説明
 5) 次アクション（登録/日程）` },
-      '17LIVE':{ sheet:'', manual:`【面談マニュアル（17LIVE）】
+    '17LIVE':{ sheet:'', manual:`【面談マニュアル（17LIVE）】
 …` },
-      'ポコチャ':{ sheet:'', manual:`【面談マニュアル（ポコチャ）】
+    'ポコチャ':{ sheet:'', manual:`【面談マニュアル（ポコチャ）】
 …` },
-      'BIGOLIVE':{ sheet:'', manual:`【面談マニュアル（BIGO）】
+    'BIGOLIVE':{ sheet:'', manual:`【面談マニュアル（BIGO）】
 …` },
-      'WAVE':{ sheet:'', manual:`【面談マニュアル（WAVE）】
-…` }
-    };
-  }
+    // ★ ここから WAVE（フローつき）
+    'WAVE':{
+      sheet:'',
+      manual:`【面談マニュアル（WAVE）】
+…`,
+      // 行ジェネレーターに並べる列（フローの column と一致）
+      columns:[
+        '副業','事務所所属','配信環境','ライブ配信の経験','アプリ継続','現在のPF',
+        '配信内容','目標','スカウトDM','DM詳細','所属に至った経緯'
+      ],
+      // 面談フロー（前/次で進む）
+      flow:{
+        index:0,
+        answers:{}, // column: value を格納
+        steps:[
+          { id:'greet',    title:'挨拶',                     type:'info',   explain:'簡単な挨拶から始める', column:null },
+          { id:'sidejob',  title:'副業の確認',               type:'choice', explain:'基本的には自己責任となる旨を説明', options:['問題なし','問題あり'], column:'副業' },
+          { id:'belong',   title:'事務所所属の確認',         type:'choice', explain:'芸能事務所や他ライバー事務所に所属しているか', options:['所属あり','所属なし'], column:'事務所所属' },
+          { id:'env',      title:'配信環境の確認',           type:'choice', explain:'Wi-Fi環境の確認。カラオケ等での配信は推奨しない旨', options:['あり','なし'], column:'配信環境' },
+          { id:'exp',      title:'ライブ配信の経験',         type:'text',   explain:'使用PFなど', column:'ライブ配信の経験' },
+          { id:'keep',     title:'アプリ継続の確認',         type:'text',   explain:'どのアプリでどのくらい継続したか', column:'アプリ継続' },
+          { id:'nowpf',    title:'現在も配信しているPFの確認', type:'text', explain:'頻度も確認', column:'現在のPF' },
+          { id:'content',  title:'配信内容の確認',           type:'text',   explain:'ジャンル・得意分野', column:'配信内容' },
+          { id:'goal',     title:'ライブ配信の目標の確認',   type:'text',   explain:'ビジョン・長期目標', column:'目標' },
+          { id:'dm',       title:'スカウトDMの有無',         type:'choice', explain:'過去に来たことがあるか', options:['あり','なし'], column:'スカウトDM' },
+          { id:'dmdetail', title:'DMありの場合の回答',       type:'text',   explain:'所属に至らなかった経緯', column:'DM詳細' },
+          { id:'reason',   title:'今回所属に至った経緯',     type:'text',   explain:'なぜ所属しようと思ったか', column:'所属に至った経緯' }
+        ]
+      }
+    }
+  };
+}
 
   // ====== Gate ======
   const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
@@ -423,37 +451,139 @@ function ivParseColumns(text){
   return parts.map(s=>s.trim()).filter(Boolean);
 }
 
-/).filter(s=>s.trim().length);
-    const first = lines[0] || '';
-    // タブ優先、なければカンマ
-    let parts = first.split('	');
-    if (parts.length===1) parts = first.split(',');
-    return parts.map(s=>s.trim()).filter(Boolean);
-  }
- function renderIvForm(){
+function renderIvForm(){
   const box = $('#ivFormBox');
   if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
-  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[]});
+  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[], flow:{index:0,answers:{},steps:[]}});
 
-  // 初期UI（列未設定）
+  // ---- 1) フロー（WAVEのみ本格UI）
+  const isWAVE = (IV_APP === 'WAVE');
+  if (isWAVE && (!rec.flow || !Array.isArray(rec.flow.steps) || !rec.flow.steps.length)) {
+    // 初期シードを補完（列も補完）
+    const seed = seedInterview()['WAVE'];
+    rec.flow = JSON.parse(JSON.stringify(seed.flow));
+    rec.columns = seed.columns.slice();
+    saveDB();
+  }
+
+  // ヘルパー：ジェネレーター入力へ同期（column名で対応）
+  const syncAnswersToInputs = ()=>{
+    if (!rec.columns || !rec.columns.length) return;
+    (rec.columns||[]).forEach(col=>{
+      const val = rec.flow?.answers?.[col] ?? '';
+      const inp = document.querySelector(`[data-col="${col}"]`);
+      if (inp) inp.value = val;
+    });
+  };
+
+  // ---- ボックスを初期化
+  box.innerHTML = '';
+
+  // ---- (A) 面談フロー UI
+  if (isWAVE){
+    const f = rec.flow;
+    const steps = f.steps;
+    const i = Math.max(0, Math.min(f.index||0, steps.length-1));
+    f.index = i;
+    const s = steps[i];
+
+    const flowWrap = document.createElement('div');
+    flowWrap.className = 'panel';
+    flowWrap.innerHTML = `
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <strong>面談フロー（WAVE）</strong>
+        <span class="pill">Step ${i+1} / ${steps.length}</span>
+      </div>
+      <div class="hr"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:6px">${s.title||''}</div>
+      <div class="muted" style="margin-bottom:10px">${s.explain||''}</div>
+      <div id="ivFlowInputArea"></div>
+      <div class="row" style="justify-content:space-between;margin-top:10px">
+        <button class="btn ghost" id="ivFlowPrev">前</button>
+        <button class="btn" id="ivFlowNext">次</button>
+      </div>
+      <div class="muted" style="margin-top:8px">※ 回答は下の「行ジェネレーター」に自動反映されます</div>
+    `;
+    box.appendChild(flowWrap);
+
+    // 入力部を描画
+    const area = flowWrap.querySelector('#ivFlowInputArea');
+    const currentVal = s.column ? (rec.flow.answers[s.column] || '') : '';
+    if (s.type === 'choice'){
+      const wrap = document.createElement('div');
+      wrap.className = 'row';
+      (s.options||[]).forEach(opt=>{
+        const b = document.createElement('button');
+        b.className = 'tab' + (currentVal===opt ? ' active' : '');
+        b.textContent = opt;
+        b.onclick = ()=>{
+          if (s.column) { rec.flow.answers[s.column] = opt; saveDB(); syncAnswersToInputs(); }
+          // 見た目更新
+          wrap.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+        };
+        wrap.appendChild(b);
+      });
+      area.appendChild(wrap);
+    } else if (s.type === 'text'){
+      const ta = document.createElement('textarea');
+      ta.placeholder = '入力してください';
+      ta.value = currentVal;
+      ta.oninput = ()=>{
+        if (s.column){ rec.flow.answers[s.column] = ta.value; saveDB(); }
+      };
+      ta.onchange = syncAnswersToInputs;
+      area.appendChild(ta);
+    } else {
+      area.innerHTML = `<div class="note">このステップには入力はありません。</div>`;
+    }
+
+    // 前/次
+    const go = (delta)=>{
+      let ni = f.index + delta;
+      // DMが「なし」の場合は「DM詳細」をスキップ
+      if (delta>0 && steps[ni]?.id==='dmdetail' && (rec.flow.answers['スカウトDM']||'')==='なし'){
+        ni += 1;
+      }
+      f.index = Math.max(0, Math.min(ni, steps.length-1));
+      saveDB();
+      renderIvForm(); // 再描画
+    };
+    flowWrap.querySelector('#ivFlowPrev').onclick = ()=> go(-1);
+    flowWrap.querySelector('#ivFlowNext').onclick = ()=> go(+1);
+  } else {
+    // WAVE以外はガイダンス
+    const info = document.createElement('div');
+    info.className = 'note';
+    info.textContent = 'WAVE以外は通常の行ジェネレーターのみ表示します。';
+    box.appendChild(info);
+  }
+
+  // ---- (B) 行ジェネレーター（既存のUIを残しつつ、自動反映）
+  // 列未設定時：ヘルパーを表示
   if (!rec.columns || !rec.columns.length){
-    box.innerHTML = `
-      <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
-      <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
-      <div class="row" style="margin-top:8px">
-        <button class="btn" id="ivColsApply">列を設定</button>
-      </div>`;
+    const p = document.createElement('div');
+    p.innerHTML = `
+      <div class="note">下のテキストにシートのヘッダー行を貼り付け→「列を設定」。</div>
+      <textarea id="ivColsRaw" placeholder="日時,氏名,..." style="margin-top:8px;min-height:90px"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>
+    `;
+    box.appendChild(p);
     $('#ivColsApply').onclick = ()=>{
-      const cols = ivParseColumns($('#ivColsRaw').value);
+      const cols = (function(txt){
+        const first = String(txt||'').split(/\r?\n/).find(s=>s.trim().length)||'';
+        const parts = first.includes('\t') ? first.split('\t') : first.split(',');
+        return parts.map(s=>s.trim()).filter(Boolean);
+      })($('#ivColsRaw').value);
       if(!cols.length){ showToast('列が読み取れませんでした'); return; }
       rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
     };
     return;
   }
 
-  // 列がある場合のUI
-  box.innerHTML = '';
-  const pillWrap = document.createElement('div'); pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
+  // 列あり → 入力群＋コピー
+  const pillWrap = document.createElement('div');
+  pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
   rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
 
   const inputs = document.createElement('div'); inputs.id='ivInputs';
@@ -465,26 +595,54 @@ function ivParseColumns(text){
   });
 
   const controls = document.createElement('div'); controls.className='row'; controls.style.marginTop='8px';
-  controls.innerHTML = `
-    <label class="pill"><select id="ivDelim"><option value="tsv">TSV(タブ)</option><option value="csv">CSV(カンマ)</option></select></label>
-    <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
-    <button class="btn copy" id="ivCopyRow">行をコピー</button>
-    <button class="btn ghost" id="ivResetCols">列を再設定</button>`;
+ controls.innerHTML = `
+  <label class="pill">
+    <select id="ivDelim">
+      <option value="tsv">TSV(タブ)</option>
+      <option value="csv">CSV(カンマ)</option>
+    </select>
+  </label>
+  <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
+  <label class="pill"><input type="checkbox" id="ivAutoClear"> コピー後に自動クリア</label>
+  <button class="btn copy" id="ivCopyRow">行をコピー</button>
+  <button class="btn danger" id="ivClearInputs">入力リセット</button>
+  <button class="btn ghost" id="ivResetCols">列を再設定</button>
+`;
 
   box.appendChild(pillWrap);
   box.appendChild(inputs);
   box.appendChild(controls);
+// 入力とWAVEフロー回答をまとめて初期化
+function clearAll(){
+  // 入力欄クリア
+  (rec.columns||[]).forEach(c=>{
+    const inp = document.querySelector(`[data-col="${c}"]`);
+    if (inp) inp.value = '';
+  });
+  // WAVEならフローもクリア
+  if (IV_APP === 'WAVE' && rec.flow){
+    rec.flow.index = 0;
+    rec.flow.answers = {};
+  }
+  saveDB();
+  renderIvForm();
+  showToast('入力をリセットしました');
+}
 
+// 「入力リセット」ボタン
+$('#ivClearInputs').onclick = clearAll;
+
+  // 回答→入力欄へ反映
+  syncAnswersToInputs();
+
+  // コピー
   $('#ivCopyRow').onclick = async ()=>{
     const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
     const delim = $('#ivDelim').value;
     const withHeader = $('#ivWithHeader').checked;
 
     const joinTsv = arr => arr.join('\t');
-    const escCsv  = v => {
-      const s = String(v ?? '');
-      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-    };
+    const escCsv  = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
 
     const textRow   = (delim === 'tsv') ? joinTsv(values) : values.map(escCsv).join(',');
     const headerRow = (delim === 'tsv') ? joinTsv(rec.columns) : rec.columns.map(escCsv).join(',');
@@ -494,74 +652,76 @@ function ivParseColumns(text){
     catch{ showToast('コピーに失敗'); }
   };
 
+  // 列再設定
   $('#ivResetCols').onclick = ()=>{
     box.innerHTML = `
       <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
       <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
     $('#ivColsApply').onclick = ()=>{
-      const cols = ivParseColumns($('#ivColsRaw').value);
+      const first = String($('#ivColsRaw').value||'').split(/\r?\n/).find(s=>s.trim().length)||'';
+      const cols = (first.includes('\t') ? first.split('\t') : first.split(',')).map(s=>s.trim()).filter(Boolean);
       if(!cols.length){ showToast('列が読み取れませんでした'); return; }
       rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
     };
   };
 }
+if ($('#ivAutoClear')?.checked){
+  clearAll();
+}
 
-    // 列がある場合のUI
-    box.innerHTML = '';
-    const pillWrap = document.createElement('div'); pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
-    rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
-    const inputs = document.createElement('div'); inputs.id='ivInputs';
-    rec.columns.forEach(c=>{ const row=document.createElement('div'); row.className='panel'; row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`; inputs.appendChild(row); });
-    const controls = document.createElement('div'); controls.className='row'; controls.style.marginTop='8px';
-    controls.innerHTML = `
-      <label class="pill"><select id="ivDelim"><option value="tsv">TSV(タブ)</option><option value="csv">CSV(カンマ)</option></select></label>
-      <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
-      <button class="btn copy" id="ivCopyRow">行をコピー</button>
-      <button class="btn ghost" id="ivResetCols">列を再設定</button>`;
-    box.appendChild(pillWrap); box.appendChild(inputs); box.appendChild(controls);
+function enableIvEdit(on){
+  ivEditor.style.display = on ? 'block' : 'none';
+  $('#ivSave').style.display = on ? 'inline-flex' : 'none';
+  $('#ivDiscard').style.display = on ? 'inline-flex' : 'none';
+  if(!on) return;
 
-    $('#ivCopyRow').onclick = async ()=>{
-      const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
-      const delim = $('#ivDelim').value;
-      const withHeader = $('#ivWithHeader').checked;
-      let textRow = '';
-      if (delim==='tsv'){
-        textRow = values.join('	');
-      } else {
-        const esc = v => { const s=String(v??''); return /[",
-
-]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
-        textRow = values.map(esc).join(',');
-      }
-      const headerRow = (delim==='tsv') ? rec.columns.join('	') : rec.columns.map(h=>(/[",
-
-]/.test(h)? '"'+h.replace(/"/g,'""')+'"' : h)).join(',');
-      const final = withHeader ? (headerRow + '
-' + textRow) : textRow;
-      try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
-    };
-        textRow = values.map(esc).join(',');
-      }
-      const headerRow = (delim==='tsv') ? rec.columns.join('	') : rec.columns.map(h=>(/[",
-
-]/.test(h)? '"'+h.replace(/"/g,'""')+'"' : h)).join(',');
-      const final = withHeader ? (headerRow + '
-' + textRow) : textRow;
-      try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
-    };
-    $('#ivResetCols').onclick = ()=>{
-      box.innerHTML = `
-        <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
-        <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
-      $('#ivColsApply').onclick = ()=>{ const cols = ivParseColumns($('#ivColsRaw').value); if(!cols.length){ showToast('列が読み取れませんでした'); return; } rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm(); };
-    };
-  }
-
-  function enableIvEdit(on){ ivEditor.style.display= on ? 'block':'none'; $('#ivSave').style.display= on ? 'inline-flex':'none'; $('#ivDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const rec=DB.interview[IV_APP]||{sheet:'',manual:'',columns:[]}; $('#ivSheetUrl').value = rec.sheet||''; $('#ivManual').value = rec.manual||''; } }
+  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
+  // 編集UIを組み立て（既存の中身を作り直す）
+  ivEditor.innerHTML = `
+    <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
+    <textarea id="ivManual" placeholder="面談マニュアル本文" style="min-height:120px"></textarea>
+    <div class="note" style="margin-top:8px">WAVEの面談フロー（JSON）。<br>各ステップの <code>title/type/explain/options/column</code> を編集できます。</div>
+    <textarea id="ivFlowJson" placeholder="WAVE用フロー（JSON配列）" style="min-height:220px"></textarea>
+  `;
+  $('#ivSheetUrl').value = rec.sheet || '';
+  $('#ivManual').value  = rec.manual || '';
+  const steps = (rec.flow && Array.isArray(rec.flow.steps)) ? rec.flow.steps : [];
+  $('#ivFlowJson').value = JSON.stringify(steps, null, 2);
+}
 // ====== Copy & Share for template ======
-  function applyTags(str){ const map={ '{{name}}':$('#tagName').value, '{{date}}':$('#tagDate').value, '{{time}}':$('#tagTime').value, '{{link}}':$('#tagLink').value }; for(const k in map){ if(map[k]) str=str.split(k).join(map[k]); } return str; }
-  async function doCopy(){ const txt=applyTags($('#textArea').value); try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }catch(e){ const ta=$('#textArea'); ta.readOnly=false; ta.select(); document.execCommand('copy'); ta.readOnly=true; showToast('コピーしました（互換）'); } }
-  async function doShare(){ const txt=applyTags($('#textArea').value); if(navigator.share){ try{ await navigator.share({text: txt}); }catch(e){} } else { showToast('共有に未対応の端末です'); } }
+function applyTags(str){
+  const map = {
+    '{{name}}': $('#tagName')?.value,
+    '{{date}}': $('#tagDate')?.value,
+    '{{time}}': $('#tagTime')?.value,
+    '{{link}}': $('#tagLink')?.value,
+  };
+  let out = String(str ?? '');
+  for(const k in map){
+    const v = map[k];
+    if(v) out = out.split(k).join(v);
+  }
+  return out;
+}
+async function doCopy(){
+  const txt = applyTags($('#textArea').value);
+  try{
+    await navigator.clipboard.writeText(txt);
+    showToast('コピーしました');
+  }catch(e){
+    const ta = $('#textArea');
+    ta.readOnly = false; ta.select(); document.execCommand('copy'); ta.readOnly = true;
+    showToast('コピーしました（互換）');
+  }
+}
+async function doShare(){
+  const txt = applyTags($('#textArea').value);
+  if(navigator.share){
+    try{ await navigator.share({ text: txt }); }catch(e){}
+  }else{
+    showToast('共有に未対応の端末です');
+  }
+}
 
   // ====== Header buttons ======
   $('#installBtn').style.display='none'; let deferredPrompt=null; window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; }); $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
@@ -589,8 +749,67 @@ function ivParseColumns(text){
     renderQaApps(); renderQaSeg(); renderQaList(); let qaEditing=false; $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); }; $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderQaApps(); renderQaSeg(); renderQaList(); }; $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderQaApps(); renderQaSeg(); renderQaList(); };
 
     // Interview
-    renderIvApps(); renderIvView(); let ivEditing=false; $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); }; $('#ivSave').onclick=()=>{ const rec=DB.interview[IV_APP]||{sheet:'',manual:''}; rec.sheet=$('#ivSheetUrl').value; rec.manual=$('#ivManual').value; DB.interview[IV_APP]=rec; saveDB(); ivEditing=false; enableIvEdit(false); showToast('面談を保存しました'); renderIvView(); }; $('#ivDiscard').onclick=()=>{ loadDB(); ivEditing=false; enableIvEdit(false); renderIvView(); };
+    renderIvApps(); renderIvView(); let ivEditing=false; $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); };$('#ivSave').onclick = ()=>{
+  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {
+    sheet:'', manual:'', columns:[], flow:{ index:0, answers:{}, steps:[] }
+  });
+
+  if ($('#ivSheetUrl')) rec.sheet  = $('#ivSheetUrl').value;
+  if ($('#ivManual'))   rec.manual = $('#ivManual').value;
+
+  // WAVE用：フローJSONも保存
+  if ($('#ivFlowJson')){
+    try{
+      const steps = JSON.parse($('#ivFlowJson').value || '[]');
+      if (!Array.isArray(steps)) throw new Error('steps is not array');
+      rec.flow = rec.flow || { index:0, answers:{}, steps:[] };
+      rec.flow.steps = steps;
+
+      // column から列を自動更新
+      const cols = steps.map(s=>s.column).filter(Boolean);
+      if (cols.length) rec.columns = cols;
+    }catch(e){
+      showToast('フローJSONの形式が不正です');
+      return;
+    }
   }
+
+  DB.interview[IV_APP] = rec;
+  saveDB();
+  showToast('面談を保存しました');
+  enableIvEdit(false);
+  renderIvView();
+  renderIvForm();
+};
+
+  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
+  if ($('#ivSheetUrl')) rec.sheet  = $('#ivSheetUrl').value;
+  if ($('#ivManual'))   rec.manual = $('#ivManual').value;
+
+  // フローJSONの保存（WAVE編集用）
+  if ($('#ivFlowJson')){
+    try{
+      const steps = JSON.parse($('#ivFlowJson').value || '[]');
+      if (!Array.isArray(steps)) throw new Error('steps is not array');
+      rec.flow = rec.flow || {index:0, answers:{}, steps:[]};
+      rec.flow.steps = steps;
+      // column を元に列を自動更新
+      const cols = steps.map(s=>s.column).filter(Boolean);
+      if (cols.length) rec.columns = cols;
+    }catch(e){
+      showToast('フローJSONの形式が不正です');
+      return;
+    }
+  }
+
+  DB.interview[IV_APP] = rec;
+  saveDB();
+  showToast('面談を保存しました');
+  enableIvEdit(false);
+  // 反映
+  renderIvView();
+  renderIvForm();
+};
 
   // Gate setup & start
   expectedHash = getFromHashOrQuery('h'); function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); } tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
