@@ -6,80 +6,69 @@
   <meta name="theme-color" content="#4f46e5" />
   <title>NOI 管理アプリ（PWA・オフライン対応）</title>
   <style>
-    :root{ --bg:#0b1220; --panel:#101826; --ink:#e5e7eb; --muted:#9aa4b2; --line:rgba(255,255,255,.12); --brand:#7c3aed; --ok:#22c55e; --warn:#f59e0b; --fs:16px; }
+    :root{ --bg:#0b1220; --panel:#101826; --ink:#f1f5f9; --muted:#a8b3c7; --line:rgba(255,255,255,.14); --brand:#7c3aed; --ok:#22c55e; --warn:#f59e0b; --fs:16px; --focus:#60a5fa; }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,var(--bg) 0,#0f172a 40%);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial;font-size:var(--fs);line-height:1.75;letter-spacing:.2px}
+    body{ margin:0; background:linear-gradient(180deg,var(--bg) 0,#0f172a 40%); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial; font-size:var(--fs); line-height:1.75; letter-spacing:.2px }
     .wrap{max-width:880px;margin:0 auto;padding:14px}
-    header{position:sticky;top:0;background:color-mix(in oklab, var(--panel) 90%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
-    h1{margin:6px 0 10px;font-size:clamp(18px,5.2vw,22px);font-weight:800}
+    header{position:sticky;top:0;background:color-mix(in oklab, var(--panel) 92%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:800;color:var(--ink);background:color-mix(in oklab, var(--panel) 88%, transparent)}
+    .btn.small{padding:6px 10px;font-size:12px;border-radius:10px}
+    .btn.primary{background:color-mix(in oklab, var(--panel) 82%, transparent)}
+    .btn.copy{background:color-mix(in oklab, var(--panel) 82%, transparent)}
+    .btn.ghost{background:rgba(127,132,152,.16)}
+    .btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
-    .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-    .btn{appearance:none;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:800;color:var(--ink);background:color-mix(in oklab, var(--panel) 90%, transparent)}
-    .btn.primary{background:color-mix(in oklab, var(--panel) 85%, transparent);color:var(--ink);border:1px solid var(--line)}
-    .btn.copy{background:color-mix(in oklab, var(--panel) 85%, transparent);color:var(--ink);border:1px solid var(--line)}
-    .btn.ghost{background:rgba(127,132,152,.16);color:var(--ink);border:1px solid var(--line)}
-
-    .tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-top:6px}
-    .tab{white-space:nowrap;border:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);padding:10px 12px;border-radius:999px;font-weight:800}
+    .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0 6px;margin-top:8px}
+    .tab{white-space:nowrap;border:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);padding:10px 12px;border-radius:999px;font-weight:800;color:var(--ink)}
     .tab.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(79,70,229,.32)}
+    .tab:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}
-    .row{display:flex;gap:10px;align-items:center}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .muted{color:var(--muted);font-size:12px}
-    .note{font-size:13px;color:var(--ink);background:color-mix(in oklab, var(--panel) 80%, transparent);border:1px dashed var(--line);padding:10px;border-radius:12px}
+    .note{font-size:13px;color:var(--ink);background:color-mix(in oklab, var(--panel) 78%, transparent);border:1px dashed var(--line);padding:10px;border-radius:12px}
 
     .apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
-    .app{background:color-mix(in oklab, var(--panel) 88%, transparent);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;align-items:center;gap:10px;min-height:56px;transition:.2s;font-weight:800}
-    .app .badge{font-size:12px;color:#c7d2fe;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);padding:3px 10px;border-radius:999px;margin-left:auto}
+    .app{background:color-mix(in oklab, var(--panel) 86%, transparent);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;align-items:center;gap:10px;min-height:56px;transition:.2s;font-weight:800;color:var(--ink)}
+    .app .badge{font-size:12px;color:#e5e7eb;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);padding:3px 10px;border-radius:999px;margin-left:auto}
     .app.selected{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(79,70,229,.35)}
 
-    textarea{width:100%;min-height:220px;border-radius:16px;border:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);color:var(--ink);padding:14px;font-size:16px;line-height:1.85}
-    input,select{width:100%;border-radius:12px;border:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);color:var(--ink);padding:10px}
-    table{width:100%;border-collapse:separate;border-spacing:0 8px}
-    th{font-size:12px;color:#cbd5e1;text-align:left}
-    td{background:rgba(255,255,255,.03);border:1px solid var(--line);padding:10px;border-radius:10px}
+    textarea, input, select{width:100%; border-radius:12px; border:1px solid var(--line); background:color-mix(in oklab, var(--panel) 92%, transparent); color:var(--ink); padding:10px;}
+    textarea#textArea{min-height:220px; line-height:1.85; font-size:16px}
+    input::placeholder,textarea::placeholder{color:color-mix(in oklab, var(--ink) 70%, transparent)}
+    input:focus-visible, textarea:focus-visible, select:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
     .progress{display:flex;gap:8px;margin-top:6px}
     .dot{width:9px;height:9px;border-radius:999px;background:color-mix(in oklab, var(--ink) 28%, transparent);opacity:.5}
     .dot.on{background:#60a5fa;opacity:1;transform:scale(1.05)}
 
-    .sticky-bar{position:sticky;bottom:0;left:0;right:0;display:flex;gap:10px;padding:10px;border-top:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);backdrop-filter:blur(8px);border-bottom-left-radius:18px;border-bottom-right-radius:18px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
-
     .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#111827;color:#e5e7eb;border:1px solid var(--line);padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:200}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
     .pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05)}
     .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:color-mix(in oklab, var(--panel) 86%, transparent);border:1px solid var(--line);padding:2px 6px;border-radius:6px;color:var(--ink)}
     .hr{height:1px;background:var(--line);margin:10px 0}
-    .danger{background:color-mix(in oklab, var(--panel) 80%, transparent);color:var(--ink);border:1px solid var(--line)}
-    #tab_tpl .pill { font-size:12px; padding:4px 8px; line-height:1.4; }
-    #tab_tpl .pill strong { font-weight:700; }
-    a{color:#93c5fd;text-decoration:none}
-  a:hover{text-decoration:underline}
-  input::placeholder,textarea::placeholder{color:color-mix(in oklab, var(--ink) 70%, transparent)}
-    /* Q&AのQ一覧を白文字に */
-  #tab_qa #qaList .app{ color:#fff; }
-  #tab_qa #qaList .app .badge{ color:#e5e7eb; background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.35); }
+    .danger{background:color-mix(in oklab, var(--panel) 78%, transparent);color:var(--ink);border:1px solid var(--line)}
+    a{color:#93c5fd;text-decoration:underline}
+    a:hover{text-decoration:none}
+
+    #tab_qa #qaList .app{ color:#fff; }
+    #tab_qa #qaList .app .badge{ color:#e5e7eb; background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.35); }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <h1>NOI 管理アプリ <span class="muted">（テンプレ／Q&A／面談）</span></h1>
-      <div class="tabs" id="mainTabs" role="tablist" aria-label="メインタブ">
-        <button class="tab active" data-tab="tpl" role="tab" aria-selected="true">テンプレ</button>
-        <button class="tab" data-tab="qa" role="tab" aria-selected="false">Q&A</button>
-        <button class="tab" data-tab="interview" role="tab" aria-selected="false">面談</button>
-      </div>
-      <div class="controls">
+      <div class="controls" style="margin-top:6px">
         <button class="btn ghost" id="installBtn">ホームに追加</button>
         <button class="btn" id="protectBtn" title="共有リンクを作成">共有リンク作成</button>
         <button class="btn" id="backupBtn" title="JSONにエクスポート">バックアップ</button>
         <input type="file" id="restoreInput" accept="application/json" style="display:none" />
         <button class="btn" id="restoreBtn">読み込み</button>
       </div>
+      <div class="tabs" id="megaTabs" role="tablist" aria-label="メインナビ"></div>
     </div>
   </header>
 
@@ -89,34 +78,33 @@
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="row" style="gap:8px">
           <span class="pill">表示：<strong id="appName"></strong>｜<span id="stepIndex">1</span>/<span id="stepTotal">-</span></span>
-          <span class="muted">（アプリ→カテゴリ選択）</span>
-        </div>
-        <div class="row">
-          <button class="btn ghost" id="prevBtn">前</button>
-          <button class="btn ghost" id="nextBtn">次</button>
-        </div>
-      </div>
-
-      <div class="grid2" style="margin-top:8px">
-        <div class="seg" id="modeSeg" role="tablist" aria-label="表示モード" style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;overflow:hidden">
-          <button data-mode="face" class="active" role="tab" aria-selected="true" style="background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800">顔出しあり</button>
-          <button data-mode="no-face" role="tab" aria-selected="false" style="background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800">顔出し無し</button>
-        </div>
-        <div class="row" style="justify-content:flex-end;gap:8px">
-          <button class="btn" id="tplEditToggle">編集モード</button>
-          <button class="btn primary" id="tplSave" style="display:none">保存</button>
-          <button class="btn danger" id="tplDiscard" style="display:none">取消</button>
+          <span class="muted">（アプリを選択 → カテゴリは上段タブ）</span>
         </div>
       </div>
 
       <div class="apps" id="appList"></div>
-      <div id="groupSegWrap" style="margin-top:8px;display:none"></div>
-
       <div class="hr"></div>
 
-      <div id="stepTitle" class="step-title" style="font-size:clamp(16px,4.6vw,20px);font-weight:900;margin:6px 0 8px"></div>
+      <!-- タイトル：常時編集可＆即保存 -->
+      <input id="stepTitleInput" placeholder="タイトル" style="font-weight:900;font-size:clamp(16px,4.6vw,20px);margin:6px 0 8px;background:transparent" />
       <p class="note" id="explain">ここにテンプレの解説が入ります。</p>
+
+      <!-- TikTok▶登録：選択肢 -->
+      <div id="ttChoiceBox" style="display:none"></div>
+
       <textarea id="textArea" readonly></textarea>
+
+      <div class="row" style="justify-content:space-between;margin-top:10px">
+        <div class="row">
+          <button class="btn ghost" id="prevBtn">前</button>
+          <button class="btn ghost" id="nextBtn">次</button>
+        </div>
+        <div class="row">
+          <button class="btn copy" id="copyBtn">この文章をコピー</button>
+          <button class="btn" id="shareBtn">共有…</button>
+        </div>
+      </div>
+
       <div class="progress" id="progress"></div>
 
       <details style="margin-top:10px">
@@ -130,25 +118,15 @@
         <div class="muted" style="margin-top:6px">コピー時に <span class="kbd">{{name}}</span> / <span class="kbd">{{date}}</span> / <span class="kbd">{{time}}</span> / <span class="kbd">{{link}}</span> を自動置換します。</div>
       </details>
 
-      <div class="buttons" style="margin-top:12px">
-        <button class="btn copy" id="copyBtn">この文章をコピー</button>
-        <button class="btn" id="shareBtn">共有…</button>
-      </div>
-
       <details style="margin-top:10px">
         <summary class="muted">全テンプレへジャンプ／編集</summary>
         <div class="jump" id="jumpList" style="display:flex;gap:8px;flex-wrap:wrap"></div>
         <div id="tplEditor" style="display:none;margin-top:10px">
-          <div class="note">下の一覧はドラッグで並び替え可能。各テンプレを直接編集できます。</div>
+          <div class="note">下の一覧は直接編集できます。</div>
           <div id="tplList"></div>
           <div class="row" style="margin-top:8px"><button class="btn" id="tplAdd">＋ テンプレを追加</button></div>
         </div>
       </details>
-
-      <div class="sticky-bar">
-        <button class="btn copy" id="copyBtn2">この文章をコピー</button>
-        <button class="btn" id="shareBtn2">共有…</button>
-      </div>
     </section>
 
     <!-- ========= Q&A ========= -->
@@ -178,17 +156,12 @@
           <button class="btn danger" id="ivDiscard" style="display:none">取消</button>
         </div>
       </div>
-      <div class="hr"></div>
-      <div id="ivManualBox" class="note">アプリを選択すると面談マニュアルを表示します。</div>
-      <div class="row" style="margin-top:8px;gap:8px">
-        <button class="btn" id="ivOpenSheet">スプレッドシートを開く</button>
-        <button class="btn copy" id="ivCopyManual">本文をコピー</button>
-      </div>
 
       <div class="hr"></div>
       <h3 style="margin:6px 0">スプレッドシート貼付用 行ジェネレーター</h3>
+
       <div id="ivFormBox" class="panel">
-        <div class="note">ここで入力した回答を <strong>1クリックでコピー</strong> → スプレッドシートに貼り付けできます。<br>最初に <em>列の順番</em> を設定してください（シートのヘッダー行をそのまま貼り付けOK）。</div>
+        <div class="note">ここで入力した回答を<strong>コピー</strong>→スプレッドシートへ貼付（TSV）。<br>最初に <em>列の順番</em> を設定してください（ヘッダー行をそのまま貼り付けOK）。</div>
         <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
         <div class="row" style="margin-top:8px">
           <button class="btn" id="ivColsApply">列を設定</button>
@@ -219,211 +192,710 @@
 
 <script>
 (()=>{ 
-  // ===== Debug hooks: 端末で原因を把握しやすくする =====
+  // ===== Debug hooks =====
   window.addEventListener('error', (e)=>{ try{ const t=document.getElementById('toast'); if(t){ t.textContent = 'Error: '+ e.message; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000);} }catch{} });
   window.addEventListener('unhandledrejection', (e)=>{ try{ const t=document.getElementById('toast'); if(t){ t.textContent = 'Promise: '+ (e.reason?.message||e.reason||'rejected'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000);} }catch{} });
-  // ====== Utils ======
-  const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // ===== Utils =====
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
   const toast = $('#toast');
   const hex = (buf) => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
   async function sha256(text){ const data = new TextEncoder().encode(text); const digest = await crypto.subtle.digest('SHA-256', data); return hex(digest); }
   function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1300); }
   function getFromHashOrQuery(name){ const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); if(h) return h; return new URLSearchParams(location.search).get(name); }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+  function linkify(s){
+    const esc = escapeHtml(String(s||''));
+    return esc.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\n/g,'<br>');
+  }
+  const clone = (o)=> (window.structuredClone ? window.structuredClone(o) : JSON.parse(JSON.stringify(o)));
 
-  // ====== PWA manifest & SW ======
+  // ===== 面談：TikTok / WAVE 共通列 =====
+  const IV_DEFAULT_COLUMNS = [
+    '人物像','配信動機','夢や目標','現在の仕事','副業の有無',
+    '事務所所属の有無','配信環境の確認','ライブ配信経験',
+    '顔出しの有無','配信内容','配信頻度'
+  ];
+
+  // ===== TikTok 登録：確認テキスト =====
+  const TT_CONFIRM_TEXT = {
+    ttba_ok: 'TTBA経由の招待コードの有効期限は24時間のみ。早く登録を行う。',
+    agency_ng: [
+      '・18歳未満でないか',
+      '・他事務所と契約していないか',
+      '・フォロワー数が基準を超えていないか',
+      '・ダイア数が基準を超えてないか',
+      '・外国籍ではないか',
+      '・マルチアカウントではないか',
+      '・BAN状態ではないか',
+      '・退会クール期間中じゃないか'
+    ].join('\n')
+  };
+  const TT_CONFIRM_REQUIRED_KEYS = new Set(['ttba_ok','agency_ng']);
+
+  // ===== PWA =====
   function makeIcon(size, bg = '#4f46e5', fg = '#ffffff', text = 'N'){
     const c = document.createElement('canvas'); c.width = c.height = size; const ctx = c.getContext('2d');
     ctx.fillStyle = bg; ctx.fillRect(0,0,size,size); ctx.fillStyle = fg; ctx.font = `${Math.floor(size*0.6)}px 900 system-ui,Segoe UI,Roboto`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, size/2, size/2+size*0.05); return c.toDataURL('image/png');
   }
-  function attachManifest(){ const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' })); const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons}; const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'}); const url = URL.createObjectURL(blob); const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link); const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple); }
-  async function registerSW(){ if(!('serviceWorker' in navigator)) return; const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('noi-v4').then(c=>c.addAll(['./'])));self.skipWaiting();});
-self.addEventListener('activate', e=>{e.waitUntil(self.clients.claim());});
-self.addEventListener('fetch', e=>{const req=e.request; if(req.method!=='GET'){ return; } e.respondWith(caches.match(req).then(c=>c||fetch(req).then(res=>{const copy=res.clone(); caches.open('noi-v4').then(cc=>cc.put(req,copy)); return res;}).catch(()=>caches.match('./'))));});`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg = await navigator.serviceWorker.register(url); reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…')); showToast('オフラインでも使えます'); }catch(e){ console.warn('SW registration failed', e); } }
+  function attachManifest(){
+    const icons = [192,512].map(sz => ({ src: makeIcon(sz), sizes: `${sz}x${sz}`, type: 'image/png', purpose:'any maskable' }));
+    const manifest = { name:'NOI 管理アプリ', short_name:'NOI', start_url:'.', scope:'.', display:'standalone', background_color:'#0b1220', theme_color:'#4f46e5', icons };
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
+    const apple = document.createElement('link'); apple.rel='apple-touch-icon'; apple.href = icons[0].src; document.head.appendChild(apple);
+  }
+  async function registerSW(){
+    if(!('serviceWorker' in navigator)) return;
+    const swCode = `
+const CACHE_NAME='noi-v9';
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./'])));
+  self.skipWaiting();
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
+    .then(()=>self.clients.claim())
+  );
+});
+self.addEventListener('fetch',e=>{
+  const req=e.request;
+  if(req.method!=='GET'){ return; }
+  e.respondWith(
+    caches.open(CACHE_NAME).then(cache=>
+      cache.match(req).then(hit=>{
+        if(hit) return hit;
+        return fetch(req).then(res=>{
+          try{ if(res && res.ok) cache.put(req,res.clone()); }catch{}
+          return res;
+        }).catch(()=>cache.match('./'));
+      })
+    )
+  );
+});`;
+    const blob=new Blob([swCode],{type:'text/javascript'});
+    const url=URL.createObjectURL(blob);
+    try{
+      const reg = await navigator.serviceWorker.register(url);
+      reg.addEventListener('updatefound', ()=> showToast('アップデートを読み込み中…'));
+      showToast('オフラインでも使えます');
+    }catch(e){ console.warn('SW registration failed', e); }
+  }
 
-  // ====== Storage (local) ======
+  // ===== Storage =====
   const KEYS = { db:'noi_db_v2' };
   const DefaultDB = { templates:null, qa:{}, interview:{} };
-  let DB = null; // runtime
-  function loadDB(){ DB = JSON.parse(localStorage.getItem(KEYS.db)||'null')||structuredClone(DefaultDB); if(!DB.templates) DB.templates = seedTemplates(); if(!DB.qa || !Object.keys(DB.qa).length) DB.qa = seedQA(); if(!DB.interview || !Object.keys(DB.interview).length) DB.interview = seedInterview(); }
+  let DB = null;
   function saveDB(){ localStorage.setItem(KEYS.db, JSON.stringify(DB)); }
 
-  // ====== Seed Data ======
+  // ===== Seed =====
   function seedTemplates(){
-    // カテゴリ: スカウト / 登録 / end
     return {
-      mode:'face', app:'', group:'スカウト', step:0,
+      app:'', group:'スカウト', step:0,
+      special:{ ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:'' },
       data:{
-        face:{
-          'TikTok':{
-            'スカウト':[ {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
+        'TikTok':{
+          'スカウト':[
+            {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
 
 配信活動に関心がありそうでご連絡しました。
 興味があればサポート内容をご案内します！
 
-まずは気軽にお話どうですか？`} , {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！
+まずは気軽にお話どうですか？`},
+            {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！
 事務所としてTikTok Liveのスタートから収益化まで伴走します。
-{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？` } ],
-            '登録':[ {title:'③ エントリー案内', explain:'フォームで情報回収', text:`ありがとうございます！下記フォームにご入力ください。
-
-エントリーフォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補日を提示', text:`面談候補です。
-・{{date}} {{time}}
-・別日/別時間もOKです`} ],
-            'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。
-Zoom：{{link}}`} ]
-          },
-          '17LIVE':{
-            'スカウト':[ {title:'① 初回スカウトDM', explain:'導入', text:`{{name}} さん、こんにちは。17LIVEでの“顔出し配信”に挑戦しませんか？`} , {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。
-{{date}} {{time}} に15分の説明はいかがでしょう？`} ],
-            '登録':[ {title:'③ エントリー案内', explain:'フォーム送付', text:`エントリーフォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。
-・{{date}} {{time}}`} ],
-            'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。
-Zoom：{{link}}`} ]
-          },
-          'ポコチャ':{
-            'スカウト':[ {title:'① 初回スカウトDM', explain:'文化前提', text:`{{name}} さん、こんにちは。ポコチャでの配信に興味はありますか？`} , {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。
-{{date}} {{time}} に説明しますね。`} ],
-            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`フォーム：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`候補日：{{date}} {{time}}`} ],
-            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}}、入室リンク：{{link}}`} ]
-          },
-          'BIGOLIVE':{
-            'スカウト':[ {title:'① 初回スカウトDM', explain:'幅の広さ', text:`{{name}} さん、こんにちは。BIGOLIVEでの配信サポートを行っています。`} , {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。
-{{date}} {{time}} に概要説明どうでしょう？`} ],
-            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
-・{{date}} {{time}}`} ],
-            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。Zoom：{{link}}`} ]
+{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？`}
+          ],
+          '登録':[ {title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:''} ],
+          'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。
+Zoom：{{link}}`} ],
+          _ttScenarios:{
+            ttba_ok:[ {title:'TTBA経由＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`{{name}} さん、TTBA経由のためBackStage登録も進められます。
+下記より手続きお願いします：
+・エントリーフォーム：{{link}}
+不明点あれば気軽にご連絡ください！`} ],
+            sns_ok:[ {title:'SNSスカウト＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`ご連絡ありがとうございます！
+SNS経由スカウトですが、BackStageの登録も可能です。
+・登録フォーム：{{link}}
+進めてみて、つまづいた所があれば教えてください。`} ],
+            agency_ng:[ {title:'BackStageでagency不可', explain:'対応メモ：{{memo}}', text:`確認したところ、BackStage上でagency登録不可の状態です。
+別ルートでの手続きをご案内しますので、{{date}} {{time}} に5〜10分だけお時間いただけますか？`} ],
+            consider:[ {title:'登録検討', explain:'—', text:`前向きにご検討ありがとうございます！
+判断材料として、サポート内容や実例を簡潔にまとめます。
+{{date}} {{time}} に5分ほどオンラインで補足しますね。`} ],
+            decline:[ {title:'登録辞退', explain:'—', text:`ご連絡ありがとうございます。今回は見送るとのこと承知しました。
+また状況が変わった際は、いつでも気軽にご相談ください！`} ]
           }
         },
-        'no-face':{
-          'WAVE':{
-            'スカウト':[ {title:'① 初回スカウトDM', explain:'音声特化を強調', text:`{{name}} さん、はじめまして。音声配信アプリ WAVE で活動しませんか？`} , {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。
-{{date}} {{time}} にオンラインでいかがでしょう？`} ],
-            '登録':[ {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`} , {title:'④ 面談日程調整', explain:'候補', text:`候補：{{date}} {{time}}`} ],
-            'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。
+        '17LIVE':{
+          'スカウト':[
+            {title:'① 初回スカウトDM', explain:'導入', text:`{{name}} さん、こんにちは。17LIVEでの“顔出し配信”に挑戦しませんか？`},
+            {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。
+{{date}} {{time}} に15分の説明はいかがでしょう？`}
+          ],
+          '登録':[
+            {title:'③ エントリー案内', explain:'フォーム送付', text:`エントリーフォーム：{{link}}`},
+            {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。
+・{{date}} {{time}}`}
+          ],
+          'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。
+Zoom：{{link}}`} ]
+        },
+        'ポコチャ':{
+          'スカウト':[
+            {title:'① 初回スカウトDM', explain:'文化前提', text:`{{name}} さん、こんにちは。ポコチャでの配信に興味はありますか？`},
+            {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。
+{{date}} {{time}} に説明しますね。`}
+          ],
+          '登録':[
+            {title:'③ エントリー案内', explain:'フォーム', text:`フォーム：{{link}}`},
+            {title:'④ 面談日程調整', explain:'候補', text:`候補日：{{date}} {{time}}`}
+          ],
+          'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}}、入室リンク：{{link}}`} ]
+        },
+        'BIGOLIVE':{
+          'スカウト':[
+            {title:'① 初回スカウトDM', explain:'幅の広さ', text:`{{name}} さん、こんにちは。BIGOLIVEでの配信サポートを行っています。`},
+            {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。
+{{date}} {{time}} に概要説明どうでしょう？`}
+          ],
+          '登録':[
+            {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
+            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
+・{{date}} {{time}}`}
+          ],
+          'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。Zoom：{{link}}`} ]
+        },
+        'WAVE':{
+          'スカウト':[
+            {title:'① 初回スカウトDM', explain:'音声特化を強調', text:`{{name}} さん、はじめまして。音声配信アプリ WAVE で活動しませんか？`},
+            {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。
+{{date}} {{time}} にオンラインでいかがでしょう？`}
+          ],
+          '登録':[
+            {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
+            {title:'④ 面談日程調整', explain:'候補', text:`候補：{{date}} {{time}}`}
+          ],
+          'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。
 入室：{{link}}`} ]
-          }
         }
       }
     };
   }
-
   function seedQA(){
     return {
       'TikTok':{
-        '回答':[ {q:'顔出しは必須？', a:'TikTokは顔出しが主流ですが、画角や演出で調整可能です。', explain:'最初は明るい場所・胸上の画角を推奨。顔出しが難しい場合は演出案を提示。'}, {q:'収益化の目安は？', a:'初月は企画・頻度次第。最初は目標を共有して進めます。', explain:'固定ファン化に向けたルーティン設計とイベント活用が鍵。'} ],
-        '送信':[ {q:'顔出しは必須？', text:`顔出しが基本ですが、演出で工夫できます。
-まずは一度、事例ベースでご紹介します！`} , {q:'収益化の目安', text:`企画と配信頻度で大きく変わります。
-初月の目標を一緒に設計しましょう！`} ]
+        '回答':[
+          {q:'顔出しは必須？', a:'TikTokは顔出しが主流ですが、画角や演出で調整可能です。参考：https://creators.tiktok.com/', explain:'最初は明るい場所・胸上の画角を推奨。顔出しが難しい場合は演出案を提示。'},
+          {q:'収益化の目安は？', a:'初月は企画・頻度次第。最初は目標を共有して進めます。', explain:'固定ファン化に向けたルーティン設計とイベント活用が鍵。'}
+        ],
+        '送信':[
+          {q:'顔出しは必須？', text:`顔出しが基本ですが、演出で工夫できます！\n一度、事例ベースでご紹介しますね。`},
+          {q:'収益化の目安', text:`企画と配信頻度で大きく変わります。\n初月の目標を一緒に設計しましょう！`}
+        ]
       },
       '17LIVE':{
-        '回答':[ {q:'イベント参加の頻度', a:'月2〜3回を目安に案件や露出に合わせて調整。', explain:'無理のない頻度で経験値を積む。'}, ],
+        '回答':[ {q:'イベント参加の頻度', a:'月2〜3回を目安に案件や露出に合わせて調整。', explain:'無理のない頻度で経験値を積む。'} ],
         '送信':[ {q:'イベント頻度', text:`月2〜3回を目安に、露出や案件状況で調整します！`} ]
       },
       'ポコチャ':{
         '回答':[ {q:'ランクはどう決まる？', a:'時間×盛り上がり指標で決まります。', explain:'盛り上がり=コメント/ギフト/視聴維持 などの総合。'} ],
-        '送信':[ {q:'ランクの仕組み', text:`時間×盛り上がりの合算で決まります。
-初期は習慣化→固定ファンづくりを一緒に！`} ]
+        '送信':[ {q:'ランクの仕組み', text:`時間×盛り上がりの合算で決まります。\n初期は習慣化→固定ファンづくりを一緒に！`} ]
       },
       'BIGOLIVE':{
         '回答':[ {q:'海外リスナー対応', a:'英語/日本語のミックスでもOK。', explain:'翻訳と絵文字でのレスポンスも活用。'} ],
         '送信':[ {q:'言語について', text:`海外リスナーも多いので、英語/日本語ミックスでOKです！`} ]
       },
       'WAVE':{
-        '回答':[ {q:'機材は必要？', a:'スマホ＋マイクでOK。', explain:'静かな環境とポップガードがあると尚良し。'} ],
+        '回答':[ {q:'機材は必要？', a:'スマホ＋マイクでOK。Amazon等で安価なものからOK。', explain:'静かな環境とポップガードがあると尚良し。'} ],
         '送信':[ {q:'機材について', text:`スマホとマイクがあれば始められます！`} ]
       }
     };
   }
-
-function seedInterview(){
-  return {
-    'TikTok':{ sheet:'', manual:`【面談マニュアル（TikTok）】
-1) アイスブレイク
-2) 配信経験/得意分野の確認
-3) スケジュール・頻度のすり合わせ
-4) 収益化までのロードマップ説明
-5) 次アクション（登録/日程）` },
-    '17LIVE':{ sheet:'', manual:`【面談マニュアル（17LIVE）】
-…` },
-    'ポコチャ':{ sheet:'', manual:`【面談マニュアル（ポコチャ）】
-…` },
-    'BIGOLIVE':{ sheet:'', manual:`【面談マニュアル（BIGO）】
-…` },
-    // ★ ここから WAVE（フローつき）
-    'WAVE':{
-      sheet:'',
-      manual:`【面談マニュアル（WAVE）】
-…`,
-      // 行ジェネレーターに並べる列（フローの column と一致）
-      columns:[
-        '副業','事務所所属','配信環境','ライブ配信の経験','アプリ継続','現在のPF',
-        '配信内容','目標','スカウトDM','DM詳細','所属に至った経緯'
-      ],
-      // 面談フロー（前/次で進む）
-      flow:{
-        index:0,
-        answers:{}, // column: value を格納
-        steps:[
-          { id:'greet',    title:'挨拶',                     type:'info',   explain:'簡単な挨拶から始める', column:null },
-          { id:'sidejob',  title:'副業の確認',               type:'choice', explain:'基本的には自己責任となる旨を説明', options:['問題なし','問題あり'], column:'副業' },
-          { id:'belong',   title:'事務所所属の確認',         type:'choice', explain:'芸能事務所や他ライバー事務所に所属しているか', options:['所属あり','所属なし'], column:'事務所所属' },
-          { id:'env',      title:'配信環境の確認',           type:'choice', explain:'Wi-Fi環境の確認。カラオケ等での配信は推奨しない旨', options:['あり','なし'], column:'配信環境' },
-          { id:'exp',      title:'ライブ配信の経験',         type:'text',   explain:'使用PFなど', column:'ライブ配信の経験' },
-          { id:'keep',     title:'アプリ継続の確認',         type:'text',   explain:'どのアプリでどのくらい継続したか', column:'アプリ継続' },
-          { id:'nowpf',    title:'現在も配信しているPFの確認', type:'text', explain:'頻度も確認', column:'現在のPF' },
-          { id:'content',  title:'配信内容の確認',           type:'text',   explain:'ジャンル・得意分野', column:'配信内容' },
-          { id:'goal',     title:'ライブ配信の目標の確認',   type:'text',   explain:'ビジョン・長期目標', column:'目標' },
-          { id:'dm',       title:'スカウトDMの有無',         type:'choice', explain:'過去に来たことがあるか', options:['あり','なし'], column:'スカウトDM' },
-          { id:'dmdetail', title:'DMありの場合の回答',       type:'text',   explain:'所属に至らなかった経緯', column:'DM詳細' },
-          { id:'reason',   title:'今回所属に至った経緯',     type:'text',   explain:'なぜ所属しようと思ったか', column:'所属に至った経緯' }
-        ]
+  function seedInterview(){
+    return {
+      'TikTok':{ sheet:'', manual:'', columns: IV_DEFAULT_COLUMNS.slice(), flow:{ index:0, answers:{}, steps:[] } },
+      '17LIVE':{ sheet:'', manual:'' },
+      'ポコチャ':{ sheet:'', manual:'' },
+      'BIGOLIVE':{ sheet:'', manual:'' },
+      'WAVE':{
+        sheet:'',
+        manual:'',
+        columns: IV_DEFAULT_COLUMNS.slice(),
+        flow:{ index:0, answers:{}, steps:[] }
       }
-    }
-  };
-}
+    };
+  }
 
-  // ====== Gate ======
+  // ===== Migrations / Ensurers =====
+  function migrateTemplatesShape(){
+    const t=DB.templates;
+    if(!t) return;
+    if(t.mode || (t.data && (t.data.face || t.data['no-face']))){
+      const newData={};
+      ['face','no-face'].forEach(m=>{
+        const src=t.data?.[m]||{};
+        Object.keys(src).forEach(app=>{
+          newData[app]=newData[app]||{};
+          const groups=src[app]||{};
+          Object.keys(groups).forEach(g=>{
+            newData[app][g]=newData[app][g]||[];
+            (groups[g]||[]).forEach(item=> newData[app][g].push(item));
+          });
+        });
+      });
+      DB.templates = {
+        app: t.app||'',
+        group: t.group||'スカウト',
+        step: t.step||0,
+        special:{ ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:'' },
+        data: newData
+      };
+      saveDB();
+    }
+    DB.templates.special = Object.assign({ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:''}, DB.templates.special||{});
+  }
+
+  // ---- TikTokの登録フロー用シナリオを必ず持たせる（グローバル定義）----
+  function ensureTTScenarios(){
+    const tiktok = DB?.templates?.data?.['TikTok'];
+    if (!tiktok) return;
+    if (!tiktok._ttScenarios) {
+      const seed = seedTemplates();
+      tiktok._ttScenarios = clone(seed?.data?.['TikTok']?._ttScenarios || {});
+    }
+    if (!Array.isArray(tiktok['登録']) || !tiktok['登録'].length) {
+      tiktok['登録'] = [{
+        title: '（選択待ち）',
+        explain: '最初に上の「登録」内フローを選択してください。',
+        text: ''
+      }];
+    }
+    saveDB();
+  }
+
+  function migrateIvColumnsCommon(){
+    const APPS = ['TikTok','WAVE'];
+    APPS.forEach(app=>{
+      const rec = DB.interview[app] || (DB.interview[app] = {
+        sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}
+      });
+      const cols = Array.isArray(rec.columns) ? rec.columns : [];
+      const same = cols.length === IV_DEFAULT_COLUMNS.length
+                && cols.every((c,i)=> c === IV_DEFAULT_COLUMNS[i]);
+      if(!same){
+        rec.columns = IV_DEFAULT_COLUMNS.slice();
+      }
+    });
+    saveDB();
+  }
+  function ensureIvDefaults(){
+    ['TikTok','WAVE'].forEach(app=>{
+      const rec = DB.interview[app] || (DB.interview[app] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
+      if (!Array.isArray(rec.columns) || !rec.columns.length){
+        rec.columns = IV_DEFAULT_COLUMNS.slice();
+      }
+    });
+    saveDB();
+  }
+
+  // ===== Load / Save =====
+  function loadDB(){
+    DB = JSON.parse(localStorage.getItem(KEYS.db)||'null') || clone(DefaultDB);
+    if(!DB.templates) DB.templates = seedTemplates();
+    if(!DB.qa || !Object.keys(DB.qa).length) DB.qa = seedQA();
+    if(!DB.interview || !Object.keys(DB.interview).length) DB.interview = seedInterview();
+    migrateTemplatesShape();
+    ensureTTScenarios();
+    ensureIvDefaults();
+    migrateIvColumnsCommon();
+  }
+
+  // ===== Gate =====
   const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
   let expectedHash = null;
   function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
   function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
   async function tryUnlock(){ const pass = (gatePass?.value||'').trim(); if(!pass) return; const h = await sha256('noi-v1:'+pass); if(h === expectedHash){ sessionStorage.setItem('noi_unlocked_'+h, '1'); updateGate(); showToast('解除しました'); } else { showToast('合言葉が違います'); } }
 
-  // ====== UI Refs ======
-  // Template
-  const appList=$('#appList'); const editorText=$('#textArea'); const stepTitle=$('#stepTitle'); const explainEl=$('#explain'); const progress=$('#progress');
-  const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal'); const groupSegWrap=$('#groupSegWrap');
+  // ===== UI Refs =====
+  const appList=$('#appList'); const editorText=$('#textArea'); const explainEl=$('#explain'); const progress=$('#progress');
+  const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
+  const stepTitleInput=$('#stepTitleInput');
+  const ttChoiceBox=$('#ttChoiceBox');
+
   // Q&A
   const qaAppList=$('#qaAppList'); const qaSegWrap=$('#qaSegWrap'); const qaList=$('#qaList'); const qaView=$('#qaView'); const qaEditor=$('#qaEditor');
+
   // Interview
-  const ivAppList=$('#ivAppList'); const ivManualBox=$('#ivManualBox'); const ivSheetBtn=$('#ivOpenSheet'); const ivCopyBtn=$('#ivCopyManual'); const ivEditor=$('#ivEditor');
+  const ivAppList=$('#ivAppList'); const ivFormBox=$('#ivFormBox'); const ivEditor=$('#ivEditor');
 
-  // ====== Tabs ======
-  function switchTab(tab){ $$('#mainTabs .tab').forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false');}); ['tpl','qa','interview'].forEach(id=> $('#tab_'+id).style.display = id===tab ? 'block':'none'); localStorage.setItem('noi_tab', tab); }
-
-  // ====== Template helpers ======
-  const GROUPS = ['スカウト','登録','end'];
-  function tplAppsByMode(){ return Object.keys(DB.templates.data[DB.templates.mode]||{}); }
-  function tplGroupList(){ const m=DB.templates.data[DB.templates.mode]||{}; const a=m[DB.templates.app]||{}; return a[DB.templates.group]||[]; }
-  function renderTplApps(){ appList.innerHTML=''; const apps=tplAppsByMode(); apps.forEach(name=>{ const b=document.createElement('button'); b.className='app'+(DB.templates.app===name?' selected':''); b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':'選択'}</span>`; b.onclick=()=>{ DB.templates.app=name; DB.templates.group='スカウト'; DB.templates.step=0; saveDB(); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; appList.appendChild(b); }); }
-  function renderTplGroupSeg(){ const on=!!DB.templates.app; groupSegWrap.style.display = on? 'block':'none'; groupSegWrap.innerHTML=''; if(!on) return; const wrap=document.createElement('div'); wrap.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;'; GROUPS.forEach(g=>{ const btn=document.createElement('button'); const active=DB.templates.group===g; btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800'; btn.textContent=g; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; } btn.onclick=()=>{ DB.templates.group=g; DB.templates.step=0; saveDB(); renderTplGroupSeg(); renderTplEditor(); }; wrap.appendChild(btn); }); groupSegWrap.appendChild(wrap); }
-  function renderTplEditor(){ const list=tplGroupList(); if(!DB.templates.app){ appNameEl.textContent='未選択'; editorText.value=''; stepTitle.textContent=''; explainEl.textContent=''; stepIndexEl.textContent='-'; stepTotalEl.textContent='-'; progress.innerHTML=''; $('#jumpList').innerHTML=''; $('#tplList').innerHTML=''; return; } appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group; stepTotalEl.textContent=list.length; if(!list.length){ stepIndexEl.textContent='-'; stepTitle.textContent='テンプレなし'; explainEl.textContent='このカテゴリにはテンプレがありません。＋で追加してください。'; editorText.value=''; progress.innerHTML=''; $('#prevBtn').disabled=true; $('#nextBtn').disabled=true; $('#jumpList').innerHTML=''; $('#tplList').innerHTML=''; return; } DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1)); stepIndexEl.textContent=DB.templates.step+1; const cur=list[DB.templates.step]; stepTitle.textContent=cur.title; explainEl.textContent=cur.explain; editorText.value=cur.text; $('#prevBtn').disabled=DB.templates.step===0; $('#nextBtn').disabled=DB.templates.step>=list.length-1; progress.innerHTML=''; list.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'+(i===DB.templates.step?' on':''); d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; progress.appendChild(d); }); const jump=$('#jumpList'); jump.innerHTML=''; list.forEach((t,i)=>{ const b=document.createElement('button'); b.className='tab'; b.textContent=t.title; b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active'); jump.appendChild(b); }); const wrap=$('#tplList'); wrap.innerHTML=''; list.forEach((t,i)=>{ const row=document.createElement('div'); row.className='panel'; row.innerHTML=`<div class="grid2"><input data-k="title" value="${t.title.replace(/"/g,'&quot;')}"/><input data-k="explain" value="${t.explain.replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${t.text.replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; wrap.appendChild(row); row.querySelectorAll('input,textarea').forEach(el=>{ el.oninput=()=>{ t[el.dataset.k]=el.value; }; }); row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); }); }); }
-  function enableTplEdit(on){ $('#tplEditor').style.display= on ? 'block':'none'; if (editorText) editorText.readOnly = !on; $('#tplSave').style.display= on ? 'inline-flex':'none'; $('#tplDiscard').style.display= on ? 'inline-flex':'none'; }
-
-  // ====== Q&A ======
-  let QA_APP = null; let QA_KIND = '回答'; // or '送信'
-  function qaApps(){ return Object.keys(DB.qa||{}); }
-  function renderQaApps(){ qaAppList.innerHTML=''; const apps=qaApps(); if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。編集モードで追加してください。</p>'; return; } if(!QA_APP) QA_APP=apps[0]; apps.forEach(a=>{ const b=document.createElement('button'); const count=(DB.qa[a]['回答']?.length||0)+(DB.qa[a]['送信']?.length||0); b.className='app'+(QA_APP===a?' selected':''); b.innerHTML=`<span>${a}</span><span class="badge">${count}</span>`; b.onclick=()=>{ QA_APP=a; renderQaApps(); renderQaSeg(); renderQaList(); }; qaAppList.appendChild(b); }); }
-  function renderQaSeg(){ qaSegWrap.style.display= QA_APP? 'block':'none'; qaSegWrap.innerHTML=''; if(!QA_APP) return; const wrap=document.createElement('div'); wrap.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;'; ['回答','送信'].forEach(kind=>{ const btn=document.createElement('button'); const active=QA_KIND===kind; btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800'; btn.textContent=kind; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; } btn.onclick=()=>{ QA_KIND=kind; renderQaSeg(); renderQaList(); }; wrap.appendChild(btn); }); qaSegWrap.appendChild(wrap); }
-  function renderQaList(){ qaList.innerHTML=''; qaView.innerHTML=''; const items=DB.qa[QA_APP]?.[QA_KIND]||[]; if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。編集モードで追加してください。</p>'; return; } const ul=document.createElement('div'); ul.style.display='grid'; ul.style.gap='8px'; items.forEach((it,i)=>{ const b=document.createElement('button'); b.className='app'; b.innerHTML=`<span>${it.q}</span>`; b.onclick=()=>{ if(QA_KIND==='回答'){ qaView.innerHTML = `<div class="panel"><h3 style="margin:0 0 6px">回答</h3><div>${escapeHtml(it.a||'')}</div><div class="hr"></div><h4 style="margin:0 0 6px">解説</h4><div class="muted">${escapeHtml(it.explain||'')}</div></div>`; } else { qaView.innerHTML = `<div class="panel"><h3 style=\"margin:0 0 6px\">送信テンプレ</h3><textarea id=\"qaSendText\" readonly>${(it.text||'').replace(/</g,'&lt;')}</textarea><div class=\"row\" style=\"margin-top:8px\"><button class=\"btn copy\" id=\"qaCopyBtn\">コピー</button></div></div>`; $('#qaCopyBtn').onclick=async()=>{ try{ await navigator.clipboard.writeText(it.text||''); showToast('コピーしました'); }catch{} }; } }; ul.appendChild(b); }); qaList.appendChild(ul); }
-  function enableQaEdit(on){ $('#qaEditor').style.display= on ? 'block':'none'; $('#qaSave').style.display= on ? 'inline-flex':'none'; $('#qaDiscard').style.display= on ? 'inline-flex':'none'; if(on){ const box=[]; qaEditor.innerHTML=''; // app選択 + 追加UI
-      const apps=qaApps(); const select=document.createElement('select'); select.innerHTML=apps.map(a=>`<option ${a===QA_APP?'selected':''}>${a}</option>`).join(''); select.onchange=()=>{ QA_APP=select.value; renderQaApps(); renderQaSeg(); renderQaList(); enableQaEdit(true); }; qaEditor.appendChild(select);
-      const kindSel=document.createElement('select'); kindSel.innerHTML=['回答','送信'].map(k=>`<option ${k===QA_KIND?'selected':''}>${k}</option>`).join(''); kindSel.onchange=()=>{ QA_KIND=kindSel.value; enableQaEdit(true); }; qaEditor.appendChild(kindSel);
-      const form=document.createElement('div'); form.className='panel'; if(QA_KIND==='回答'){ form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/><input id="qaA" placeholder="回答"/></div><textarea id="qaExplain" placeholder="解説（任意）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`; } else { form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/></div><textarea id="qaText" placeholder="送信テンプレ本文"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`; } qaEditor.appendChild(form); $('#qaAdd').onclick=()=>{ const rec = (QA_KIND==='回答')? {q:$('#qaQ').value, a:$('#qaA').value, explain:$('#qaExplain').value} : {q:$('#qaQ').value, text:$('#qaText').value}; if(!rec.q) return; DB.qa[QA_APP][QA_KIND].push(rec); saveDB(); showToast('追加しました'); renderQaList(); enableQaEdit(true); };
-      // 既存の一覧（編集/削除）
-      const items=DB.qa[QA_APP]?.[QA_KIND]||[]; const list=document.createElement('div'); list.style.marginTop='8px'; items.forEach((it,i)=>{ const row=document.createElement('div'); row.className='panel'; if(QA_KIND==='回答'){ row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/"/g,'&quot;')}"/><input data-k="a" value="${(it.a||'').replace(/"/g,'&quot;')}"/></div><textarea data-k="explain">${(it.explain||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; } else { row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/"/g,'&quot;')}"/></div><textarea data-k="text">${(it.text||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`; } list.appendChild(row); row.querySelectorAll('input,textarea').forEach(el=> el.oninput = ()=>{ it[el.dataset.k]=el.value; }); row.querySelector('[data-del]')?.addEventListener('click',()=>{ items.splice(i,1); saveDB(); enableQaEdit(true); renderQaList(); }); }); qaEditor.appendChild(list); }
+  // ===== Tabs / MegaTabs =====
+  let CURRENT_TAB = 'tpl';
+  function switchTab(tab){
+    CURRENT_TAB = tab;
+    ['tpl','qa','interview'].forEach(id=> $('#tab_'+id).style.display = (id===tab) ? 'block':'none');
+    localStorage.setItem('noi_tab', tab);
+    renderMegaTabs();
+  }
+  function renderMegaTabs(){
+    const wrap = $('#megaTabs'); if(!wrap) return;
+    wrap.innerHTML = '';
+    const order = ['スカウト','登録','end','Q&A','面談'];
+    order.forEach(name=>{
+      const btn=document.createElement('button'); btn.className='tab'; btn.textContent=name;
+      const isTplGroup = ['スカウト','登録','end'].includes(name);
+      const active = isTplGroup ? (CURRENT_TAB==='tpl' && DB.templates.group===name) :
+                    (name==='Q&A' ? CURRENT_TAB==='qa' : CURRENT_TAB==='interview');
+      if(active) btn.classList.add('active');
+      btn.onclick = ()=>{
+        if(isTplGroup){
+          DB.templates.group = name;
+          DB.templates.step  = 0;
+          saveDB();
+          switchTab('tpl');
+          renderTplApps();
+          renderTplEditor();
+        }else{
+          if(name==='Q&A'){
+            switchTab('qa');
+            renderQaApps(); renderQaSeg(); renderQaList();
+          }else{
+            switchTab('interview');
+            renderIvApps(); renderIvForm();
+          }
+        }
+      };
+      wrap.appendChild(btn);
+    });
   }
 
-  // ====== Interview ======
+  // ===== Template helpers =====
+  function tplApps(){ return Object.keys(DB.templates.data||{}); }
+  function tplGroupList(){
+    const a=DB.templates.data[DB.templates.app]||{};
+    if(DB.templates.app==='TikTok' && DB.templates.group==='登録' && !DB.templates.special.ttChoice){
+      return [];
+    }
+    return a[DB.templates.group]||[];
+  }
+
+  function renderTplApps(){
+    appList.innerHTML='';
+    const apps=tplApps();
+    apps.forEach(name=>{
+      const b=document.createElement('button');
+      b.className='app'+(DB.templates.app===name?' selected':'');
+      const count=Object.values(DB.templates.data[name]||{}).reduce((n,arr)=>n+(arr?.length||0),0);
+      b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':count}</span>`;
+      b.onclick=()=>{ 
+        DB.templates.app=name; 
+        DB.templates.step=0; 
+        DB.templates.special.ttChoice=null; 
+        DB.templates.special.ttNote=''; 
+        DB.templates.special.ttConfirmRequired=false;
+        DB.templates.special.ttConfirmText='';
+        saveDB(); 
+        renderTplApps(); 
+        renderTplEditor(); 
+      };
+      appList.appendChild(b);
+    });
+  }
+
+  // --- TikTok登録：確認カード ---
+  function renderTTConfirm(){
+    ttChoiceBox.style.display = 'block';
+    ttChoiceBox.innerHTML = '';
+    const card = document.createElement('div');
+    card.className = 'panel';
+    const body = escapeHtml(DB.templates.special.ttConfirmText || '');
+    card.innerHTML = `
+      <h3 style="margin:0 0 6px">確認事項</h3>
+      <textarea id="ttConfirmText" style="min-height:120px">${body}</textarea>
+      <div class="row" style="margin-top:8px;justify-content:flex-end;gap:8px">
+        <button class="btn ghost" id="ttBack">戻る</button>
+        <button class="btn primary" id="ttGo">進む</button>
+      </div>`;
+    ttChoiceBox.appendChild(card);
+
+    $('#ttConfirmText').addEventListener('input', (e)=>{
+      DB.templates.special.ttConfirmText = e.target.value || '';
+      saveDB();
+    });
+    $('#ttBack').onclick = ()=>{
+      DB.templates.special.ttChoice = null;
+      DB.templates.special.ttConfirmRequired = false;
+      DB.templates.special.ttConfirmText = '';
+      if (DB.templates?.data?.['TikTok']){
+        DB.templates.data['TikTok']['登録'] = [{title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:''}];
+      }
+      DB.templates.step = 0;
+      saveDB();
+      renderTplEditor();
+    };
+    $('#ttGo').onclick = ()=>{
+      DB.templates.special.ttConfirmRequired = false;
+      saveDB();
+      renderTplEditor();
+    };
+  }
+
+  function renderTTChoice(){
+    const isTikTokRegister = (DB.templates.app==='TikTok' && DB.templates.group==='登録');
+
+    ttChoiceBox.style.display = isTikTokRegister ? 'block' : 'none';
+    ttChoiceBox.innerHTML = '';
+    if (!isTikTokRegister) return;
+
+    if (DB.templates.special.ttChoice && DB.templates.special.ttConfirmRequired){
+      renderTTConfirm();
+      return;
+    }
+
+    if (!DB.templates.special.ttChoice){
+      const options = [
+        {key:'ttba_ok',   title:'TTBA経由(アプリ内スカウト)でBackStageも登録可能の場合', note:true},
+        {key:'sns_ok',    title:'SNS等のスカウトでBackstageも登録可能な場合',          note:true},
+        {key:'agency_ng', title:'Backstage上でagency登録不可となっている場合',            note:true},
+        {key:'consider',  title:'登録検討の場合',                                          note:false},
+        {key:'decline',   title:'登録拒否の場合',                                          note:false},
+      ];
+      const list=document.createElement('div');
+      list.className='apps';
+      options.forEach(opt=>{
+        const btn=document.createElement('button');
+        btn.className='app';
+        btn.innerHTML=`<span>${opt.title}</span><span class="badge">選択</span>`;
+        btn.onclick=()=>{
+          ensureTTScenarios();
+          const tiktok = DB.templates.data['TikTok'] || {};
+          const scenarios = tiktok._ttScenarios || {};
+          const src = clone(scenarios[opt.key] || []);
+          DB.templates.special.ttChoice = opt.key;
+          DB.templates.special.ttNote   = '';
+          if (TT_CONFIRM_REQUIRED_KEYS.has(opt.key)){
+            DB.templates.special.ttConfirmRequired = true;
+            DB.templates.special.ttConfirmText = TT_CONFIRM_TEXT[opt.key] || '';
+          }else{
+            DB.templates.special.ttConfirmRequired = false;
+            DB.templates.special.ttConfirmText = '';
+          }
+          if (!DB.templates.data['TikTok']['登録']) DB.templates.data['TikTok']['登録'] = [];
+          DB.templates.data['TikTok']['登録'] = src;
+          DB.templates.step = 0;
+          saveDB();
+          renderTplEditor();
+        };
+        list.appendChild(btn);
+      });
+      ttChoiceBox.appendChild(list);
+
+      const showNote = document.createElement('div');
+      showNote.style.marginTop='10px';
+      showNote.innerHTML = `
+        <div class="note">上の3つを選ぶ場合は補足メモを残せます（テンプレ解説に表示）。</div>
+        <textarea id="ttMemo" placeholder="補足メモ（任意）" style="min-height:90px;margin-top:6px"></textarea>`;
+      ttChoiceBox.appendChild(showNote);
+      $('#ttMemo').addEventListener('input', ()=>{
+        DB.templates.special.ttNote = $('#ttMemo').value||'';
+        saveDB();
+      });
+      return;
+    }
+
+    ttChoiceBox.style.display = 'none';
+  }
+
+  function renderTplEditor(){
+    const list=tplGroupList();
+
+    if(!DB.templates.app){
+      appNameEl.textContent='未選択'; stepIndexEl.textContent='-'; stepTotalEl.textContent='-';
+      stepTitleInput.value=''; explainEl.textContent='アプリを選択してください。';
+      editorText.value=''; progress.innerHTML=''; $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
+      renderTTChoice();
+      return;
+    }
+
+    renderTTChoice();
+    ensureTTScenarios();
+
+    if (DB.templates.app==='TikTok' && DB.templates.group==='登録' && DB.templates.special.ttChoice && DB.templates.special.ttConfirmRequired){
+      appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group;
+      stepIndexEl.textContent='-'; stepTotalEl.textContent='—';
+      stepTitleInput.value='';
+      explainEl.innerHTML='上の「確認事項」を確認して <span class="kbd">進む</span> を押してください。';
+      editorText.value=''; progress.innerHTML='';
+      $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
+      $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
+      return;
+    }
+
+    appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group;
+    stepTotalEl.textContent=list.length || (DB.templates.app==='TikTok' && DB.templates.group==='登録' ? '—' : '0');
+
+    if(!list.length){
+      stepIndexEl.textContent='-';
+      stepTitleInput.value='テンプレなし';
+      explainEl.textContent = (DB.templates.app==='TikTok' && DB.templates.group==='登録' && !DB.templates.special.ttChoice)
+        ? '登録のフローを選択してください。' : 'このカテゴリにはテンプレがありません。＋で追加してください。';
+      editorText.value=''; progress.innerHTML='';
+      $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
+      $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
+      return;
+    }
+
+    DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1));
+    stepIndexEl.textContent=DB.templates.step+1;
+
+    const cur=list[DB.templates.step];
+
+    stepTitleInput.value = cur.title || '';
+    stepTitleInput.oninput = ()=>{ cur.title = stepTitleInput.value; saveDB(); };
+
+    const memo = DB.templates.special?.ttNote || '';
+    const explainText = (cur.explain||'').replace('{{memo}}', memo);
+    explainEl.innerHTML = linkify(explainText);
+
+    editorText.value=cur.text||'';
+
+    $('#prevBtn').disabled=DB.templates.step===0;
+    $('#nextBtn').disabled=DB.templates.step>=list.length-1;
+
+    progress.innerHTML='';
+    list.forEach((_,i)=>{
+      const d=document.createElement('div'); d.className='dot'+(i===DB.templates.step?' on':'');
+      d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();};
+      progress.appendChild(d);
+    });
+    const jump=$('#jumpList');
+    jump.innerHTML='';
+    list.forEach((t,i)=>{
+      const b=document.createElement('button'); b.className='tab'; b.textContent=t.title||`No.${i+1}`;
+      b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active'); jump.appendChild(b);
+    });
+
+    const wrap=$('#tplList'); wrap.innerHTML='';
+    list.forEach((t,i)=>{
+      const row=document.createElement('div'); row.className='panel';
+      row.innerHTML=`
+        <div class="grid2"><input data-k="title" value="${(t.title||'').replace(/"/g,'&quot;')}"/><input data-k="explain" value="${(t.explain||'').replace(/"/g,'&quot;')}"/></div>
+        <textarea data-k="text">${(t.text||'').replace(/</g,'&lt;')}</textarea>
+        <div class="row" style="gap:8px;margin-top:8px">
+          <button class="btn danger" data-del="${i}">削除</button>
+        </div>`;
+      wrap.appendChild(row);
+      row.querySelectorAll('input,textarea').forEach(el=> el.oninput=()=>{ t[el.dataset.k]=el.value; saveDB(); });
+      row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); });
+    });
+  }
+
+  // ===== Q&A =====
+  let QA_APP = null; let QA_KIND = '回答';
+  function qaApps(){ return Object.keys(DB.qa||{}); }
+  function renderQaApps(){
+    qaAppList.innerHTML=''; const apps=qaApps();
+    if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。編集モードで追加してください。</p>'; return; }
+    if(!QA_APP) QA_APP=apps[0];
+    apps.forEach(a=>{
+      const b=document.createElement('button'); const count=(DB.qa[a]['回答']?.length||0)+(DB.qa[a]['送信']?.length||0);
+      b.className='app'+(QA_APP===a?' selected':''); b.innerHTML=`<span>${a}</span><span class="badge">${count}</span>`;
+      b.onclick=()=>{ QA_APP=a; renderQaApps(); renderQaSeg(); renderQaList(); }; qaAppList.appendChild(b);
+    });
+  }
+  function renderQaSeg(){
+    qaSegWrap.style.display= QA_APP? 'block':'none'; qaSegWrap.innerHTML='';
+    if(!QA_APP) return;
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;';
+    ['回答','送信'].forEach(kind=>{
+      const btn=document.createElement('button'); const active=QA_KIND===kind;
+      btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800';
+      btn.textContent=kind; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; }
+      btn.onclick=()=>{ QA_KIND=kind; renderQaSeg(); renderQaList(); }; wrap.appendChild(btn);
+    });
+    qaSegWrap.appendChild(wrap);
+  }
+  function renderQaList(){
+    qaList.innerHTML=''; qaView.innerHTML='';
+    const items=DB.qa[QA_APP]?.[QA_KIND]||[];
+    if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。編集モードで追加してください。</p>'; return; }
+    const ul=document.createElement('div'); ul.style.display='grid'; ul.style.gap='8px';
+    items.forEach((it,i)=>{
+      const b=document.createElement('button'); b.className='app'; b.innerHTML=`<span>${escapeHtml(it.q||'')}</span>`;
+      b.onclick=()=>{
+        if(QA_KIND==='回答'){
+          qaView.innerHTML = `
+            <div class="panel">
+              <h3 style="margin:0 0 6px">回答</h3>
+              <div>${linkify(it.a||'')}</div>
+              <div class="hr"></div>
+              <h4 style="margin:0 0 6px">解説</h4>
+              <div class="muted">${linkify(it.explain||'')}</div>
+            </div>`;
+        } else {
+          qaView.innerHTML = `
+            <div class="panel">
+              <h3 style="margin:0 0 6px">送信テンプレ</h3>
+              <div class="note" style="white-space:pre-wrap">${linkify(it.text||'')}</div>
+              <div class="row" style="margin-top:8px"><button class="btn copy" id="qaCopyBtn">コピー</button></div>
+            </div>`;
+          $('#qaCopyBtn').onclick=async()=>{ try{ await navigator.clipboard.writeText(it.text||''); showToast('コピーしました'); }catch{} };
+        }
+      };
+      ul.appendChild(b);
+    });
+    qaList.appendChild(ul);
+  }
+  function enableQaEdit(on){
+    $('#qaEditor').style.display= on ? 'block':'none';
+    $('#qaSave').style.display= on ? 'inline-flex':'none';
+    $('#qaDiscard').style.display= on ? 'inline-flex':'none';
+    if(on){
+      qaEditor.innerHTML='';
+      const apps=qaApps();
+      const select=document.createElement('select');
+      select.innerHTML=apps.map(a=>`<option ${a===QA_APP?'selected':''}>${a}</option>`).join('');
+      select.onchange=()=>{ QA_APP=select.value; renderQaApps(); renderQaSeg(); renderQaList(); enableQaEdit(true); };
+      qaEditor.appendChild(select);
+
+      const kindSel=document.createElement('select');
+      kindSel.innerHTML=['回答','送信'].map(k=>`<option ${k===QA_KIND?'selected':''}>${k}</option>`).join('');
+      kindSel.onchange=()=>{ QA_KIND=kindSel.value; enableQaEdit(true); };
+      qaEditor.appendChild(kindSel);
+
+      const form=document.createElement('div'); form.className='panel';
+      if(QA_KIND==='回答'){
+        form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/><input id="qaA" placeholder="回答（URL可）"/></div><textarea id="qaExplain" placeholder="解説（任意・URL可）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`;
+      } else {
+        form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/></div><textarea id="qaText" placeholder="送信テンプレ本文（URL可）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`;
+      }
+      qaEditor.appendChild(form);
+      $('#qaAdd').onclick=()=>{
+        const rec = (QA_KIND==='回答')? {q:$('#qaQ').value, a:$('#qaA').value, explain:$('#qaExplain').value} : {q:$('#qaQ').value, text:$('#qaText').value};
+        if(!rec.q) return; DB.qa[QA_APP][QA_KIND].push(rec); saveDB(); showToast('追加しました'); renderQaList(); enableQaEdit(true);
+      };
+      const items=DB.qa[QA_APP]?.[QA_KIND]||[]; const list=document.createElement('div'); list.style.marginTop='8px';
+      items.forEach((it,i)=>{
+        const row=document.createElement('div'); row.className='panel';
+        if(QA_KIND==='回答'){
+          row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/\"/g,'&quot;')}"/><input data-k="a" value="${(it.a||'').replace(/\"/g,'&quot;')}"/></div><textarea data-k="explain">${(it.explain||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`;
+        } else {
+          row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/\"/g,'&quot;')}"/></div><textarea data-k="text">${(it.text||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`;
+        }
+        list.appendChild(row);
+        row.querySelectorAll('input,textarea').forEach(el=> el.oninput = ()=>{ it[el.dataset.k]=el.value; saveDB(); });
+        row.querySelector('[data-del]')?.addEventListener('click',()=>{ items.splice(i,1); saveDB(); enableQaEdit(true); renderQaList(); });
+      });
+      qaEditor.appendChild(list);
+    }
+  }
+
+  // ===== Interview =====
   let IV_APP = null;
   function ivApps(){ return Object.keys(DB.interview||{}); }
   function renderIvApps(){
@@ -434,385 +906,187 @@ function seedInterview(){
     apps.forEach(a=>{
       const b=document.createElement('button');
       b.className='app'+(IV_APP===a?' selected':'');
-      b.innerHTML=`<span>${a}</span>`; b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvView(); renderIvForm(); };
+      b.innerHTML=`<span>${a}</span>`;
+      b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvForm(); };
       ivAppList.appendChild(b);
     });
   }
-  function renderIvView(){
-    const rec=DB.interview[IV_APP]||{sheet:'',manual:'',columns:[]};
-    ivManualBox.textContent = rec.manual||'（未入力）';
-    ivSheetBtn.onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); };
-    ivCopyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(rec.manual||''); showToast('コピーしました'); }catch{} };
+  function ivParseColumns(text){
+    if(!text) return [];
+    const first = String(text).split(/\r?\n/).find(s => s.trim().length) || '';
+    const parts = first.includes('\t') ? first.split('\t') : first.split(',');
+    return parts.map(s=>s.trim()).filter(Boolean);
   }
-function ivParseColumns(text){
-  if(!text) return [];
-  const first = String(text).split(/\r?\n/).find(s => s.trim().length) || '';
-  const parts = first.includes('\t') ? first.split('\t') : first.split(',');
-  return parts.map(s=>s.trim()).filter(Boolean);
-}
+  function renderIvForm(){
+    const box = ivFormBox;
+    if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
+    const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[], flow:{index:0,answers:{},steps:[]}});
 
-function renderIvForm(){
-  const box = $('#ivFormBox');
-  if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
-  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[], flow:{index:0,answers:{},steps:[]}});
-
-  // ---- 1) フロー（WAVEのみ本格UI）
-  const isWAVE = (IV_APP === 'WAVE');
-  if (isWAVE && (!rec.flow || !Array.isArray(rec.flow.steps) || !rec.flow.steps.length)) {
-    // 初期シードを補完（列も補完）
-    const seed = seedInterview()['WAVE'];
-    rec.flow = JSON.parse(JSON.stringify(seed.flow));
-    rec.columns = seed.columns.slice();
-    saveDB();
-  }
-
-  // ヘルパー：ジェネレーター入力へ同期（column名で対応）
-  const syncAnswersToInputs = ()=>{
-    if (!rec.columns || !rec.columns.length) return;
-    (rec.columns||[]).forEach(col=>{
-      const val = rec.flow?.answers?.[col] ?? '';
-      const inp = document.querySelector(`[data-col="${col}"]`);
-      if (inp) inp.value = val;
-    });
-  };
-
-  // ---- ボックスを初期化
-  box.innerHTML = '';
-
-  // ---- (A) 面談フロー UI
-  if (isWAVE){
-    const f = rec.flow;
-    const steps = f.steps;
-    const i = Math.max(0, Math.min(f.index||0, steps.length-1));
-    f.index = i;
-    const s = steps[i];
-
-    const flowWrap = document.createElement('div');
-    flowWrap.className = 'panel';
-    flowWrap.innerHTML = `
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <strong>面談フロー（WAVE）</strong>
-        <span class="pill">Step ${i+1} / ${steps.length}</span>
-      </div>
-      <div class="hr"></div>
-      <div style="font-weight:800;font-size:16px;margin-bottom:6px">${s.title||''}</div>
-      <div class="muted" style="margin-bottom:10px">${s.explain||''}</div>
-      <div id="ivFlowInputArea"></div>
-      <div class="row" style="justify-content:space-between;margin-top:10px">
-        <button class="btn ghost" id="ivFlowPrev">前</button>
-        <button class="btn" id="ivFlowNext">次</button>
-      </div>
-      <div class="muted" style="margin-top:8px">※ 回答は下の「行ジェネレーター」に自動反映されます</div>
-    `;
-    box.appendChild(flowWrap);
-
-    // 入力部を描画
-    const area = flowWrap.querySelector('#ivFlowInputArea');
-    const currentVal = s.column ? (rec.flow.answers[s.column] || '') : '';
-    if (s.type === 'choice'){
-      const wrap = document.createElement('div');
-      wrap.className = 'row';
-      (s.options||[]).forEach(opt=>{
-        const b = document.createElement('button');
-        b.className = 'tab' + (currentVal===opt ? ' active' : '');
-        b.textContent = opt;
-        b.onclick = ()=>{
-          if (s.column) { rec.flow.answers[s.column] = opt; saveDB(); syncAnswersToInputs(); }
-          // 見た目更新
-          wrap.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-          b.classList.add('active');
-        };
-        wrap.appendChild(b);
-      });
-      area.appendChild(wrap);
-    } else if (s.type === 'text'){
-      const ta = document.createElement('textarea');
-      ta.placeholder = '入力してください';
-      ta.value = currentVal;
-      ta.oninput = ()=>{
-        if (s.column){ rec.flow.answers[s.column] = ta.value; saveDB(); }
+    box.innerHTML = '';
+    if (!rec.columns || !rec.columns.length){
+      const p = document.createElement('div');
+      p.innerHTML = `
+        <div class="note">下のテキストにシートのヘッダー行を貼り付け→「列を設定」。</div>
+        <textarea id="ivColsRaw" placeholder="日時,氏名,..." style="margin-top:8px;min-height:90px"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
+      box.appendChild(p);
+      $('#ivColsApply').onclick = ()=>{
+        const cols = ivParseColumns($('#ivColsRaw').value);
+        if(!cols.length){ showToast('列が読み取れませんでした'); return; }
+        rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
       };
-      ta.onchange = syncAnswersToInputs;
-      area.appendChild(ta);
-    } else {
-      area.innerHTML = `<div class="note">このステップには入力はありません。</div>`;
+      return;
     }
 
-    // 前/次
-    const go = (delta)=>{
-      let ni = f.index + delta;
-      // DMが「なし」の場合は「DM詳細」をスキップ
-      if (delta>0 && steps[ni]?.id==='dmdetail' && (rec.flow.answers['スカウトDM']||'')==='なし'){
-        ni += 1;
-      }
-      f.index = Math.max(0, Math.min(ni, steps.length-1));
-      saveDB();
-      renderIvForm(); // 再描画
+    const pillWrap = document.createElement('div');
+    pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
+    rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
+    box.appendChild(pillWrap);
+
+    const inputs = document.createElement('div'); inputs.id='ivInputs';
+    rec.columns.forEach(c=>{
+      const row=document.createElement('div'); row.className='panel';
+      row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`;
+      inputs.appendChild(row);
+    });
+    box.appendChild(inputs);
+
+    const controls = document.createElement('div'); controls.className='row'; controls.style.cssText='margin-top:8px;justify-content:flex-end';
+    controls.innerHTML = `
+      <button class="btn copy small" id="ivCopyRow2">コピー</button>
+      <button class="btn danger small" id="ivClearInputs2">リセット</button>
+      <button class="btn ghost small" id="ivResetCols2">行設定</button>
+      <button class="btn small" id="ivOpenSheet2">スプシ</button>`;
+    box.appendChild(controls);
+
+    const copyTSV = async ()=>{
+      const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
+      const final = values.join('\t');
+      try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
     };
-    flowWrap.querySelector('#ivFlowPrev').onclick = ()=> go(-1);
-    flowWrap.querySelector('#ivFlowNext').onclick = ()=> go(+1);
-  } else {
-    // WAVE以外はガイダンス
-    const info = document.createElement('div');
-    info.className = 'note';
-    info.textContent = 'WAVE以外は通常の行ジェネレーターのみ表示します。';
-    box.appendChild(info);
-  }
-
-  // ---- (B) 行ジェネレーター（既存のUIを残しつつ、自動反映）
-  // 列未設定時：ヘルパーを表示
-  if (!rec.columns || !rec.columns.length){
-    const p = document.createElement('div');
-    p.innerHTML = `
-      <div class="note">下のテキストにシートのヘッダー行を貼り付け→「列を設定」。</div>
-      <textarea id="ivColsRaw" placeholder="日時,氏名,..." style="margin-top:8px;min-height:90px"></textarea>
-      <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>
-    `;
-    box.appendChild(p);
-    $('#ivColsApply').onclick = ()=>{
-      const cols = (function(txt){
-        const first = String(txt||'').split(/\r?\n/).find(s=>s.trim().length)||'';
-        const parts = first.includes('\t') ? first.split('\t') : first.split(',');
-        return parts.map(s=>s.trim()).filter(Boolean);
-      })($('#ivColsRaw').value);
-      if(!cols.length){ showToast('列が読み取れませんでした'); return; }
-      rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+    const clearAll = ()=>{
+      (rec.columns||[]).forEach(c=>{ const inp = document.querySelector(`[data-col="${c}"]`); if (inp) inp.value = ''; });
+      if (IV_APP === 'WAVE' && rec.flow){ rec.flow.index = 0; rec.flow.answers = {}; }
+      saveDB(); renderIvForm(); showToast('入力をリセットしました');
     };
-    return;
-  }
 
-  // 列あり → 入力群＋コピー
-  const pillWrap = document.createElement('div');
-  pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
-  rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
-
-  const inputs = document.createElement('div'); inputs.id='ivInputs';
-  rec.columns.forEach(c=>{
-    const row=document.createElement('div');
-    row.className='panel';
-    row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`;
-    inputs.appendChild(row);
-  });
-
-  const controls = document.createElement('div'); controls.className='row'; controls.style.marginTop='8px';
- controls.innerHTML = `
-  <label class="pill">
-    <select id="ivDelim">
-      <option value="tsv">TSV(タブ)</option>
-      <option value="csv">CSV(カンマ)</option>
-    </select>
-  </label>
-  <label class="pill"><input type="checkbox" id="ivWithHeader"> ヘッダー行を付ける</label>
-  <label class="pill"><input type="checkbox" id="ivAutoClear"> コピー後に自動クリア</label>
-  <button class="btn copy" id="ivCopyRow">行をコピー</button>
-  <button class="btn danger" id="ivClearInputs">入力リセット</button>
-  <button class="btn ghost" id="ivResetCols">列を再設定</button>
-`;
-
-  box.appendChild(pillWrap);
-  box.appendChild(inputs);
-  box.appendChild(controls);
-// 入力とWAVEフロー回答をまとめて初期化
-function clearAll(){
-  // 入力欄クリア
-  (rec.columns||[]).forEach(c=>{
-    const inp = document.querySelector(`[data-col="${c}"]`);
-    if (inp) inp.value = '';
-  });
-  // WAVEならフローもクリア
-  if (IV_APP === 'WAVE' && rec.flow){
-    rec.flow.index = 0;
-    rec.flow.answers = {};
-  }
-  saveDB();
-  renderIvForm();
-  showToast('入力をリセットしました');
-}
-
-// 「入力リセット」ボタン
-$('#ivClearInputs').onclick = clearAll;
-
-  // 回答→入力欄へ反映
-  syncAnswersToInputs();
-
-  // コピー
-  $('#ivCopyRow').onclick = async ()=>{
-    const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
-    const delim = $('#ivDelim').value;
-    const withHeader = $('#ivWithHeader').checked;
-
-    const joinTsv = arr => arr.join('\t');
-    const escCsv  = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
-
-    const textRow   = (delim === 'tsv') ? joinTsv(values) : values.map(escCsv).join(',');
-    const headerRow = (delim === 'tsv') ? joinTsv(rec.columns) : rec.columns.map(escCsv).join(',');
-    const final = withHeader ? (headerRow + '\n' + textRow) : textRow;
-
-    try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }
-    catch{ showToast('コピーに失敗'); }
-  };
-
-  // 列再設定
-  $('#ivResetCols').onclick = ()=>{
-    box.innerHTML = `
-      <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
-      <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
-    $('#ivColsApply').onclick = ()=>{
-      const first = String($('#ivColsRaw').value||'').split(/\r?\n/).find(s=>s.trim().length)||'';
-      const cols = (first.includes('\t') ? first.split('\t') : first.split(',')).map(s=>s.trim()).filter(Boolean);
-      if(!cols.length){ showToast('列が読み取れませんでした'); return; }
-      rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+    $('#ivCopyRow2').onclick = copyTSV;
+    $('#ivClearInputs2').onclick = clearAll;
+    $('#ivResetCols2').onclick = ()=>{
+      box.innerHTML = `
+        <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
+      $('#ivColsApply').onclick = ()=>{
+        const cols = ivParseColumns($('#ivColsRaw').value);
+        if(!cols.length){ showToast('列が読み取れませんでした'); return; }
+        rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
+      };
     };
-  };
-}
-if ($('#ivAutoClear')?.checked){
-  clearAll();
-}
+    $('#ivOpenSheet2').onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); };
 
-function enableIvEdit(on){
-  ivEditor.style.display = on ? 'block' : 'none';
-  $('#ivSave').style.display = on ? 'inline-flex' : 'none';
-  $('#ivDiscard').style.display = on ? 'inline-flex' : 'none';
-  if(!on) return;
+    const syncAnswersToInputs = ()=>{
+      (rec.columns||[]).forEach(col=>{
+        const val = rec.flow?.answers?.[col] ?? '';
+        const inp = document.querySelector(`[data-col="${col}"]`);
+        if (inp && val && !inp.value) inp.value = val;
+      });
+    };
+    if (IV_APP==='WAVE') syncAnswersToInputs();
+  }
 
-  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
-  // 編集UIを組み立て（既存の中身を作り直す）
-  ivEditor.innerHTML = `
-    <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
-    <textarea id="ivManual" placeholder="面談マニュアル本文" style="min-height:120px"></textarea>
-    <div class="note" style="margin-top:8px">WAVEの面談フロー（JSON）。<br>各ステップの <code>title/type/explain/options/column</code> を編集できます。</div>
-    <textarea id="ivFlowJson" placeholder="WAVE用フロー（JSON配列）" style="min-height:220px"></textarea>
-  `;
-  $('#ivSheetUrl').value = rec.sheet || '';
-  $('#ivManual').value  = rec.manual || '';
-  const steps = (rec.flow && Array.isArray(rec.flow.steps)) ? rec.flow.steps : [];
-  $('#ivFlowJson').value = JSON.stringify(steps, null, 2);
-}
-// ====== Copy & Share for template ======
-function applyTags(str){
-  const map = {
-    '{{name}}': $('#tagName')?.value,
-    '{{date}}': $('#tagDate')?.value,
-    '{{time}}': $('#tagTime')?.value,
-    '{{link}}': $('#tagLink')?.value,
-  };
-  let out = String(str ?? '');
-  for(const k in map){
-    const v = map[k];
-    if(v) out = out.split(k).join(v);
-  }
-  return out;
-}
-async function doCopy(){
-  const txt = applyTags($('#textArea').value);
-  try{
-    await navigator.clipboard.writeText(txt);
-    showToast('コピーしました');
-  }catch(e){
-    const ta = $('#textArea');
-    ta.readOnly = false; ta.select(); document.execCommand('copy'); ta.readOnly = true;
-    showToast('コピーしました（互換）');
-  }
-}
-async function doShare(){
-  const txt = applyTags($('#textArea').value);
-  if(navigator.share){
-    try{ await navigator.share({ text: txt }); }catch(e){}
-  }else{
-    showToast('共有に未対応の端末です');
-  }
-}
+  function enableIvEdit(on){
+    ivEditor.style.display = on ? 'block' : 'none';
+    $('#ivSave').style.display = on ? 'inline-flex' : 'none';
+    $('#ivDiscard').style.display = on ? 'inline-flex' : 'none';
+    if(!on) return;
 
-  // ====== Header buttons ======
-  $('#installBtn').style.display='none'; let deferredPrompt=null; window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; }); $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
+    const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
+
+    ivEditor.innerHTML = `
+      <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
+      <textarea id="ivManual" placeholder="面談マニュアル本文" style="min-height:120px"></textarea>
+      <div class="note" style="margin-top:8px">WAVEの面談フロー（JSON）。<br>各ステップの <code>title/type/explain/options/column</code> を編集できます。</div>
+      <textarea id="ivFlowJson" placeholder="WAVE用フロー（JSON配列）" style="min-height:220px"></textarea>`;
+    $('#ivSheetUrl').value = rec.sheet || '';
+    $('#ivManual').value  = rec.manual || '';
+    const steps = (rec.flow && Array.isArray(rec.flow.steps)) ? rec.flow.steps : [];
+    $('#ivFlowJson').value = JSON.stringify(steps, null, 2);
+  }
+
+  // ===== Copy & Share (テンプレ) =====
+  function applyTags(str){
+    const map = { '{{name}}': $('#tagName')?.value, '{{date}}': $('#tagDate')?.value, '{{time}}': $('#tagTime')?.value, '{{link}}': $('#tagLink')?.value };
+    let out = String(str ?? ''); for(const k in map){ const v = map[k]; if(v) out = out.split(k).join(v); } return out;
+  }
+  async function doCopy(){
+    const txt = applyTags($('#textArea').value);
+    try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }
+    catch(e){ const ta = $('#textArea'); ta.readOnly = false; ta.select(); document.execCommand('copy'); ta.readOnly = true; showToast('コピーしました（互換）'); }
+  }
+  async function doShare(){
+    const txt = applyTags($('#textArea').value);
+    if(navigator.share){ try{ await navigator.share({ text: txt }); }catch(e){} } else { showToast('共有に未対応の端末です'); }
+  }
+
+  // ===== Header buttons =====
+  $('#installBtn').style.display='none'; let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; });
+  $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
   $('#backupBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(DB)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='noi-backup.json'; a.click(); };
-  $('#restoreBtn').onclick=()=> $('#restoreInput').click(); $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
+  $('#restoreBtn').onclick=()=> $('#restoreInput').click();
+  $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
   $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); } };
 
-  // ====== HTML helpers ======
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-
-  // ====== Init & Boot ======
+  // ===== Init & Boot =====
   function boot(){
-    // tabs
-    $$('#mainTabs .tab').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab)); { const _savedTab = localStorage.getItem('noi_tab'); const _ok = ['tpl','qa','interview']; switchTab(_ok.includes(_savedTab) ? _savedTab : 'tpl'); }
+    renderMegaTabs();
+    const saved = localStorage.getItem('noi_tab'); const ok=['tpl','qa','interview'];
+    switchTab(ok.includes(saved)? saved : 'tpl');
 
-    // templates
-    renderTplApps(); renderTplGroupSeg(); renderTplEditor();
-    $$('#modeSeg button').forEach(btn=>{ btn.onclick=()=>{ DB.templates.mode=btn.dataset.mode; DB.templates.app=''; DB.templates.group='スカウト'; DB.templates.step=0; saveDB(); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode)); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; }); $$('#modeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.mode===DB.templates.mode));
+    // テンプレ
+    renderTplApps(); renderTplEditor();
     $('#prevBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
     $('#nextBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step<list.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
-    ['#copyBtn','#copyBtn2'].forEach(s=> $(s).onclick=doCopy); ['#shareBtn','#shareBtn2'].forEach(s=> $(s).onclick=doShare);
-    let tplEditing=false; $('#tplEditToggle').onclick=()=>{ tplEditing=!tplEditing; enableTplEdit(tplEditing); }; $('#tplSave').onclick=()=>{ saveDB(); tplEditing=false; enableTplEdit(false); showToast('テンプレを保存しました'); renderTplEditor(); }; $('#tplDiscard').onclick=()=>{ loadDB(); tplEditing=false; enableTplEdit(false); renderTplApps(); renderTplGroupSeg(); renderTplEditor(); }; $('#tplAdd').onclick=()=>{ const m=DB.templates.data[DB.templates.mode][DB.templates.app]; m[DB.templates.group]=m[DB.templates.group]||[]; m[DB.templates.group].push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
+    $('#copyBtn').onclick=doCopy; $('#shareBtn').onclick=doShare;
+    $('#tplEditor').style.display='block';
+
+    $('#tplAdd').onclick=()=>{ const m=DB.templates.data[DB.templates.app]; if(!m) return; m[DB.templates.group]=m[DB.templates.group]||[]; m[DB.templates.group].push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
 
     // Q&A
-    renderQaApps(); renderQaSeg(); renderQaList(); let qaEditing=false; $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); }; $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderQaApps(); renderQaSeg(); renderQaList(); }; $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderQaApps(); renderQaSeg(); renderQaList(); };
+    renderQaApps(); renderQaSeg(); renderQaList();
+    let qaEditing=false;
+    $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); };
+    $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderQaApps(); renderQaSeg(); renderQaList(); };
+    $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderQaApps(); renderQaSeg(); renderQaList(); };
 
     // Interview
-    renderIvApps(); renderIvView(); let ivEditing=false; $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); };$('#ivSave').onclick = ()=>{
-  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {
-    sheet:'', manual:'', columns:[], flow:{ index:0, answers:{}, steps:[] }
-  });
-
-  if ($('#ivSheetUrl')) rec.sheet  = $('#ivSheetUrl').value;
-  if ($('#ivManual'))   rec.manual = $('#ivManual').value;
-
-  // WAVE用：フローJSONも保存
-  if ($('#ivFlowJson')){
-    try{
-      const steps = JSON.parse($('#ivFlowJson').value || '[]');
-      if (!Array.isArray(steps)) throw new Error('steps is not array');
-      rec.flow = rec.flow || { index:0, answers:{}, steps:[] };
-      rec.flow.steps = steps;
-
-      // column から列を自動更新
-      const cols = steps.map(s=>s.column).filter(Boolean);
-      if (cols.length) rec.columns = cols;
-    }catch(e){
-      showToast('フローJSONの形式が不正です');
-      return;
-    }
+    renderIvApps(); renderIvForm();
+    let ivEditing=false;
+    $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); };
+    $('#ivSave').onclick = ()=>{
+      const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{ index:0, answers:{}, steps:[] }});
+      if ($('#ivSheetUrl')) rec.sheet  = $('#ivSheetUrl').value;
+      if ($('#ivManual'))   rec.manual = $('#ivManual').value;
+      if ($('#ivFlowJson')){
+        try{
+          const steps = JSON.parse($('#ivFlowJson').value || '[]');
+          if (!Array.isArray(steps)) throw new Error('steps is not array');
+          rec.flow = rec.flow || { index:0, answers:{}, steps:[] };
+          rec.flow.steps = steps;
+          const cols = steps.map(s=>s.column).filter(Boolean);
+          if (cols.length) rec.columns = cols;
+        }catch(e){ showToast('フローJSONの形式が不正です'); return; }
+      }
+      DB.interview[IV_APP] = rec; saveDB();
+      showToast('面談を保存しました'); enableIvEdit(false); renderIvForm();
+    };
+    $('#ivDiscard').onclick=()=>{ loadDB(); enableIvEdit(false); renderIvApps(); renderIvForm(); };
   }
 
-  DB.interview[IV_APP] = rec;
-  saveDB();
-  showToast('面談を保存しました');
-  enableIvEdit(false);
-  renderIvView();
-  renderIvForm();
-};
-
-  const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
-  if ($('#ivSheetUrl')) rec.sheet  = $('#ivSheetUrl').value;
-  if ($('#ivManual'))   rec.manual = $('#ivManual').value;
-
-  // フローJSONの保存（WAVE編集用）
-  if ($('#ivFlowJson')){
-    try{
-      const steps = JSON.parse($('#ivFlowJson').value || '[]');
-      if (!Array.isArray(steps)) throw new Error('steps is not array');
-      rec.flow = rec.flow || {index:0, answers:{}, steps:[]};
-      rec.flow.steps = steps;
-      // column を元に列を自動更新
-      const cols = steps.map(s=>s.column).filter(Boolean);
-      if (cols.length) rec.columns = cols;
-    }catch(e){
-      showToast('フローJSONの形式が不正です');
-      return;
-    }
-  }
-
-  DB.interview[IV_APP] = rec;
-  saveDB();
-  showToast('面談を保存しました');
-  enableIvEdit(false);
-  // 反映
-  renderIvView();
-  renderIvForm();
-};
-
-  // Gate setup & start
-  expectedHash = getFromHashOrQuery('h'); function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); } tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+  // Gate
+  expectedHash = getFromHashOrQuery('h');
+  function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); }
+  tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
 
   attachManifest(); registerSW(); loadDB(); boot();
 })();
