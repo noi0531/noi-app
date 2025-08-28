@@ -15,7 +15,42 @@
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
     <!-- 追加：匿名ログイン用（失敗しても無視するので安全） -->
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script>
+(function initFirebaseSafely(){
+  // 失敗してもアプリはローカルだけで動くようにする
+  window.db = null;
+  window.__FIREBASE_INIT_ERROR__ = null;
 
+  try{
+    if(!window.firebase) throw new Error('firebase global not loaded');
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8ZxI3qto9O_kJxyGoo0cdGP5TKOib6LU",
+      authDomain: "noiapp-b9239.firebaseapp.com",
+      projectId: "noiapp-b9239",
+      storageBucket: "noiapp-b9239.firebasestorage.app",
+      messagingSenderId: "611224601199",
+      appId: "1:611224601199:web:9b5f0f8fecc5ab25a5c39a"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+    // Firestore
+    const db = firebase.firestore();
+    window.db = db;
+
+    // 永続化（失敗しても無視）
+    db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+
+    // 匿名ログイン（設定が無くても無視）
+    try { firebase.auth().signInAnonymously().catch(()=>{}); } catch {}
+
+  }catch(err){
+    console.warn('Firebase initialization failed:', err);
+    window.__FIREBASE_INIT_ERROR__ = (err && err.message) || String(err);
+  }
+})();
+</script>
   <script>
     // ===== Firebase 初期化 =====
     const firebaseConfig = {
