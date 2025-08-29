@@ -61,19 +61,7 @@
       messagingSenderId: "611224601199",
       appId: "1:611224601199:web:9b5f0f8fecc5ab25a5c39a"
     };
-      
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    window.db = db;
   </script>
-<script>
-// （可能なら）オフライン永続化をオン
-firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-
-// （任意）匿名ログイン：プロバイダ未設定なら失敗しても無視
-try { firebase.auth().signInAnonymously().catch(()=>{}); } catch {}
-</script>
-
   <style>
     :root{ --bg:#0b1220; --panel:#101826; --ink:#f1f5f9; --muted:#a8b3c7; --line:rgba(255,255,255,.14); --brand:#7c3aed; --ok:#22c55e; --warn:#f59e0b; --fs:16px; --focus:#60a5fa; }
     *{box-sizing:border-box}
@@ -297,67 +285,84 @@ try { firebase.auth().signInAnonymously().catch(()=>{}); } catch {}
       pushTimer:null
     };
 
-    function saveDB(){
-      DB._rev = (DB._rev|0) + 1;                            // 変更カウンタ
-      localStorage.setItem(KEYS.db, JSON.stringify(DB));
-      if (SYNC.enabled) queueRemotePush();
-    }
+function saveDB(){
+  DB._rev = (DB._rev|0) + 1;               // 変更カウンタ
+  localStorage.setItem(KEYS.db, JSON.stringify(DB));
+  if (SYNC.enabled) queueRemotePush();     // ← ここでキュー
+}
 
-    function queueRemotePush(immediate=false){
-      if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
-      SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 400);
-    }
+function queueRemotePush(immediate=false){
+  if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
+  SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 400);
+}
 
-    async function pushRemote(){
-      try{
-        await db.collection('rooms').doc(SYNC.roomId).set({
-          db: DB,
-          rev: DB._rev|0,
-          by: SYNC.clientId,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }catch(e){ console.warn('remote push failed', e); }
-    }
+async function pushRemote(){
+  if (!window.db || !SYNC.roomId) return;  // Firestore未利用時は何もしない
+  try{
+    await window.db.collection('rooms').doc(SYNC.roomId).set({
+      db: DB,
+      rev: DB._rev|0,
+      by: SYNC.clientId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }catch(e){ console.warn('remote push failed', e); }
+}
+// ← ここから既存の renderAll で続ける
+function renderAll(){
+  renderMegaTabs();
+  if (CURRENT_TAB==='tpl'){ renderTplApps(); renderTplEditor(); }
+  else if (CURRENT_TAB==='qa'){ renderQaApps(); renderQaSeg(); renderQaList(); }
+  else { renderIvApps(); renderIvForm(); }
+}
 
-    function renderAll(){
-      renderMegaTabs();
-      if (CURRENT_TAB==='tpl'){ renderTplApps(); renderTplEditor(); }
-      else if (CURRENT_TAB==='qa'){ renderQaApps(); renderQaSeg(); renderQaList(); }
-      else { renderIvApps(); renderIvForm(); }
-    }
+function queueRemotePush(immediate=false){
+  if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
+  SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 400);
+}
 
-  function startRealtime(roomId){
+async function pushRemote(){
+  if (!window.db || !SYNC.roomId) return; // ← 追加ガード
+  try{
+    await window.db.collection('rooms').doc(SYNC.roomId).set({   // ← window.db に
+      db: DB,
+      rev: DB._rev|0,
+      by: SYNC.clientId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }catch(e){ console.warn('remote push failed', e); }
+}
+
+function startRealtime(roomId){
   if (!roomId || SYNC.enabled) return;
+  if (!window.db) { console.warn('Firestore unavailable; realtime disabled'); return; }
+
   SYNC.enabled = true;
   SYNC.roomId = roomId;
 
-  const ref = db.collection('rooms').doc(roomId);
-  let initialized = false; // 初回スナップショットかどうか
+  const ref = window.db.collection('rooms').doc(roomId); // ← window.db を明示
+  let initialized = false;
 
   SYNC.unsub = ref.onSnapshot(
     async snap => {
       const d = snap.data();
 
-      // --- 初回だけの処理 ---
       if (!initialized){
         initialized = true;
-
-        if (d && (d.rev|0) > (DB._rev|0)){      // リモートが新しければ取り込む
+        if (d && (d.rev|0) > (DB._rev|0)){
           DB = d.db;
           localStorage.setItem(KEYS.db, JSON.stringify(DB));
           renderAll();
-        } else if (!d){                          // リモート無し→自分の状態を公開
+        } else if (!d){
           await pushRemote();
         }
-        return; // 初回はここで終了
+        return;
       }
 
-      // --- 2回目以降（通常の購読）---
-      if (!d) return;                            // 稀に空→無視
-      if (d.by === SYNC.clientId) return;        // 自分の更新→無視
-      if ((d.rev|0) <= (DB._rev|0)) return;      // 古い更新→無視
+      if (!d) return;
+      if (d.by === SYNC.clientId) return;
+      if ((d.rev|0) <= (DB._rev|0)) return;
 
-      DB = d.db;                                 // 反映
+      DB = d.db;
       localStorage.setItem(KEYS.db, JSON.stringify(DB));
       renderAll();
       try{ showToast('他の人の更新を反映しました'); }catch{}
@@ -365,9 +370,7 @@ try { firebase.auth().signInAnonymously().catch(()=>{}); } catch {}
     err => console.warn('onSnapshot', err)
   );
 }
-
     // ============================================
-
     // ===== Seed =====
     function seedTemplates(){
       return {
@@ -574,22 +577,25 @@ Zoom：{{link}}`} ]
       ensureIvDefaults();
       migrateIvColumnsCommon();
     }
-
-    // ===== Gate =====
-    const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
-    let expectedHash = null;
-    function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
-    function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
-    async function tryUnlock(){
-      const pass = (gatePass?.value||'').trim(); if(!pass) return;
-      const h = await sha256('noi-v1:'+pass);
-      if(h === expectedHash){
-        sessionStorage.setItem('noi_unlocked_'+h, '1');
-        updateGate(); showToast('解除しました');
-        startRealtime(expectedHash);                // ← 合言葉解除で同期開始
-      } else { showToast('合言葉が違います'); }
-    }
-
+// ===== Gate =====
+const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
+let expectedHash = null;
+function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
+function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
+expectedHash = getFromHashOrQuery('h');
+async function tryUnlock(){
+  const pass = (gatePass?.value||'').trim(); 
+  if(!pass) return;
+  const h = await sha256('noi-v1:'+pass);
+  if(h === expectedHash){
+    sessionStorage.setItem('noi_unlocked_'+h, '1');
+    updateGate(); 
+    showToast('解除しました');
+    if (window.db) startRealtime(expectedHash);  // ← ここでガードして呼ぶ
+  } else {
+    showToast('合言葉が違います');
+  }
+}
     // ===== UI Refs =====
     const appList=$('#appList'); const editorText=$('#textArea'); const explainEl=$('#explain'); const progress=$('#progress');
     const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
@@ -1128,10 +1134,11 @@ Zoom：{{link}}`} ]
     loadDB(); boot();
 
     // すでに解除済みなら即同期開始
-    if (expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) === '1'){
-      startRealtime(expectedHash);
-    }
-  })();
+if (expectedHash
+  && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1'
+  && window.db) {
+  startRealtime(expectedHash);
+}
   </script>
 
   <!-- PWA: 実ファイル sw.js を登録 -->
