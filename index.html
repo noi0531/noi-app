@@ -11,7 +11,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, enableMultiTabIndexedDbPersistence, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // Firebase初期化をグローバルスコープで実行
@@ -37,17 +37,12 @@
                 } catch (e) {
                     console.warn('Persistence failed:', e);
                 }
-
-                // 匿名ログイン (失敗しても無視)
+// 永続化（複数タブ対応 / 失敗しても無視）
                 try {
-                    await signInAnonymously(getAuth(app));
+                    await enableMultiTabIndexedDbPersistence(window.db);
                 } catch (e) {
-                    console.warn('Anonymous sign-in failed:', e);
+                    console.warn('Persistence failed:', e);
                 }
-            } catch (err) {
-                console.warn('Firebase initialization failed:', err);
-                window.__FIREBASE_INIT_ERROR__ = (err && err.message) || String(err);
-            }
         })();
     </script>
     <style>
@@ -318,7 +313,21 @@
                 err => console.warn('onSnapshot', err)
             );
         }
-
+function startRealtimeWhenReady(roomId){
+  if (!roomId || SYNC.enabled) return;
+  const boot = () => {
+    try { startRealtime(roomId); console.log('[SYNC] started', roomId); }
+    catch (e) { console.warn('[SYNC] start failed', e); }
+  };
+  if (window.db) {
+    boot();
+  } else {
+    const timer = setInterval(() => {
+      if (window.db) { clearInterval(timer); boot(); }
+    }, 150);
+    setTimeout(() => clearInterval(timer), 8000);
+  }
+}
         // ============================================
         // ===== Seed =====
         function seedTemplates(){
@@ -538,7 +547,7 @@ Zoom：{{link}}`} ]
                 sessionStorage.setItem('noi_unlocked_'+h, '1');
                 updateGate();
                 showToast('解除しました');
-                if (window.db) startRealtime(expectedHash);
+                startRealtimeWhenReady(expectedHash);
             } else {
                 showToast('合言葉が違います');
             }
@@ -1084,11 +1093,9 @@ Zoom：{{link}}`} ]
         loadDB(); boot();
 
         // すでに解除済みなら即同期開始
-        if (expectedHash
-            && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1'
-            && window.db) {
-            startRealtime(expectedHash);
-        }
+       if (expectedHash && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1') {
+           startRealtimeWhenReady(expectedHash);
+       }
     </script>
 
     <script>
