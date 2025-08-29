@@ -14,26 +14,34 @@
         // ここにご自身のFirebaseプロジェクトの設定情報を貼り付けてください。
         // Firebaseコンソール > プロジェクトの設定 > 全般 > マイアプリ で確認できます。
         const firebaseConfig = {
-            apiKey: "AIzaSy...", // 実際のAPIキーに置き換えてください
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "your-sender-id",
-            appId: "your-app-id"
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            apiKey: "AIzaSyBWJqpaMyQyXOgH0HBKA10yjDvAmZ6jlgM",
+            authDomain: "noiapp-2f0ee.firebaseapp.com",
+            projectId: "noiapp-2f0ee",
+            storageBucket: "noiapp-2f0ee.firebasestorage.app",
+            messagingSenderId: "564426011238",
+            appId: "1:564426011238:web:b00408eb0b5afe190af3a7",
+            measurementId: "G-1JP156WMFJ"
         };
 
         // Firebase SDKをインポート
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp, enableMultiTabIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        // Firebase初期化をグローバルスコープで実行
-        (async function initFirebase() {
-            window.db = null;
-            try {
-                const app = initializeApp(firebaseConfig);
-                window.db = getFirestore(app);
-                window.serverTimestamp = serverTimestamp;
-
+        import {
+    initializeFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager,
+    serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        await signInAnonymously(auth);
+  // 旧 enableMultiTabIndexedDbPersistence の後継
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
+        window.db = db;
+        window.serverTimestamp = serverTimestamp;
                 // オフライン＆複数タブ対応を有効化
                 await enableMultiTabIndexedDbPersistence(window.db);
                 console.log('Firebase initialized and persistence enabled.');
@@ -210,6 +218,7 @@
     <div class="toast" id="toast">OK</div>
 
     <script type="module">
+        import { doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         // Utils
         const $ = s => document.querySelector(s);
         const $$ = s => Array.from(document.querySelectorAll(s));
@@ -259,7 +268,7 @@
 
         function queueRemotePush(immediate=false){
             if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
-            SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 400);
+            SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 1000);
         }
 
         async function pushRemote(){
@@ -274,9 +283,13 @@
             }catch(e){ console.warn('remote push failed', e); }
         }
 
-        function startRealtime(roomId){
+           function startRealtime(roomId){
             if (!roomId || SYNC.enabled) return;
-            if (!window.db) { console.warn('Firestore unavailable; realtime disabled'); return; }
+            if (!window.db) {
+                console.warn('Firestore unavailable; realtime disabled');
+                showToast('データベースに接続できません');
+                return;
+            }
 
             SYNC.enabled = true;
             SYNC.roomId = roomId;
@@ -286,33 +299,54 @@
 
             SYNC.unsub = onSnapshot(
                 ref,
-                async snap => {
+                async (snap) => {
                     const d = snap.data();
-                    if (!initialized){
+
+                    // 初回読み込み時の処理
+                    if (!initialized) {
                         initialized = true;
-                        if (d && (d.rev|0) > (DB._rev|0)){
+                        // リモートに新しいデータがあれば採用、なければローカルデータをプッシュ
+                        if (d && (d.rev || 0) > (DB._rev || 0)) {
+                            console.log('Initial sync: Remote data is newer. Applying remote data.');
                             DB = d.db;
                             localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                            renderAll(); // ★変更点：初回ロード時も描画
-                        } else if (!d){
+                            renderAll();
+                        } else {
+                            console.log('Initial sync: Local data is newer or no remote data. Pushing local data.');
                             await pushRemote();
                         }
                         return;
                     }
-                    if (!d) return;
-                    if (d.by === SYNC.clientId) return; // 自分の変更は無視
-                    if ((d.rev|0) <= (DB._rev|0)) return; // 古いデータは無視
 
-                    // 他のユーザーからの更新を適用
+                    // 2回目以降の更新処理
+                    if (!d) return; // データがなければ何もしない
+                    if (d.by === SYNC.clientId) return; // 自分の変更は無視
+
+                    // ★修正点1: 競合を避けるためのロジック変更
+                    // 他のユーザーからの更新で、リビジョン番号が自分のものより古い場合のみ無視します。
+                    // これにより、同時に更新した場合でも、後から書き込まれたデータが正しく反映されます。
+                    if ((d.rev || 0) < (DB._rev || 0)) {
+                        console.log('Stale update received, ignoring.');
+                        return;
+                    }
+
+                    console.log('Remote update received. Applying changes.');
                     DB = d.db;
                     localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                    renderAll(); // ★★★ 最も重要な修正点 ★★★
-                    try{ showToast('他の人の更新を反映しました'); }catch{}
+                    renderAll();
+                    try { showToast('他の人の更新を反映しました'); } catch {}
                 },
-                err => console.warn('onSnapshot', err)
+                (err) => {
+                    // ★修正点2: エラーハンドリングを強化
+                    console.error('Firestore onSnapshot error:', err);
+                    let message = 'リアルタイム同期でエラーが発生しました。';
+                    if (err.code === 'permission-denied') {
+                        message = 'エラー: DBアクセス権限がありません。';
+                    }
+                    showToast(message);
+                }
             );
         }
-
         function startRealtimeWhenReady(roomId){
             if (!roomId || SYNC.enabled) return;
             const bootSync = () => {
