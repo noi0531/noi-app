@@ -10,40 +10,36 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%234f46e5'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='72' fill='white' font-family='Segoe UI,Roboto,Arial,sans-serif'%3EN%3C/text%3E%3C/svg%3E">
 
     <script type="module">
-        import { doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // ★重要★
+        // ここにご自身のFirebaseプロジェクトの設定情報を貼り付けてください。
+        // Firebaseコンソール > プロジェクトの設定 > 全般 > マイアプリ で確認できます。
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", // 実際のAPIキーに置き換えてください
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
+        };
+
+        // Firebase SDKをインポート
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, enableMultiTabIndexedDbPersistence, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp, enableMultiTabIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Firebase初期化をグローバルスコープで実行
-        (async function initFirebaseSafely() {
+        (async function initFirebase() {
             window.db = null;
-            window.__FIREBASE_INIT_ERROR__ = null;
             try {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyD8ZxI3qto9O_kJxyGoo0cdGP5TKOib6LU",
-                    authDomain: "noiapp-b9239.firebaseapp.com",
-                    projectId: "noiapp-b9239",
-                    storageBucket: "noiapp-b9239.firebasestorage.app",
-                    messagingSenderId: "611224601199",
-                    appId: "1:611224601199:web:9b5f0f8fecc5ab25a5c39a"
-                };
                 const app = initializeApp(firebaseConfig);
                 window.db = getFirestore(app);
                 window.serverTimestamp = serverTimestamp;
 
-                // 永続化 (失敗しても無視)
-                try {
-                    await window.db.enablePersistence({ synchronizeTabs: true });
-                } catch (e) {
-                    console.warn('Persistence failed:', e);
-                }
-// 永続化（複数タブ対応 / 失敗しても無視）
-                try {
-                    await enableMultiTabIndexedDbPersistence(window.db);
-                } catch (e) {
-                    console.warn('Persistence failed:', e);
-                }
+                // オフライン＆複数タブ対応を有効化
+                await enableMultiTabIndexedDbPersistence(window.db);
+                console.log('Firebase initialized and persistence enabled.');
+            } catch (e) {
+                console.error('Firebase initialization failed:', e);
+            }
         })();
     </script>
     <style>
@@ -297,40 +293,45 @@
                         if (d && (d.rev|0) > (DB._rev|0)){
                             DB = d.db;
                             localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                            renderAll();
+                            renderAll(); // ★変更点：初回ロード時も描画
                         } else if (!d){
                             await pushRemote();
                         }
                         return;
                     }
                     if (!d) return;
-                    if (d.by === SYNC.clientId) return;
-                    if ((d.rev|0) <= (DB._rev|0)) return;
+                    if (d.by === SYNC.clientId) return; // 自分の変更は無視
+                    if ((d.rev|0) <= (DB._rev|0)) return; // 古いデータは無視
+
+                    // 他のユーザーからの更新を適用
                     DB = d.db;
                     localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                    renderAll();
+                    renderAll(); // ★★★ 最も重要な修正点 ★★★
                     try{ showToast('他の人の更新を反映しました'); }catch{}
                 },
                 err => console.warn('onSnapshot', err)
             );
         }
-function startRealtimeWhenReady(roomId){
-  if (!roomId || SYNC.enabled) return;
-  const boot = () => {
-    try { startRealtime(roomId); console.log('[SYNC] started', roomId); }
-    catch (e) { console.warn('[SYNC] start failed', e); }
-  };
-  if (window.db) {
-    boot();
-  } else {
-    const timer = setInterval(() => {
-      if (window.db) { clearInterval(timer); boot(); }
-    }, 150);
-    setTimeout(() => clearInterval(timer), 8000);
-  }
-}
+
+        function startRealtimeWhenReady(roomId){
+            if (!roomId || SYNC.enabled) return;
+            const bootSync = () => {
+                try { startRealtime(roomId); console.log('[SYNC] Realtime started for room:', roomId); }
+                catch (e) { console.warn('[SYNC] Realtime start failed', e); }
+            };
+            if (window.db) {
+                bootSync();
+            } else {
+                // Firebaseの初期化を待つ
+                const timer = setInterval(() => {
+                    if (window.db) { clearInterval(timer); bootSync(); }
+                }, 150);
+                setTimeout(() => clearInterval(timer), 8000); // タイムアウト
+            }
+        }
+
         // ============================================
-        // ===== Seed =====
+        // ===== Seed (初期データ) =====
         function seedTemplates(){
             return {
                 app:'', group:'スカウト', step:0,
@@ -338,54 +339,34 @@ function startRealtimeWhenReady(roomId){
                 data:{
                     'TikTok':{
                         'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。
-配信活動に関心がありそうでご連絡しました。
-興味があればサポート内容をご案内します！
-まずは気軽にお話どうですか？`},
-                            {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！
-事務所としてTikTok Liveのスタートから収益化まで伴走します。
-{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？`}
+                            {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。\n配信活動に関心がありそうでご連絡しました。\n興味があればサポート内容をご案内します！\nまずは気軽にお話どうですか？`},
+                            {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！\n事務所としてTikTok Liveのスタートから収益化まで伴走します。\n{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？`}
                         ],
                         '登録':[ {title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:''} ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。
-Zoom：{{link}}`} ],
+                        'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。\nZoom：{{link}}`} ],
                         _ttScenarios:{
-                            ttba_ok:[ {title:'TTBA経由＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`{{name}} さん、TTBA経由のためBackStage登録も進められます。
-下記より手続きお願いします：
-・エントリーフォーム：{{link}}
-不明点あれば気軽にご連絡ください！`} ],
-                            sns_ok:[ {title:'SNSスカウト＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`ご連絡ありがとうございます！
-SNS経由スカウトですが、BackStageの登録も可能です。
-・登録フォーム：{{link}}
-進めてみて、つまづいた所があれば教えてください。`} ],
-                            agency_ng:[ {title:'BackStageでagency不可', explain:'対応メモ：{{memo}}', text:`確認したところ、BackStage上でagency登録不可の状態です。
-別ルートでの手続きをご案内しますので、{{date}} {{time}} に5〜10分だけお時間いただけますか？`} ],
-                            consider:[ {title:'登録検討', explain:'—', text:`前向きにご検討ありがとうございます！
-判断材料として、サポート内容や実例を簡潔にまとめます。
-{{date}} {{time}} に5分ほどオンラインで補足しますね。`} ],
-                            decline:[ {title:'登録辞退', explain:'—', text:`ご連絡ありがとうございます。今回は見送るとのこと承知しました。
-また状況が変わった際は、いつでも気軽にご相談ください！`} ]
+                            ttba_ok:[ {title:'TTBA経由＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`{{name}} さん、TTBA経由のためBackStage登録も進められます。\n下記より手続きお願いします：\n・エントリーフォーム：{{link}}\n不明点あれば気軽にご連絡ください！`} ],
+                            sns_ok:[ {title:'SNSスカウト＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`ご連絡ありがとうございます！\nSNS経由スカウトですが、BackStageの登録も可能です。\n・登録フォーム：{{link}}\n進めてみて、つまづいた所があれば教えてください。`} ],
+                            agency_ng:[ {title:'BackStageでagency不可', explain:'対応メモ：{{memo}}', text:`確認したところ、BackStage上でagency登録不可の状態です。\n別ルートでの手続きをご案内しますので、{{date}} {{time}} に5〜10分だけお時間いただけますか？`} ],
+                            consider:[ {title:'登録検討', explain:'—', text:`前向きにご検討ありがとうございます！\n判断材料として、サポート内容や実例を簡潔にまとめます。\n{{date}} {{time}} に5分ほどオンラインで補足しますね。`} ],
+                            decline:[ {title:'登録辞退', explain:'—', text:`ご連絡ありがとうございます。今回は見送るとのこと承知しました。\nまた状況が変わった際は、いつでも気軽にご相談ください！`} ]
                         }
                     },
                     '17LIVE':{
                         'スカウト':[
                             {title:'① 初回スカウトDM', explain:'導入', text:`{{name}} さん、こんにちは。17LIVEでの“顔出し配信”に挑戦しませんか？`},
-                            {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。
-{{date}} {{time}} に15分の説明はいかがでしょう？`}
+                            {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。\n{{date}} {{time}} に15分の説明はいかがでしょう？`}
                         ],
                         '登録':[
                             {title:'③ エントリー案内', explain:'フォーム送付', text:`エントリーフォーム：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。
-・{{date}} {{time}}`}
+                            {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。\n・{{date}} {{time}}`}
                         ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。
-Zoom：{{link}}`} ]
+                        'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。\nZoom：{{link}}`} ]
                     },
                     'ポコチャ':{
                         'スカウト':[
                             {title:'① 初回スカウトDM', explain:'文化前提', text:`{{name}} さん、こんにちは。ポコチャでの配信に興味はありますか？`},
-                            {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。
-{{date}} {{time}} に説明しますね。`}
+                            {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。\n{{date}} {{time}} に説明しますね。`}
                         ],
                         '登録':[
                             {title:'③ エントリー案内', explain:'フォーム', text:`フォーム：{{link}}`},
@@ -396,28 +377,24 @@ Zoom：{{link}}`} ]
                     'BIGOLIVE':{
                         'スカウト':[
                             {title:'① 初回スカウトDM', explain:'幅の広さ', text:`{{name}} さん、こんにちは。BIGOLIVEでの配信サポートを行っています。`},
-                            {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。
-{{date}} {{time}} に概要説明どうでしょう？`}
+                            {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。\n{{date}} {{time}} に概要説明どうでしょう？`}
                         ],
                         '登録':[
                             {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。
-・{{date}} {{time}}`}
+                            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。\n・{{date}} {{time}}`}
                         ],
                         'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。Zoom：{{link}}`} ]
                     },
                     'WAVE':{
                         'スカウト':[
                             {title:'① 初回スカウトDM', explain:'音声特化を強調', text:`{{name}} さん、はじめまして。音声配信アプリ WAVE で活動しませんか？`},
-                            {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。
-{{date}} {{time}} にオンラインでいかがでしょう？`}
+                            {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。\n{{date}} {{time}} にオンラインでいかがでしょう？`}
                         ],
                         '登録':[
                             {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
                             {title:'④ 面談日程調整', explain:'候補', text:`候補：{{date}} {{time}}`}
                         ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。
-入室：{{link}}`} ]
+                        'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。\n入室：{{link}}`} ]
                     }
                 }
             };
@@ -462,10 +439,9 @@ Zoom：{{link}}`} ]
             };
         }
 
-        // ===== Migrations / Ensurers =====
+        // ===== Migrations / Ensurers (データ構造の整合性を保つ関数) =====
         function migrateTemplatesShape(){
-            const t=DB.templates;
-            if(!t) return;
+            const t=DB.templates; if(!t) return;
             if(t.mode || (t.data && (t.data.face || t.data['no-face']))){
                 const newData={};
                 ['face','no-face'].forEach(m=>{
@@ -480,9 +456,7 @@ Zoom：{{link}}`} ]
                     });
                 });
                 DB.templates = {
-                    app: t.app||'',
-                    group: t.group||'スカウト',
-                    step: t.step||0,
+                    app: t.app||'', group: t.group||'スカウト', step: t.step||0,
                     special:{ ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:'' },
                     data: newData
                 };
@@ -490,11 +464,8 @@ Zoom：{{link}}`} ]
             }
             DB.templates.special = Object.assign({ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:''}, DB.templates.special||{});
         }
-
-        // ---- TikTok登録：確認シナリオを保持 ----
         function ensureTTScenarios(){
-            const tiktok = DB?.templates?.data?.['TikTok'];
-            if (!tiktok) return;
+            const tiktok = DB?.templates?.data?.['TikTok']; if (!tiktok) return;
             if (!tiktok._ttScenarios) {
                 const seed = seedTemplates();
                 tiktok._ttScenarios = clone(seed?.data?.['TikTok']?._ttScenarios || {});
@@ -504,7 +475,6 @@ Zoom：{{link}}`} ]
             }
             saveDB();
         }
-
         function migrateIvColumnsCommon(){
             const APPS = ['TikTok','WAVE'];
             APPS.forEach(app=>{
@@ -534,15 +504,13 @@ Zoom：{{link}}`} ]
             ensureIvDefaults();
             migrateIvColumnsCommon();
         }
-        // ===== Gate =====
+        // ===== Gate (合言葉) =====
         const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
         let expectedHash = null;
         function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
         function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
-        expectedHash = getFromHashOrQuery('h');
         async function tryUnlock(){
-            const pass = (gatePass?.value||'').trim();
-            if(!pass) return;
+            const pass = (gatePass?.value||'').trim(); if(!pass) return;
             const h = await sha256('noi-v1:'+pass);
             if(h === expectedHash){
                 sessionStorage.setItem('noi_unlocked_'+h, '1');
@@ -557,11 +525,7 @@ Zoom：{{link}}`} ]
         const appList=$('#appList'); const editorText=$('#textArea'); const explainEl=$('#explain'); const progress=$('#progress');
         const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
         const stepTitleInput=$('#stepTitleInput'); const ttChoiceBox=$('#ttChoiceBox');
-
-        // Q&A
         const qaAppList=$('#qaAppList'); const qaSegWrap=$('#qaSegWrap'); const qaList=$('#qaList'); const qaView=$('#qaView'); const qaEditor=$('#qaEditor');
-
-        // Interview
         const ivAppList=$('#ivAppList'); const ivFormBox=$('#ivFormBox'); const ivEditor=$('#ivEditor');
 
         // ===== Tabs / MegaTabs =====
@@ -580,7 +544,7 @@ Zoom：{{link}}`} ]
                 const btn=document.createElement('button'); btn.className='tab'; btn.textContent=name;
                 const isTplGroup = ['スカウト','登録','end'].includes(name);
                 const active = isTplGroup ? (CURRENT_TAB==='tpl' && DB.templates.group===name) :
-                                           (name==='Q&A' ? CURRENT_TAB==='qa' : CURRENT_TAB==='interview');
+                                             (name==='Q&A' ? CURRENT_TAB==='qa' : CURRENT_TAB==='interview');
                 if(active) btn.classList.add('active');
                 btn.onclick = ()=>{
                     if(isTplGroup){
@@ -602,7 +566,6 @@ Zoom：{{link}}`} ]
             if(DB.templates.app==='TikTok' && DB.templates.group==='登録' && !DB.templates.special.ttChoice) return [];
             return a[DB.templates.group]||[];
         }
-
         function renderTplApps(){
             appList.innerHTML='';
             const apps=tplApps();
@@ -623,8 +586,6 @@ Zoom：{{link}}`} ]
                 appList.appendChild(b);
             });
         }
-
-        // --- TikTok登録：確認カード ---
         function renderTTConfirm(){
             ttChoiceBox.style.display = 'block';
             ttChoiceBox.innerHTML = '';
@@ -657,21 +618,14 @@ Zoom：{{link}}`} ]
                 DB.templates.special.ttConfirmRequired = false; saveDB(); renderTplEditor();
             };
         }
-
         function renderTTChoice(){
             const isTikTokRegister = (DB.templates.app==='TikTok' && DB.templates.group==='登録');
             ttChoiceBox.style.display = isTikTokRegister ? 'block' : 'none';
             if (!isTikTokRegister) return;
 
             if (DB.templates.special.ttChoice && DB.templates.special.ttConfirmRequired){ renderTTConfirm(); return; }
+            if (DB.templates.special.ttChoice){ return; }
 
-            // ttChoiceが選択済みの場合
-            if (DB.templates.special.ttChoice){
-                // 何もしない（表示はrenderTplEditor()で行う）
-                return;
-            }
-
-            // ttChoiceが未選択の場合
             ttChoiceBox.innerHTML = '';
             const options = [
                 {key:'ttba_ok', title:'TTBA経由(アプリ内スカウト)でBackStageも登録可能の場合', note:true},
@@ -715,7 +669,6 @@ Zoom：{{link}}`} ]
                 DB.templates.special.ttNote = $('#ttMemo').value||''; saveDB();
             });
         }
-
         function renderTplEditor(){
             const list=tplGroupList();
 
@@ -801,7 +754,7 @@ Zoom：{{link}}`} ]
         function qaApps(){ return Object.keys(DB.qa||{}); }
         function renderQaApps(){
             qaAppList.innerHTML=''; const apps=qaApps();
-            if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。編集モードで追加してください。</p>'; return; }
+            if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。</p>'; return; }
             if(!QA_APP) QA_APP=apps[0];
             apps.forEach(a=>{
                 const b=document.createElement('button'); const count=(DB.qa[a]['回答']?.length||0)+(DB.qa[a]['送信']?.length||0);
@@ -825,7 +778,7 @@ Zoom：{{link}}`} ]
         function renderQaList(){
             qaList.innerHTML=''; qaView.innerHTML='';
             const items=DB.qa[QA_APP]?.[QA_KIND]||[];
-            if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。編集モードで追加してください。</p>'; return; }
+            if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。</p>'; return; }
             const ul=document.createElement('div'); ul.style.display='grid'; ul.style.gap='8px';
             items.forEach((it,i)=>{
                 const b=document.createElement('button'); b.className='app'; b.innerHTML=`<span>${escapeHtml(it.q||'')}</span>`;
@@ -903,7 +856,7 @@ Zoom：{{link}}`} ]
         function renderIvApps(){
             ivAppList.innerHTML='';
             const apps=ivApps();
-            if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。編集モードで追加してください。</p>'; return; }
+            if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。</p>'; return; }
             if(!IV_APP) IV_APP=apps[0];
             apps.forEach(a=>{
                 const b=document.createElement('button');
@@ -995,7 +948,6 @@ Zoom：{{link}}`} ]
             };
             if (IV_APP==='WAVE') syncAnswersToInputs();
         }
-
         function enableIvEdit(on){
             ivEditor.style.display = on ? 'block' : 'none';
             $('#ivSave').style.display = on ? 'inline-flex' : 'none';
@@ -1039,30 +991,49 @@ Zoom：{{link}}`} ]
         $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
         $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); } };
 
-        // ===== Init & Boot =====
-        function boot(){
+        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+        // ★ 修正点：リアルタイム更新時に画面全体を再描画する関数を追加 ★
+        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+        function renderAll() {
+            console.log('Data updated from Firestore, re-rendering UI...');
             renderMegaTabs();
-            const saved = localStorage.getItem('noi_tab'); const ok=['tpl','qa','interview'];
-            switchTab(ok.includes(saved)? saved : 'tpl');
+            // 現在表示中のタブに応じて、必要な部分だけを再描画
+            const currentTab = CURRENT_TAB || 'tpl';
+            if (currentTab === 'tpl') {
+                renderTplApps();
+                renderTplEditor();
+            } else if (currentTab === 'qa') {
+                renderQaApps();
+                renderQaSeg();
+                renderQaList();
+            } else if (currentTab === 'interview') {
+                renderIvApps();
+                renderIvForm();
+            }
+        }
 
+        // ===== Init & Boot (アプリ起動処理) =====
+        function boot(){
+            const saved = localStorage.getItem('noi_tab'); const ok=['tpl','qa','interview'];
+            const initialTab = ok.includes(saved) ? saved : 'tpl';
+            switchTab(initialTab);
+            renderAll(); // 初期表示
+
+            // --- イベントリスナーを一度だけ設定 ---
             // テンプレ
-            renderTplApps(); renderTplEditor();
             $('#prevBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
             $('#nextBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step<list.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
             $('#copyBtn').onclick=doCopy; $('#shareBtn').onclick=doShare;
             $('#tplEditor').style.display='block';
-
             $('#tplAdd').onclick=()=>{ const m=DB.templates.data[DB.templates.app]; if(!m) return; m[DB.templates.group]=m[DB.templates.group]||[]; m[DB.templates.group].push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
 
             // Q&A
-            renderQaApps(); renderQaSeg(); renderQaList();
             let qaEditing=false;
             $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); };
-            $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderQaApps(); renderQaSeg(); renderQaList(); };
-            $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderQaApps(); renderQaSeg(); renderQaList(); };
+            $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderAll(); };
+            $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderAll(); };
 
             // Interview
-            renderIvApps(); renderIvForm();
             let ivEditing=false;
             $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); };
             $('#ivSave').onclick = ()=>{
@@ -1085,25 +1056,19 @@ Zoom：{{link}}`} ]
             $('#ivDiscard').onclick=()=>{ loadDB(); enableIvEdit(false); renderIvApps(); renderIvForm(); };
         }
 
-        // Gate
+        // --- Gate (合言葉処理) ---
         expectedHash = getFromHashOrQuery('h');
-        function tickGate(){ updateGate(); if(gateNeeded()) requestAnimationFrame(tickGate); }
-        tickGate(); gateBtn?.addEventListener('click', tryUnlock); gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+        updateGate(); // 初期チェック
+        gateBtn?.addEventListener('click', tryUnlock);
+        gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
 
-        // 起動
-        loadDB(); boot();
+        // --- 起動 ---
+        loadDB();
+        boot();
 
-        // すでに解除済みなら即同期開始
-       if (expectedHash && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1') {
-           startRealtimeWhenReady(expectedHash);
-       }
-    </script>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js', { scope: './' })
-                .then(() => console.log('SW registered'))
-                .catch(e => console.warn('SW registration failed', e));
+        // ページ読み込み時にすでに解除済みなら、すぐに同期を開始
+        if (expectedHash && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1') {
+            startRealtimeWhenReady(expectedHash);
         }
     </script>
 </body>
