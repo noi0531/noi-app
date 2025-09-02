@@ -1,1109 +1,302 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <meta name="theme-color" content="#4f46e5" />
-    <title>NOI 管理アプリ（PWA・オフライン対応）</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NOIGRIT 署名マニュアル｜PDFに署名する全部入りガイド</title>
+  <meta name="description" content="NOIGRIT向け 署名マニュアル。スマホ（iPhone/Android）・PC（Mac/Windows）・印刷手書きの3カテゴリで超詳細に解説。標準機能のみ。スマホ最適化・軽量表示。"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --accent:#38bdf8; --accent2:#22c55e;
+      --ng-y1:#fde047; --ng-y2:#f59e0b; --ng-stroke:#eab308;
+      --shadow:0 6px 16px rgba(0,0,0,.25);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; padding:0; }
+    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif; color:var(--ink); background:linear-gradient(180deg,var(--bg),#0a1328 40%,var(--bg)); }
 
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%234f46e5'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='72' fill='white' font-family='Segoe UI,Roboto,Arial,sans-serif'%3EN%3C/text%3E%3C/svg%3E">
+    header{ padding:calc(18px + env(safe-area-inset-top)) 16px 14px; background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:40; }
+    .hero{ max-width:1100px; margin:0 auto; text-align:center; }
 
-    <script type="module">
-        // ★重要★
-        // ここにご自身のFirebaseプロジェクトの設定情報を貼り付けてください。
-        // Firebaseコンソール > プロジェクトの設定 > 全般 > マイアプリ で確認できます。
-        const firebaseConfig = {
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-            apiKey: "AIzaSyBWJqpaMyQyXOgH0HBKA10yjDvAmZ6jlgM",
-            authDomain: "noiapp-2f0ee.firebaseapp.com",
-            projectId: "noiapp-2f0ee",
-            storageBucket: "noiapp-2f0ee.firebasestorage.app",
-            messagingSenderId: "564426011238",
-            appId: "1:564426011238:web:b00408eb0b5afe190af3a7",
-            measurementId: "G-1JP156WMFJ"
-        };
+    .brand{ display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .logo-badge{ display:inline-flex; align-items:center; justify-content:center; padding:.5em 1.2em; border-radius:14px;
+      background:linear-gradient(135deg, var(--ng-y1), var(--ng-y2)); color:#1f2937;
+      font-family:'Montserrat', sans-serif; font-weight:900; font-size:24px; letter-spacing:.1em;
+      border:1px solid var(--ng-stroke); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), var(--shadow);
+      text-transform:uppercase;
+    }
+    .brand h1{ margin:0; font-size:26px; letter-spacing:.02em; font-weight:700; font-family:'Montserrat', sans-serif; }
+    .hero p{ margin:10px 0 0; color:var(--muted); font-size:15px; }
 
-        // Firebase SDKをインポート
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import {
-    initializeFirestore,
-    persistentLocalCache,
-    persistentMultipleTabManager,
-    serverTimestamp
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        await signInAnonymously(auth);
-  // 旧 enableMultiTabIndexedDbPersistence の後継
-        const db = initializeFirestore(app, {
-            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-        });
-        window.db = db;
-        window.serverTimestamp = serverTimestamp;
-                // オフライン＆複数タブ対応を有効化
-                await enableMultiTabIndexedDbPersistence(window.db);
-                console.log('Firebase initialized and persistence enabled.');
-            } catch (e) {
-                console.error('Firebase initialization failed:', e);
-            }
-        })();
-    </script>
-    <style>
-        :root{ --bg:#0b1220; --panel:#101826; --ink:#f1f5f9; --muted:#a8b3c7; --line:rgba(255,255,255,.14); --brand:#7c3aed; --ok:#22c55e; --warn:#f59e0b; --fs:16px; --focus:#60a5fa; }
-        *{box-sizing:border-box}
-        body{ margin:0; background:linear-gradient(180deg,var(--bg) 0,#0f172a 40%); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial; font-size:var(--fs); line-height:1.75; letter-spacing:.2px }
-        .wrap{max-width:880px;margin:0 auto;padding:14px}
-        header{position:sticky;top:0;background:color-mix(in oklab, var(--panel) 92%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
-        .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-        .btn{appearance:none;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:800;color:var(--ink);background:color-mix(in oklab, var(--panel) 88%, transparent)}
-        .btn.small{padding:6px 10px;font-size:12px;border-radius:10px}
-        .btn.primary{background:color-mix(in oklab, var(--panel) 82%, transparent)}
-        .btn.copy{background:color-mix(in oklab, var(--panel) 82%, transparent)}
-        .btn.ghost{background:rgba(127,132,152,.16)}
-        .btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
-        .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0 6px;margin-top:8px}
-        .tab{white-space:nowrap;border:1px solid var(--line);background:color-mix(in oklab, var(--panel) 92%, transparent);padding:10px 12px;border-radius:999px;font-weight:800;color:var(--ink)}
-        .tab.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(79,70,229,.32)}
-        .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}
-        .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-        .muted{color:var(--muted);font-size:12px}
-        .note{font-size:13px;color:var(--ink);background:color-mix(in oklab, var(--panel) 78%, transparent);border:1px dashed var(--line);padding:10px;border-radius:12px}
-        .apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
-        .app{background:color-mix(in oklab, var(--panel) 86%, transparent);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;align-items:center;gap:10px;min-height:56px;transition:.2s;font-weight:800;color:var(--ink)}
-        .app .badge{font-size:12px;color:#e5e7eb;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);padding:3px 10px;border-radius:999px;margin-left:auto}
-        .app.selected{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(79,70,229,.35)}
-        textarea, input, select{width:100%; border-radius:12px; border:1px solid var(--line); background:color-mix(in oklab, var(--panel) 92%, transparent); color:var(--ink); padding:10px;}
-        textarea#textArea{min-height:220px; line-height:1.85; font-size:16px}
-        input::placeholder,textarea::placeholder{color:color-mix(in oklab, var(--ink) 70%, transparent)}
-        input:focus-visible, textarea:focus-visible, select:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
-        .progress{display:flex;gap:8px;margin-top:6px}
-        .dot{width:9px;height:9px;border-radius:999px;background:color-mix(in oklab, var(--ink) 28%, transparent);opacity:.5}
-        .dot.on{background:#60a5fa;opacity:1;transform:scale(1.05)}
-        .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#111827;color:#e5e7eb;border:1px solid var(--line);padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:200}
-        .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        .pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05)}
-        .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:color-mix(in oklab, var(--panel) 86%, transparent);border:1px solid var(--line);padding:2px 6px;border-radius:6px;color:var(--ink)}
-        .hr{height:1px;background:var(--line);margin:10px 0}
-        .danger{background:color-mix(in oklab, var(--panel) 78%, transparent);color:var(--ink);border:1px solid var(--line)}
-        a{color:#93c5fd;text-decoration:underline}
-        a:hover{text-decoration:none}
-        #tab_qa #qaList .app{ color:#fff; }
-        #tab_qa #qaList .app .badge{ color:#e5e7eb; background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.35); }
-    </style>
+    .tabs{ max-width:1100px; margin:12px auto 0; padding:10px 12px 8px; display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; border-top:1px solid rgba(255,255,255,.04); }
+    .tabs::-webkit-scrollbar{ display:none; }
+    .tab{ appearance:none; border:none; cursor:pointer; padding:14px 18px; border-radius:999px; background:#0f2036; color:var(--ink); border:1px solid #253449; font-weight:800; flex:0 0 auto; white-space:nowrap; font-size:15px; line-height:1.2; }
+    .tab[aria-selected="true"]{ outline:2px solid color-mix(in oklab, var(--accent) 60%, white 0%); background:#142742; }
+
+    main{ max-width:1100px; margin:16px auto 80px; padding:0 16px; }
+    .panel{ display:none; background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:20px; margin:16px 0; }
+    .panel[aria-hidden="false"]{ display:block; }
+    .panel h2{ margin:0 0 10px; color:var(--accent); font-size:20px; }
+    .panel .sub{ margin:0 0 12px; color:var(--muted); font-size:14px; }
+
+    .intro-grid{ display:grid; grid-template-columns:1fr; gap:14px; text-align:left; }
+    .notice{ border:1px solid #3b3b28; background:#171710; border-radius:12px; padding:14px; }
+    .notice h3{ margin:0 0 8px; color:#fde68a; font-size:16px; }
+    .notice ul{ margin:8px 0 0 18px; padding:0; }
+
+    .subsel{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; justify-content:center; }
+    .chip{ appearance:none; border:1px solid #2b3a50; background:#0e1d30; color:var(--ink); border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; font-size:14px; }
+    .chip[aria-pressed="true"]{ outline:2px solid var(--accent2); background:#12324f; }
+
+    .steps{ counter-reset:step; display:grid; gap:12px; }
+    .step{ position:relative; padding:14px 14px 14px 20px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(180deg, color-mix(in oklab, var(--accent) 8%, transparent), transparent); }
+    .step::before{ counter-increment:step; content:counter(step); position:absolute; left:10px; top:-12px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:var(--accent); color:#062030; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,.28); font-size:13px; }
+
+    .block{ border:1px solid var(--line); border-radius:12px; padding:12px; margin:12px 0; background:#0d1a2b; }
+    .block h3{ margin:0 0 6px; font-size:15px; color:var(--accent2); }
+    .mini{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .kbd{ display:inline-block; padding:3px 7px; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; background:#0d1a2b; }
+
+    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    @media (max-width:720px){
+      .brand h1{ font-size:22px; }
+      .logo-badge{ font-size:20px; }
+      .panel{ padding:18px; }
+      .grid2{ grid-template-columns:1fr; }
+      .step{ padding:12px; }
+      .mini{ font-size:13.5px; }
+    }
+
+    .footer{ margin:32px auto 60px; max-width:1100px; color:var(--muted); font-size:12.5px; padding:0 16px; text-align:center; }
+    .sendbox{ border:1px solid #35507a; background:#0b203a; border-radius:12px; padding:12px; }
+    .sendbox h4{ margin:0 0 6px; font-size:14px; color:#8ec1ff; }
+    .sendbox code{ display:block; background:#071425; border:1px solid #11294a; padding:10px; border-radius:8px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; white-space:pre-wrap; word-break:break-word; color:#dbeafe; }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="wrap">
-            <div class="controls" style="margin-top:6px">
-                <button class="btn ghost" id="installBtn">ホームに追加</button>
-                <button class="btn" id="protectBtn" title="共有リンクを作成">共有リンク作成</button>
-                <button class="btn" id="backupBtn" title="JSONにエクスポート">バックアップ</button>
-                <input type="file" id="restoreInput" accept="application/json" style="display:none" />
-                <button class="btn" id="restoreBtn">読み込み</button>
-            </div>
-            <div class="tabs" id="megaTabs" role="tablist" aria-label="メインナビ"></div>
-        </div>
-    </header>
-
-    <main class="wrap">
-        <section class="panel" id="tab_tpl">
-            <div class="row" style="justify-content:space-between;align-items:center">
-                <div class="row" style="gap:8px">
-                    <span class="pill">表示：<strong id="appName"></strong>｜<span id="stepIndex">1</span>/<span id="stepTotal">-</span></span>
-                    <span class="muted">（アプリを選択 → カテゴリは上段タブ）</span>
-                </div>
-            </div>
-
-            <div class="apps" id="appList"></div>
-            <div class="hr"></div>
-
-            <input id="stepTitleInput" placeholder="タイトル" style="font-weight:900;font-size:clamp(16px,4.6vw,20px);margin:6px 0 8px;background:transparent" />
-            <p class="note" id="explain">ここにテンプレの解説が入ります。</p>
-
-            <div id="ttChoiceBox" style="display:none"></div>
-
-            <textarea id="textArea" readonly></textarea>
-
-            <div class="row" style="justify-content:space-between;margin-top:10px">
-                <div class="row">
-                    <button class="btn ghost" id="prevBtn">前</button>
-                    <button class="btn ghost" id="nextBtn">次</button>
-                </div>
-                <div class="row">
-                    <button class="btn copy" id="copyBtn">この文章をコピー</button>
-                    <button class="btn" id="shareBtn">共有…</button>
-                </div>
-            </div>
-
-            <div class="progress" id="progress"></div>
-
-            <details style="margin-top:10px">
-                <summary class="muted">差し替えタグ（任意）</summary>
-                <div class="grid2" style="margin-top:8px">
-                    <input id="tagName" placeholder="{{name}} → 山本さん" />
-                    <input id="tagDate" placeholder="{{date}} → 9/2(火)" />
-                    <input id="tagTime" placeholder="{{time}} → 20:00" />
-                    <input id="tagLink" placeholder="{{link}} → https://..." />
-                </div>
-                <div class="muted" style="margin-top:6px">コピー時に <span class="kbd">{{name}}</span> / <span class="kbd">{{date}}</span> / <span class="kbd">{{time}}</span> / <span class="kbd">{{link}}</span> を自動置換します。</div>
-            </details>
-
-            <details style="margin-top:10px">
-                <summary class="muted">全テンプレへジャンプ／編集</summary>
-                <div class="jump" id="jumpList" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-                <div id="tplEditor" style="display:none;margin-top:10px">
-                    <div class="note">下の一覧は直接編集できます。</div>
-                    <div id="tplList"></div>
-                    <div class="row" style="margin-top:8px"><button class="btn" id="tplAdd">＋ テンプレを追加</button></div>
-                </div>
-            </details>
-        </section>
-
-        <section class="panel" id="tab_qa" style="display:none">
-            <div class="grid2">
-                <div class="apps" id="qaAppList"></div>
-                <div class="row" style="justify-content:flex-end;gap:8px">
-                    <button class="btn" id="qaEditToggle">編集モード</button>
-                    <button class="btn primary" id="qaSave" style="display:none">保存</button>
-                    <button class="btn danger" id="qaDiscard" style="display:none">取消</button>
-                </div>
-            </div>
-            <div id="qaSegWrap" style="margin-top:8px;display:none"></div>
-            <div class="hr"></div>
-            <div id="qaList"></div>
-            <div id="qaView" style="margin-top:8px"></div>
-            <div id="qaEditor" style="display:none;margin-top:10px"></div>
-        </section>
-
-        <section class="panel" id="tab_interview" style="display:none">
-            <div class="grid2">
-                <div class="apps" id="ivAppList"></div>
-                <div class="row" style="justify-content:flex-end;gap:8px">
-                    <button class="btn" id="ivEditToggle">編集モード</button>
-                    <button class="btn primary" id="ivSave" style="display:none">保存</button>
-                    <button class="btn danger" id="ivDiscard" style="display:none">取消</button>
-                </div>
-            </div>
-
-            <div class="hr"></div>
-            <h3 style="margin:6px 0">スプレッドシート貼付用 行ジェネレーター</h3>
-            <div id="ivFormBox" class="panel">
-                <div class="note">ここで入力した回答を<strong>コピー</strong>→スプレッドシートへ貼付（TSV）。<br>最初に <em>列の順番</em> を設定してください（ヘッダー行をそのまま貼り付けOK）。</div>
-                <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
-                <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>
-            </div>
-
-            <div id="ivEditor" style="display:none;margin-top:10px">
-                <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
-                <textarea id="ivManual" placeholder="面談マニュアル本文"></textarea>
-            </div>
-        </section>
-    </main>
-
-    <div class="gate" id="gate" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.75);backdrop-filter:blur(6px);z-index:100;">
-        <div class="card" style="width:min(520px,92%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;">
-            <h2 style="margin:4px 0 10px;font-size:18px">アクセス保護</h2>
-            <p class="muted" style="margin:0 0 10px">合言葉を入力してください。共有相手にのみ伝えてください。</p>
-            <div class="row" style="gap:8px">
-                <input id="gatePass" type="password" placeholder="合言葉" aria-label="合言葉" />
-                <button class="btn primary" id="gateBtn">解除</button>
-            </div>
-            <p class="muted" style="margin:10px 0 0">※ オフラインでも動作します。合言葉は端末に保存されません。</p>
-        </div>
+  <header>
+    <div class="hero">
+      <div class="brand">
+        <span class="logo-badge">NOIGRIT</span>
+        <h1>署名マニュアル</h1>
+      </div>
+      <p>ご自身で署名に使う端末（PC/スマホ）に合わせて、下のカテゴリを選択してください。</p>
     </div>
+  </header>
 
-    <div class="toast" id="toast">OK</div>
+  <div class="tabs" role="tablist" aria-label="NOIGRIT 署名カテゴリ">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="p-intro" id="t-intro">使い方 / 注意事項</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-phone" id="t-phone">スマホで署名する場合</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-pc" id="t-pc">PCで署名する場合</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-print" id="t-print">その他（印刷/手書き）</button>
+  </div>
 
-    <script type="module">
-        import { doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // Utils
-        const $ = s => document.querySelector(s);
-        const $$ = s => Array.from(document.querySelectorAll(s));
-        const toast = $('#toast');
-        const hex = (buf) => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-        async function sha256(text){ const data = new TextEncoder().encode(text); const digest = await crypto.subtle.digest('SHA-256', data); return hex(digest); }
-        function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1300); }
-        function getFromHashOrQuery(name){ const h = new URLSearchParams(location.hash.replace(/^#/,'')).get(name); if(h) return h; return new URLSearchParams(location.search).get(name); }
-        function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-        function linkify(s){
-            const esc = escapeHtml(String(s||''));
-            return esc.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\n/g,'<br>');
-        }
-        const clone = (o)=> (window.structuredClone ? window.structuredClone(o) : JSON.parse(JSON.stringify(o)));
+  <main>
+    <!-- INTRO -->
+    <section class="panel" id="p-intro" role="tabpanel" aria-labelledby="t-intro" aria-hidden="false">
+      <h2>NOIGRIT署名マニュアルの使い方</h2>
+      <div class="intro-grid">
+        <p class="sub">スマホ / PC / 印刷からお選びください。各ページの最後に送付方法があります。</p>
+        <div class="notice">
+          <h3>注意事項</h3>
+          <ul>
+            <li>ご記入いただくのは「<b>配信申込書兼承諾書</b>」のみです。</li>
+            <li>送付は「配信申込書兼承諾書」だけでなく <b>署名ページを含む全ページ</b> を添付してください。</li>
+            <li><b>誤字・脱字がないか</b> をご確認ください。</li>
+            <li><b>期日を過ぎると契約できない場合</b> があります。必ず期限内にご対応ください。</li>
+                <li><b>※未成年の場合は親権者兼法廷代理人の箇所も記入してください。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
-        // ===== 面談：TikTok / WAVE 共通列 =====
-        const IV_DEFAULT_COLUMNS = ['人物像','配信動機','夢や目標','現在の仕事','副業の有無','事務所所属の有無','配信環境の確認','ライブ配信経験','顔出しの有無','配信内容','配信頻度'];
+    <!-- PHONE (iPhone/Android) -->
+    <section class="panel" id="p-phone" role="tabpanel" aria-labelledby="t-phone" aria-hidden="true">
+      <h2>スマホで署名する場合</h2>
+      <p class="sub">お使いの機種を選んでください。</p>
+      <div class="subsel" role="group" aria-label="スマホ機種選択">
+        <button class="chip" id="c-iphone" aria-pressed="true">iPhone</button>
+        <button class="chip" id="c-android" aria-pressed="false">Android</button>
+      </div>
+      <div class="phone-iphone">
+        <div class="steps" style="margin-top:10px;">
+          <div class="step"><b>PDFを開く：</b> プレビューで <span class="kbd">マークアップ</span>。またはファイルAppでPDF→右上 <span class="kbd">マークアップ</span>。</div>
+          <div class="step"><b>テキスト署名：</b> 右下「＋」→ <b>テキスト</b>。氏名・日付を入力。<span class="mini">aAでフォント/サイズ/色を調整、ドラッグで位置合わせ。</span></div>
+          <div class="step"><b>手書き署名：</b> 下部ツールからペン→指/Apple Pencilでサイン。<span class="mini">二本指ピンチで拡大すると精密。</span></div>
+          <div class="step"><b>複数ページ：</b> サムネイルから該当ページに移動し、同様に記入。</div>
+          <div class="step"><b>保存/共有：</b> 右上 <b>完了</b> → 共有→メール送信を選択し下記メールアドレスに送信を行う。</div>
+        </div>
+        <div class="grid2">
+          <div class="block">
+            <h3>補足</h3>
+            <ol class="mini">
+              <li>共有 → <b>プリント</b> を選択。</li>
+              <li>プレビューを二本指でピンチアウトして全画面化。</li>
+              <li>左上共有 → <b>ファイルに保存</b>。</li>
+            </ol>
+          </div>
+          <div class="block">
+            <h3>小ワザ</h3>
+            <ul class="mini">
+              <li>文字色は濃いグレーが紙でも自然。</li>
+              <li>長押しでテキスト枠を掴むと微調整しやすい。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sendbox">
+          <h4>送付方法</h4>
+          <code>アドレス：noigrit@gmail.com
+件名：【契約書署名済】
+本文：本名記載（フルネーム）</code>
+        </div>
+      </div>
+      <div class="phone-android" style="display:none;">
+        <div class="steps" style="margin-top:10px;">
+          <div class="step"><b>PDFを開く：</b> Googleドライブにアップロード → タップして表示。</div>
+          <div class="step"><b>注釈で入力：</b> 画面下 <b>注釈</b>（鉛筆）→ <b>テキスト</b> を配置 → 氏名・日付を入力。</div>
+          <div class="step"><b>保存：</b> 右上 <b>保存</b>。<span class="mini">元ファイルを残したい場合は「コピーを保存」。</span></div>
+             <div class="step"><b>送付：保存したPDFを下記メールアドレスに送信。</b> </div>
+        </div>
+        <div class="grid2">
+          <div class="block">
+            <h3>補足</h3>
+            <p class="mini">機密性が高い場合はPCでローカル編集、または印刷/手書きを推奨。</p>
+              <p class="mini">箇所ごとのズレについてゃ拡大をしてドラックで調整。</p>
+          </div>
+        </div>
+        <div class="sendbox">
+          <h4>送付方法</h4>
+          <code>アドレス：noigrit@gmail.com
+件名：【契約書署名済】
+本文：本名記載（フルネーム）</code>
+        </div>
+      </div>
+    </section>
 
-        // ===== TikTok 登録：確認テキスト =====
-        const TT_CONFIRM_TEXT = {
-            ttba_ok: 'TTBA経由の招待コードの有効期限は24時間のみ。早く登録を行う。',
-            agency_ng: [
-                '・18歳未満でないか','・他事務所と契約していないか','・フォロワー数が基準を超えていないか','・ダイア数が基準を超えてないか','・外国籍ではないか','・マルチアカウントではないか','・BAN状態ではないか','・退会クール期間中じゃないか'
-            ].join('\n')
-        };
-        const TT_CONFIRM_REQUIRED_KEYS = new Set(['ttba_ok','agency_ng']);
+    <!-- PC (Mac/Windows) -->
+    <section class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc" aria-hidden="true">
+      <h2>PCで署名する場合</h2>
+      <p class="sub">お使いのOSを選んでください。</p>
+      <div class="subsel" role="group" aria-label="PC OS選択">
+        <button class="chip" id="c-mac" aria-pressed="true">Mac</button>
+        <button class="chip" id="c-windows" aria-pressed="false">Windows</button>
+      </div>
+      <div class="pc-mac">
+        <div class="steps" style="margin-top:10px;">
+          <div class="step"><b>PDF取り込み：PDFをダウンロードする。</div>
+          <div class="step"><b>記入方法：ダウンロードしたPDFを開き、配信申し込み書兼承諾書を選択『フォーム入力のツールバー』をタップ。「申込日、氏名、住所、生年月日、アドレス。電話番号」にテキスト入力を行う。※未成年者の場合は親権者兼法定代理人のア所も記入</div>
+          <div class="step"><b>記入漏れ：入力内容の確認</div>
+          <div class="step"><b>送付：下記メールアドレル宛に記入したPDFを添付し送信を行う。</div>
+        </div>
+        <div class="grid2">
+          <div class="block">
+            <h3>補足</h3>
+            <ul class="mini">
+              <li>等幅寄りのフォントと濃いグレーで自然な見た目。</li>
+              <li>用紙サイズ（A4/Letter）に注意。印刷時のズレ防止。</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>パスワード（任意）</h3>
+            <ol class="mini">
+              <li><span class="kbd">ファイル → 書き出す</span>。</li>
+              <li>フォーマット: PDF → <b>暗号化</b>にチェック → パスワード設定。</li>
+            </ol>
+          </div>
+        </div>
+        <div class="sendbox">
+          <h4>送付方法</h4>
+          <code>アドレス：noigrit@gmail.com
+件名：【契約書署名済】
+本文：本名記載（フルネーム）</code>
+        </div>
+      </div>
+      <div class="pc-windows" style="display:none;">
+        <div class="steps" style="margin-top:10px;">
+          <div class="step"><b>PDFを開く：</b> 右クリック → <b>プログラムから開く → Microsoft Edge</b>。</div>
+          <div class="step"><b>テキスト署名：</b> 上部 <b>テキストの追加</b> → 氏名・日付を入力し、ドラッグで配置。</div>
+          <div class="step"><b>固定化：</b>『印刷』を押しMicrosoft print to PDFで保存 <b></div>
+          <div class="step"><b>送付：</b>記入事項を確認後下記メールアドレスにPDFを添付し送信を行う<b></div>
+        </div>
+        </div>
+        <div class="grid2">
+          <div class="block">
+            <h3>補足</h3>
+            <ul class="mini">
+              <li>フォント差を避けたい → 必ず「印刷→PDF」で固定。</li>
+              <li>同じ署名を複数ページ → 1度作成してコピー&ペースト。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sendbox">
+          <h4>送付方法</h4>
+          <code>アドレス：noigrit@gmail.com
+件名：【契約書署名済】
+本文：本名記載（フルネーム）</code>
+        </div>
+    </section>
+    <!-- PRINT/HANDWRITE -->
+    <section class="panel" id="p-print" role="tabpanel" aria-labelledby="t-print" aria-hidden="true">
+      <h2>その他（印刷/手書き）</h2>
+      <p class="sub">「手書き必須」や紙原本回収の指定がある相手に確実。</p>
+      <div class="steps">
+        <div class="step"><b>データ準備：</b> PDFダウンロードしUSBに保存 or 専用アプリ(セブン=netprint、ファミマ/ローソン=PrintSmash）をインストール。</div>
+        <div class="step"><b>印刷：</b> こちらを参照(https://www.printing.ne.jp/support/landing/landing_pdfprint.html)</div>
+        <div class="step"><b>記入：</b> ボールペンで署名・日付。訂正は二重線＋訂正印の指示があるか事前確認。</div>
+        <div class="step"><b>スキャン：</b> <b>スキャン方法はこちらを参照(https://pdf.wondershare.jp/info/paper-to-pdf-convenience-store.html)スマホやUSBに取り込み後下記メールアドレスに添付し送信。</b><b></b></div>
+      </div>
+      <div class="grid2">
+        <div class="block">
+          <h3>補足</h3>
+          <ul class="mini">
+            <li>曲がり防止：原稿台ガイドに合わせる。</li>
+            <li>容量軽減：白黒（文字）モード、300dpiで十分。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="sendbox">
+        <h4>送付方法</h4>
+        <code>アドレス：noigrit@gmail.com
+件名：【契約書署名済】
+本文：本名記載（フルネーム）</code>
+      </div>
+    </section>
+  </main>
 
-        // ===== Storage / DB model =====
-        const KEYS = { db:'noi_db_v2' };
-        const DefaultDB = { templates:null, qa:{}, interview:{} };
-        let DB = null;
+  <div class="footer">© 2025 NOIGRIT 署名マニュアル. 本ページは一般的な実務ノウハウの提供を目的としています。</div>
 
-        // ======== Firestore リアルタイム同期 =========
-        const SYNC = {
-            enabled:false,
-            roomId:null,
-            clientId:(crypto.randomUUID?.() || Math.random().toString(36).slice(2)),
-            unsub:null,
-            pushTimer:null
-        };
+  <script>
+    // === Minimal JS: enable tab switching & sub-choices ===
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = Array.from(document.querySelectorAll('.panel'));
+    function activateTop(id){
+      tabs.forEach(t=>t.setAttribute('aria-selected', String(t.id === 't-'+id)));
+      panels.forEach(p=>p.setAttribute('aria-hidden', String(p.id !== 'p-'+id)));
+    }
+    tabs.forEach(t=> t.addEventListener('click', ()=> activateTop(t.id.replace('t-',''))));
 
-        function saveDB(){
-            DB._rev = (DB._rev|0) + 1;
-            localStorage.setItem(KEYS.db, JSON.stringify(DB));
-            if (SYNC.enabled) queueRemotePush();
-        }
+    // Phone chips
+    const phoneI = document.querySelector('.phone-iphone');
+    const phoneA = document.querySelector('.phone-android');
+    const chipI = document.getElementById('c-iphone');
+    const chipA = document.getElementById('c-android');
+    if(chipI && chipA){
+      chipI.addEventListener('click',()=>{ chipI.setAttribute('aria-pressed','true'); chipA.setAttribute('aria-pressed','false'); phoneI.style.display='block'; phoneA.style.display='none'; });
+      chipA.addEventListener('click',()=>{ chipI.setAttribute('aria-pressed','false'); chipA.setAttribute('aria-pressed','true'); phoneI.style.display='none'; phoneA.style.display='block'; });
+    }
 
-        function queueRemotePush(immediate=false){
-            if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
-            SYNC.pushTimer = setTimeout(pushRemote, immediate ? 0 : 1000);
-        }
-
-        async function pushRemote(){
-            if (!window.db || !SYNC.roomId) return;
-            try{
-                await setDoc(doc(window.db, 'rooms', SYNC.roomId), {
-                    db: DB,
-                    rev: DB._rev|0,
-                    by: SYNC.clientId,
-                    updatedAt: window.serverTimestamp()
-                }, { merge: true });
-            }catch(e){ console.warn('remote push failed', e); }
-        }
-
-           function startRealtime(roomId){
-            if (!roomId || SYNC.enabled) return;
-            if (!window.db) {
-                console.warn('Firestore unavailable; realtime disabled');
-                showToast('データベースに接続できません');
-                return;
-            }
-
-            SYNC.enabled = true;
-            SYNC.roomId = roomId;
-
-            const ref = doc(window.db, 'rooms', roomId);
-            let initialized = false;
-
-            SYNC.unsub = onSnapshot(
-                ref,
-                async (snap) => {
-                    const d = snap.data();
-
-                    // 初回読み込み時の処理
-                    if (!initialized) {
-                        initialized = true;
-                        // リモートに新しいデータがあれば採用、なければローカルデータをプッシュ
-                        if (d && (d.rev || 0) > (DB._rev || 0)) {
-                            console.log('Initial sync: Remote data is newer. Applying remote data.');
-                            DB = d.db;
-                            localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                            renderAll();
-                        } else {
-                            console.log('Initial sync: Local data is newer or no remote data. Pushing local data.');
-                            await pushRemote();
-                        }
-                        return;
-                    }
-
-                    // 2回目以降の更新処理
-                    if (!d) return; // データがなければ何もしない
-                    if (d.by === SYNC.clientId) return; // 自分の変更は無視
-
-                    // ★修正点1: 競合を避けるためのロジック変更
-                    // 他のユーザーからの更新で、リビジョン番号が自分のものより古い場合のみ無視します。
-                    // これにより、同時に更新した場合でも、後から書き込まれたデータが正しく反映されます。
-                    if ((d.rev || 0) < (DB._rev || 0)) {
-                        console.log('Stale update received, ignoring.');
-                        return;
-                    }
-
-                    console.log('Remote update received. Applying changes.');
-                    DB = d.db;
-                    localStorage.setItem(KEYS.db, JSON.stringify(DB));
-                    renderAll();
-                    try { showToast('他の人の更新を反映しました'); } catch {}
-                },
-                (err) => {
-                    // ★修正点2: エラーハンドリングを強化
-                    console.error('Firestore onSnapshot error:', err);
-                    let message = 'リアルタイム同期でエラーが発生しました。';
-                    if (err.code === 'permission-denied') {
-                        message = 'エラー: DBアクセス権限がありません。';
-                    }
-                    showToast(message);
-                }
-            );
-        }
-        function startRealtimeWhenReady(roomId){
-            if (!roomId || SYNC.enabled) return;
-            const bootSync = () => {
-                try { startRealtime(roomId); console.log('[SYNC] Realtime started for room:', roomId); }
-                catch (e) { console.warn('[SYNC] Realtime start failed', e); }
-            };
-            if (window.db) {
-                bootSync();
-            } else {
-                // Firebaseの初期化を待つ
-                const timer = setInterval(() => {
-                    if (window.db) { clearInterval(timer); bootSync(); }
-                }, 150);
-                setTimeout(() => clearInterval(timer), 8000); // タイムアウト
-            }
-        }
-
-        // ============================================
-        // ===== Seed (初期データ) =====
-        function seedTemplates(){
-            return {
-                app:'', group:'スカウト', step:0,
-                special:{ ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:'' },
-                data:{
-                    'TikTok':{
-                        'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'最初に送る定型', text:`{{name}} さん、はじめまして！NOIの山本です。\n配信活動に関心がありそうでご連絡しました。\n興味があればサポート内容をご案内します！\nまずは気軽にお話どうですか？`},
-                            {title:'② 反応後の一次返信', explain:'「どんな内容？」への返答', text:`ありがとうございます！\n事務所としてTikTok Liveのスタートから収益化まで伴走します。\n{{date}} {{time}} に15分だけオンラインで説明、いかがでしょう？`}
-                        ],
-                        '登録':[ {title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:''} ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前リマインド', text:`本日 {{time}} から15分、面談予定です。\nZoom：{{link}}`} ],
-                        _ttScenarios:{
-                            ttba_ok:[ {title:'TTBA経由＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`{{name}} さん、TTBA経由のためBackStage登録も進められます。\n下記より手続きお願いします：\n・エントリーフォーム：{{link}}\n不明点あれば気軽にご連絡ください！`} ],
-                            sns_ok:[ {title:'SNSスカウト＋BackStage登録可', explain:'必要に応じてメモ：{{memo}}', text:`ご連絡ありがとうございます！\nSNS経由スカウトですが、BackStageの登録も可能です。\n・登録フォーム：{{link}}\n進めてみて、つまづいた所があれば教えてください。`} ],
-                            agency_ng:[ {title:'BackStageでagency不可', explain:'対応メモ：{{memo}}', text:`確認したところ、BackStage上でagency登録不可の状態です。\n別ルートでの手続きをご案内しますので、{{date}} {{time}} に5〜10分だけお時間いただけますか？`} ],
-                            consider:[ {title:'登録検討', explain:'—', text:`前向きにご検討ありがとうございます！\n判断材料として、サポート内容や実例を簡潔にまとめます。\n{{date}} {{time}} に5分ほどオンラインで補足しますね。`} ],
-                            decline:[ {title:'登録辞退', explain:'—', text:`ご連絡ありがとうございます。今回は見送るとのこと承知しました。\nまた状況が変わった際は、いつでも気軽にご相談ください！`} ]
-                        }
-                    },
-                    '17LIVE':{
-                        'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'導入', text:`{{name}} さん、こんにちは。17LIVEでの“顔出し配信”に挑戦しませんか？`},
-                            {title:'② 反応後の一次返信', explain:'概要', text:`ありがとうございます！イベント活用で露出UP。\n{{date}} {{time}} に15分の説明はいかがでしょう？`}
-                        ],
-                        '登録':[
-                            {title:'③ エントリー案内', explain:'フォーム送付', text:`エントリーフォーム：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補提示', text:`候補日をご確認ください。\n・{{date}} {{time}}`}
-                        ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前案内', text:`本日 {{time}} から面談です。\nZoom：{{link}}`} ]
-                    },
-                    'ポコチャ':{
-                        'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'文化前提', text:`{{name}} さん、こんにちは。ポコチャでの配信に興味はありますか？`},
-                            {title:'② 反応後の一次返信', explain:'ランク説明', text:`“時間×盛り上がり”でランクが決まります。\n{{date}} {{time}} に説明しますね。`}
-                        ],
-                        '登録':[
-                            {title:'③ エントリー案内', explain:'フォーム', text:`フォーム：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補', text:`候補日：{{date}} {{time}}`}
-                        ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}}、入室リンク：{{link}}`} ]
-                    },
-                    'BIGOLIVE':{
-                        'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'幅の広さ', text:`{{name}} さん、こんにちは。BIGOLIVEでの配信サポートを行っています。`},
-                            {title:'② 反応後の一次返信', explain:'特性', text:`多言語リスナーが入りやすいです。\n{{date}} {{time}} に概要説明どうでしょう？`}
-                        ],
-                        '登録':[
-                            {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補', text:`以下から選択ください。\n・{{date}} {{time}}`}
-                        ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} です。Zoom：{{link}}`} ]
-                    },
-                    'WAVE':{
-                        'スカウト':[
-                            {title:'① 初回スカウトDM', explain:'音声特化を強調', text:`{{name}} さん、はじめまして。音声配信アプリ WAVE で活動しませんか？`},
-                            {title:'② 反応後の一次返信', explain:'継続しやすさ', text:`WAVEは準備が楽で継続しやすいです。\n{{date}} {{time}} にオンラインでいかがでしょう？`}
-                        ],
-                        '登録':[
-                            {title:'③ エントリー案内', explain:'フォーム', text:`エントリー：{{link}}`},
-                            {title:'④ 面談日程調整', explain:'候補', text:`候補：{{date}} {{time}}`}
-                        ],
-                        'end':[ {title:'⑤ 当日リマインド', explain:'直前', text:`本日 {{time}} に15分説明です。\n入室：{{link}}`} ]
-                    }
-                }
-            };
-        }
-        function seedQA(){
-            return {
-                'TikTok':{
-                    '回答':[
-                        {q:'顔出しは必須？', a:'TikTokは顔出しが主流ですが、画角や演出で調整可能です。参考：https://creators.tiktok.com/', explain:'最初は明るい場所・胸上の画角を推奨。顔出しが難しい場合は演出案を提示。'},
-                        {q:'収益化の目安は？', a:'初月は企画・頻度次第。最初は目標を共有して進めます。', explain:'固定ファン化に向けたルーティン設計とイベント活用が鍵。'}
-                    ],
-                    '送信':[
-                        {q:'顔出しは必須？', text:`顔出しが基本ですが、演出で工夫できます！\n一度、事例ベースでご紹介しますね。`},
-                        {q:'収益化の目安', text:`企画と配信頻度で大きく変わります。\n初月の目標を一緒に設計しましょう！`}
-                    ]
-                },
-                '17LIVE':{
-                    '回答':[ {q:'イベント参加の頻度', a:'月2〜3回を目安に案件や露出に合わせて調整。', explain:'無理のない頻度で経験値を積む。'} ],
-                    '送信':[ {q:'イベント頻度', text:`月2〜3回を目安に、露出や案件状況で調整します！`} ]
-                },
-                'ポコチャ':{
-                    '回答':[ {q:'ランクはどう決まる？', a:'時間×盛り上がり指標で決まります。', explain:'盛り上がり=コメント/ギフト/視聴維持 などの総合。'} ],
-                    '送信':[ {q:'ランクの仕組み', text:`時間×盛り上がりの合算で決まります。\n初期は習慣化→固定ファンづくりを一緒に！`} ]
-                },
-                'BIGOLIVE':{
-                    '回答':[ {q:'海外リスナー対応', a:'英語/日本語のミックスでもOK。', explain:'翻訳と絵文字でのレスポンスも活用。'} ],
-                    '送信':[ {q:'言語について', text:`海外リスナーも多いので、英語/日本語ミックスでOKです！`} ]
-                },
-                'WAVE':{
-                    '回答':[ {q:'機材は必要？', a:'スマホ＋マイクでOK。Amazon等で安価なものからOK。', explain:'静かな環境とポップガードがあると尚良し。'} ],
-                    '送信':[ {q:'機材について', text:`スマホとマイクがあれば始められます！`} ]
-                }
-            };
-        }
-        function seedInterview(){
-            return {
-                'TikTok':{ sheet:'', manual:'', columns: IV_DEFAULT_COLUMNS.slice(), flow:{ index:0, answers:{}, steps:[] } },
-                '17LIVE':{ sheet:'', manual:'' },
-                'ポコチャ':{ sheet:'', manual:'' },
-                'BIGOLIVE':{ sheet:'', manual:'' },
-                'WAVE':{ sheet:'', manual:'', columns: IV_DEFAULT_COLUMNS.slice(), flow:{ index:0, answers:{}, steps:[] } }
-            };
-        }
-
-        // ===== Migrations / Ensurers (データ構造の整合性を保つ関数) =====
-        function migrateTemplatesShape(){
-            const t=DB.templates; if(!t) return;
-            if(t.mode || (t.data && (t.data.face || t.data['no-face']))){
-                const newData={};
-                ['face','no-face'].forEach(m=>{
-                    const src=t.data?.[m]||{};
-                    Object.keys(src).forEach(app=>{
-                        newData[app]=newData[app]||{};
-                        const groups=src[app]||{};
-                        Object.keys(groups).forEach(g=>{
-                            newData[app][g]=newData[app][g]||[];
-                            (groups[g]||[]).forEach(item=> newData[app][g].push(item));
-                        });
-                    });
-                });
-                DB.templates = {
-                    app: t.app||'', group: t.group||'スカウト', step: t.step||0,
-                    special:{ ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:'' },
-                    data: newData
-                };
-                saveDB();
-            }
-            DB.templates.special = Object.assign({ttChoice:null, ttNote:'', ttConfirmRequired:false, ttConfirmText:''}, DB.templates.special||{});
-        }
-        function ensureTTScenarios(){
-            const tiktok = DB?.templates?.data?.['TikTok']; if (!tiktok) return;
-            if (!tiktok._ttScenarios) {
-                const seed = seedTemplates();
-                tiktok._ttScenarios = clone(seed?.data?.['TikTok']?._ttScenarios || {});
-            }
-            if (!Array.isArray(tiktok['登録']) || !tiktok['登録'].length) {
-                tiktok['登録'] = [{ title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:'' }];
-            }
-            saveDB();
-        }
-        function migrateIvColumnsCommon(){
-            const APPS = ['TikTok','WAVE'];
-            APPS.forEach(app=>{
-                const rec = DB.interview[app] || (DB.interview[app] = { sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]} });
-                const cols = Array.isArray(rec.columns) ? rec.columns : [];
-                const same = cols.length === IV_DEFAULT_COLUMNS.length && cols.every((c,i)=> c === IV_DEFAULT_COLUMNS[i]);
-                if(!same) rec.columns = IV_DEFAULT_COLUMNS.slice();
-            });
-            saveDB();
-        }
-        function ensureIvDefaults(){
-            ['TikTok','WAVE'].forEach(app=>{
-                const rec = DB.interview[app] || (DB.interview[app] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
-                if (!Array.isArray(rec.columns) || !rec.columns.length) rec.columns = IV_DEFAULT_COLUMNS.slice();
-            });
-            saveDB();
-        }
-
-        // ===== Load / Save =====
-        function loadDB(){
-            DB = JSON.parse(localStorage.getItem(KEYS.db)||'null') || JSON.parse(JSON.stringify(DefaultDB));
-            if(!DB.templates) DB.templates = seedTemplates();
-            if(!DB.qa || !Object.keys(DB.qa).length) DB.qa = seedQA();
-            if(!DB.interview || !Object.keys(DB.interview).length) DB.interview = seedInterview();
-            migrateTemplatesShape();
-            ensureTTScenarios();
-            ensureIvDefaults();
-            migrateIvColumnsCommon();
-        }
-        // ===== Gate (合言葉) =====
-        const gate = $('#gate'); const gatePass=$('#gatePass'); const gateBtn=$('#gateBtn');
-        let expectedHash = null;
-        function gateNeeded(){ return !!expectedHash && sessionStorage.getItem('noi_unlocked_'+expectedHash) !== '1'; }
-        function updateGate(){ if(!gate) return; gate.style.display = gateNeeded() ? 'flex' : 'none'; if(gateNeeded()){ setTimeout(()=>gatePass && gatePass.focus(), 50); } }
-        async function tryUnlock(){
-            const pass = (gatePass?.value||'').trim(); if(!pass) return;
-            const h = await sha256('noi-v1:'+pass);
-            if(h === expectedHash){
-                sessionStorage.setItem('noi_unlocked_'+h, '1');
-                updateGate();
-                showToast('解除しました');
-                startRealtimeWhenReady(expectedHash);
-            } else {
-                showToast('合言葉が違います');
-            }
-        }
-        // ===== UI Refs =====
-        const appList=$('#appList'); const editorText=$('#textArea'); const explainEl=$('#explain'); const progress=$('#progress');
-        const appNameEl=$('#appName'); const stepIndexEl=$('#stepIndex'); const stepTotalEl=$('#stepTotal');
-        const stepTitleInput=$('#stepTitleInput'); const ttChoiceBox=$('#ttChoiceBox');
-        const qaAppList=$('#qaAppList'); const qaSegWrap=$('#qaSegWrap'); const qaList=$('#qaList'); const qaView=$('#qaView'); const qaEditor=$('#qaEditor');
-        const ivAppList=$('#ivAppList'); const ivFormBox=$('#ivFormBox'); const ivEditor=$('#ivEditor');
-
-        // ===== Tabs / MegaTabs =====
-        let CURRENT_TAB = 'tpl';
-        function switchTab(tab){
-            CURRENT_TAB = tab;
-            ['tpl','qa','interview'].forEach(id=> $('#tab_'+id).style.display = (id===tab) ? 'block':'none');
-            localStorage.setItem('noi_tab', tab);
-            renderMegaTabs();
-        }
-        function renderMegaTabs(){
-            const wrap = $('#megaTabs'); if(!wrap) return;
-            wrap.innerHTML = '';
-            const order = ['スカウト','登録','end','Q&A','面談'];
-            order.forEach(name=>{
-                const btn=document.createElement('button'); btn.className='tab'; btn.textContent=name;
-                const isTplGroup = ['スカウト','登録','end'].includes(name);
-                const active = isTplGroup ? (CURRENT_TAB==='tpl' && DB.templates.group===name) :
-                                             (name==='Q&A' ? CURRENT_TAB==='qa' : CURRENT_TAB==='interview');
-                if(active) btn.classList.add('active');
-                btn.onclick = ()=>{
-                    if(isTplGroup){
-                        DB.templates.group = name; DB.templates.step = 0; saveDB();
-                        switchTab('tpl'); renderTplApps(); renderTplEditor();
-                    }else{
-                        if(name==='Q&A'){ switchTab('qa'); renderQaApps(); renderQaSeg(); renderQaList(); }
-                        else { switchTab('interview'); renderIvApps(); renderIvForm(); }
-                    }
-                };
-                wrap.appendChild(btn);
-            });
-        }
-
-        // ===== Template helpers =====
-        function tplApps(){ return Object.keys(DB.templates.data||{}); }
-        function tplGroupList(){
-            const a=DB.templates.data[DB.templates.app]||{};
-            if(DB.templates.app==='TikTok' && DB.templates.group==='登録' && !DB.templates.special.ttChoice) return [];
-            return a[DB.templates.group]||[];
-        }
-        function renderTplApps(){
-            appList.innerHTML='';
-            const apps=tplApps();
-            apps.forEach(name=>{
-                const b=document.createElement('button');
-                b.className='app'+(DB.templates.app===name?' selected':'');
-                const count=Object.values(DB.templates.data[name]||{}).reduce((n,arr)=>n+(arr?.length||0),0);
-                b.innerHTML=`<span>${name}</span><span class="badge">${DB.templates.app===name?'選択中':count}</span>`;
-                b.onclick=()=>{
-                    DB.templates.app=name;
-                    DB.templates.step=0;
-                    DB.templates.special.ttChoice=null;
-                    DB.templates.special.ttNote='';
-                    DB.templates.special.ttConfirmRequired=false;
-                    DB.templates.special.ttConfirmText='';
-                    saveDB(); renderTplApps(); renderTplEditor();
-                };
-                appList.appendChild(b);
-            });
-        }
-        function renderTTConfirm(){
-            ttChoiceBox.style.display = 'block';
-            ttChoiceBox.innerHTML = '';
-            const card = document.createElement('div');
-            card.className = 'panel';
-            const body = escapeHtml(DB.templates.special.ttConfirmText || '');
-            card.innerHTML = `
-                <h3 style="margin:0 0 6px">確認事項</h3>
-                <textarea id="ttConfirmText" style="min-height:120px">${body}</textarea>
-                <div class="row" style="margin-top:8px;justify-content:flex-end;gap:8px">
-                    <button class="btn ghost" id="ttBack">戻る</button>
-                    <button class="btn primary" id="ttGo">進む</button>
-                </div>`;
-            ttChoiceBox.appendChild(card);
-
-            $('#ttConfirmText').addEventListener('input', (e)=>{
-                DB.templates.special.ttConfirmText = e.target.value || '';
-                saveDB();
-            });
-            $('#ttBack').onclick = ()=>{
-                DB.templates.special.ttChoice = null;
-                DB.templates.special.ttConfirmRequired = false;
-                DB.templates.special.ttConfirmText = '';
-                if (DB.templates?.data?.['TikTok']){
-                    DB.templates.data['TikTok']['登録'] = [{title:'（選択待ち）', explain:'最初に上の「登録」内フローを選択してください。', text:''}];
-                }
-                saveDB(); renderTplEditor();
-            };
-            $('#ttGo').onclick = ()=>{
-                DB.templates.special.ttConfirmRequired = false; saveDB(); renderTplEditor();
-            };
-        }
-        function renderTTChoice(){
-            const isTikTokRegister = (DB.templates.app==='TikTok' && DB.templates.group==='登録');
-            ttChoiceBox.style.display = isTikTokRegister ? 'block' : 'none';
-            if (!isTikTokRegister) return;
-
-            if (DB.templates.special.ttChoice && DB.templates.special.ttConfirmRequired){ renderTTConfirm(); return; }
-            if (DB.templates.special.ttChoice){ return; }
-
-            ttChoiceBox.innerHTML = '';
-            const options = [
-                {key:'ttba_ok', title:'TTBA経由(アプリ内スカウト)でBackStageも登録可能の場合', note:true},
-                {key:'sns_ok', title:'SNS等のスカウトでBackstageも登録可能な場合', note:true},
-                {key:'agency_ng', title:'Backstage上でagency登録不可となっている場合', note:true},
-                {key:'consider', title:'登録検討の場合', note:false},
-                {key:'decline', title:'登録拒否の場合', note:false},
-            ];
-            const list=document.createElement('div'); list.className='apps';
-            options.forEach(opt=>{
-                const btn=document.createElement('button'); btn.className='app';
-                btn.innerHTML=`<span>${opt.title}</span><span class="badge">選択</span>`;
-                btn.onclick=()=>{
-                    ensureTTScenarios();
-                    const tiktok = DB.templates.data['TikTok'] || {};
-                    const scenarios = tiktok._ttScenarios || {};
-                    const src = clone(scenarios[opt.key] || []);
-                    DB.templates.special.ttChoice = opt.key;
-                    DB.templates.special.ttNote = '';
-                    if (TT_CONFIRM_REQUIRED_KEYS.has(opt.key)){
-                        DB.templates.special.ttConfirmRequired = true;
-                        DB.templates.special.ttConfirmText = TT_CONFIRM_TEXT[opt.key] || '';
-                    }else{
-                        DB.templates.special.ttConfirmRequired = false;
-                        DB.templates.special.ttConfirmText = '';
-                    }
-                    if (!DB.templates.data['TikTok']['登録']) DB.templates.data['TikTok']['登録'] = [];
-                    DB.templates.data['TikTok']['登録'] = src;
-                    DB.templates.step = 0; saveDB(); renderTplEditor();
-                };
-                list.appendChild(btn);
-            });
-            ttChoiceBox.appendChild(list);
-
-            const showNote = document.createElement('div'); showNote.style.marginTop='10px';
-            showNote.innerHTML = `
-                <div class="note">上の3つを選ぶ場合は補足メモを残せます（テンプレ解説に表示）。</div>
-                <textarea id="ttMemo" placeholder="補足メモ（任意）" style="min-height:90px;margin-top:6px"></textarea>`;
-            ttChoiceBox.appendChild(showNote);
-            $('#ttMemo').addEventListener('input', ()=>{
-                DB.templates.special.ttNote = $('#ttMemo').value||''; saveDB();
-            });
-        }
-        function renderTplEditor(){
-            const list=tplGroupList();
-
-            if(!DB.templates.app){
-                appNameEl.textContent='未選択'; stepIndexEl.textContent='-'; stepTotalEl.textContent='-';
-                stepTitleInput.value=''; explainEl.textContent='アプリを選択してください。';
-                editorText.value=''; progress.innerHTML=''; $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
-                renderTTChoice(); return;
-            }
-
-            renderTTChoice(); ensureTTScenarios();
-
-            if (DB.templates.app==='TikTok' && DB.templates.group==='登録' && DB.templates.special.ttChoice && DB.templates.special.ttConfirmRequired){
-                appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group;
-                stepIndexEl.textContent='-'; stepTotalEl.textContent='—';
-                stepTitleInput.value=''; explainEl.innerHTML='上の「確認事項」を確認して <span class="kbd">進む</span> を押してください。';
-                editorText.value=''; progress.innerHTML='';
-                $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
-                $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
-                return;
-            }
-
-            appNameEl.textContent=DB.templates.app+'｜'+DB.templates.group;
-            stepTotalEl.textContent=list.length || (DB.templates.app==='TikTok' && DB.templates.group==='登録' ? '—' : '0');
-
-            if(!list.length){
-                stepIndexEl.textContent='-';
-                stepTitleInput.value='テンプレなし';
-                explainEl.textContent = (DB.templates.app==='TikTok' && DB.templates.group==='登録' && !DB.templates.special.ttChoice)
-                    ? '登録のフローを選択してください。' : 'このカテゴリにはテンプレがありません。＋で追加してください。';
-                editorText.value=''; progress.innerHTML='';
-                $('#prevBtn').disabled=true; $('#nextBtn').disabled=true;
-                $('#jumpList').innerHTML=''; $('#tplList').innerHTML='';
-                return;
-            }
-
-            DB.templates.step=Math.max(0,Math.min(DB.templates.step,list.length-1));
-            stepIndexEl.textContent=DB.templates.step+1;
-
-            const cur=list[DB.templates.step];
-
-            stepTitleInput.value = cur.title || '';
-            stepTitleInput.oninput = ()=>{ cur.title = stepTitleInput.value; saveDB(); };
-
-            const memo = DB.templates.special?.ttNote || '';
-            const explainText = (cur.explain||'').replace('{{memo}}', memo);
-            explainEl.innerHTML = linkify(explainText);
-
-            editorText.value=cur.text||'';
-
-            $('#prevBtn').disabled=DB.templates.step===0;
-            $('#nextBtn').disabled=DB.templates.step>=list.length-1;
-
-            progress.innerHTML='';
-            list.forEach((_,i)=>{
-                const d=document.createElement('div'); d.className='dot'+(i===DB.templates.step?' on':'');
-                d.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();};
-                progress.appendChild(d);
-            });
-            const jump=$('#jumpList'); jump.innerHTML='';
-            list.forEach((t,i)=>{
-                const b=document.createElement('button'); b.className='tab'; b.textContent=t.title||`No.${i+1}`;
-                b.onclick=()=>{DB.templates.step=i; saveDB(); renderTplEditor();}; if(i===DB.templates.step) b.classList.add('active'); jump.appendChild(b);
-            });
-
-            const wrap=$('#tplList'); wrap.innerHTML='';
-            list.forEach((t,i)=>{
-                const row=document.createElement('div'); row.className='panel';
-                row.innerHTML=`
-                    <div class="grid2"><input data-k="title" value="${(t.title||'').replace(/"/g,'&quot;')}"/><input data-k="explain" value="${(t.explain||'').replace(/"/g,'&quot;')}"/></div>
-                    <textarea data-k="text">${(t.text||'').replace(/</g,'&lt;')}</textarea>
-                    <div class="row" style="gap:8px;margin-top:8px">
-                        <button class="btn danger" data-del="${i}">削除</button>
-                    </div>`;
-                wrap.appendChild(row);
-                row.querySelectorAll('input,textarea').forEach(el=> el.oninput=()=>{ t[el.dataset.k]=el.value; saveDB(); });
-                row.querySelector('[data-del]')?.addEventListener('click',()=>{ list.splice(i,1); saveDB(); renderTplEditor(); });
-            });
-        }
-
-        // ===== Q&A =====
-        let QA_APP = null; let QA_KIND = '回答';
-        function qaApps(){ return Object.keys(DB.qa||{}); }
-        function renderQaApps(){
-            qaAppList.innerHTML=''; const apps=qaApps();
-            if(!apps.length){ qaAppList.innerHTML='<p class="muted">Q&Aのデータがありません。</p>'; return; }
-            if(!QA_APP) QA_APP=apps[0];
-            apps.forEach(a=>{
-                const b=document.createElement('button'); const count=(DB.qa[a]['回答']?.length||0)+(DB.qa[a]['送信']?.length||0);
-                b.className='app'+(QA_APP===a?' selected':''); b.innerHTML=`<span>${a}</span><span class="badge">${count}</span>`;
-                b.onclick=()=>{ QA_APP=a; renderQaApps(); renderQaSeg(); renderQaList(); }; qaAppList.appendChild(b);
-            });
-        }
-        function renderQaSeg(){
-            qaSegWrap.style.display= QA_APP? 'block':'none'; qaSegWrap.innerHTML='';
-            if(!QA_APP) return;
-            const wrap=document.createElement('div');
-            wrap.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:999px;overflow:hidden;';
-            ['回答','送信'].forEach(kind=>{
-                const btn=document.createElement('button'); const active=QA_KIND===kind;
-                btn.style.cssText='background:none;color:var(--ink);border:none;padding:12px 14px;font-weight:800';
-                btn.textContent=kind; if(active){ btn.classList.add('active'); btn.style.background='linear-gradient(135deg,#4f46e5,#7c3aed)'; btn.style.color='#fff'; }
-                btn.onclick=()=>{ QA_KIND=kind; renderQaSeg(); renderQaList(); }; wrap.appendChild(btn);
-            });
-            qaSegWrap.appendChild(wrap);
-        }
-        function renderQaList(){
-            qaList.innerHTML=''; qaView.innerHTML='';
-            const items=DB.qa[QA_APP]?.[QA_KIND]||[];
-            if(!items.length){ qaList.innerHTML='<p class="muted">項目がありません。</p>'; return; }
-            const ul=document.createElement('div'); ul.style.display='grid'; ul.style.gap='8px';
-            items.forEach((it,i)=>{
-                const b=document.createElement('button'); b.className='app'; b.innerHTML=`<span>${escapeHtml(it.q||'')}</span>`;
-                b.onclick=()=>{
-                    if(QA_KIND==='回答'){
-                        qaView.innerHTML = `
-                            <div class="panel">
-                                <h3 style="margin:0 0 6px">回答</h3>
-                                <div>${linkify(it.a||'')}</div>
-                                <div class="hr"></div>
-                                <h4 style="margin:0 0 6px">解説</h4>
-                                <div class="muted">${linkify(it.explain||'')}</div>
-                            </div>`;
-                    } else {
-                        qaView.innerHTML = `
-                            <div class="panel">
-                                <h3 style="margin:0 0 6px">送信テンプレ</h3>
-                                <div class="note" style="white-space:pre-wrap">${linkify(it.text||'')}</div>
-                                <div class="row" style="margin-top:8px"><button class="btn copy" id="qaCopyBtn">コピー</button></div>
-                            </div>`;
-                        $('#qaCopyBtn').onclick=async()=>{ try{ await navigator.clipboard.writeText(it.text||''); showToast('コピーしました'); }catch{} };
-                    }
-                };
-                ul.appendChild(b);
-            });
-            qaList.appendChild(ul);
-        }
-        function enableQaEdit(on){
-            $('#qaEditor').style.display= on ? 'block':'none';
-            $('#qaSave').style.display= on ? 'inline-flex':'none';
-            $('#qaDiscard').style.display= on ? 'inline-flex':'none';
-            if(on){
-                qaEditor.innerHTML='';
-                const apps=qaApps();
-                const select=document.createElement('select');
-                select.innerHTML=apps.map(a=>`<option ${a===QA_APP?'selected':''}>${a}</option>`).join('');
-                select.onchange=()=>{ QA_APP=select.value; renderQaApps(); renderQaSeg(); renderQaList(); enableQaEdit(true); };
-                qaEditor.appendChild(select);
-
-                const kindSel=document.createElement('select');
-                kindSel.innerHTML=['回答','送信'].map(k=>`<option ${k===QA_KIND?'selected':''}>${k}</option>`).join('');
-                kindSel.onchange=()=>{ QA_KIND=kindSel.value; enableQaEdit(true); };
-                qaEditor.appendChild(kindSel);
-
-                const form=document.createElement('div'); form.className='panel';
-                if(QA_KIND==='回答'){
-                    form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/><input id="qaA" placeholder="回答（URL可）"/></div><textarea id="qaExplain" placeholder="解説（任意・URL可）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`;
-                } else {
-                    form.innerHTML=`<div class="grid2"><input id="qaQ" placeholder="Q（質問）"/></div><textarea id="qaText" placeholder="送信テンプレ本文（URL可）"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qaAdd">＋ 追加</button></div>`;
-                }
-                qaEditor.appendChild(form);
-                $('#qaAdd').onclick=()=>{
-                    const rec = (QA_KIND==='回答')? {q:$('#qaQ').value, a:$('#qaA').value, explain:$('#qaExplain').value} : {q:$('#qaQ').value, text:$('#qaText').value};
-                    if(!rec.q) return; DB.qa[QA_APP][QA_KIND].push(rec); saveDB(); showToast('追加しました'); renderQaList(); enableQaEdit(true);
-                };
-                const items=DB.qa[QA_APP]?.[QA_KIND]||[]; const list=document.createElement('div'); list.style.marginTop='8px';
-                items.forEach((it,i)=>{
-                    const row=document.createElement('div'); row.className='panel';
-                    if(QA_KIND==='回答'){
-                        row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/\"/g,'&quot;')}"/><input data-k="a" value="${(it.a||'').replace(/\"/g,'&quot;')}"/></div><textarea data-k="explain">${(it.explain||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`;
-                    } else {
-                        row.innerHTML=`<div class="grid2"><input data-k="q" value="${(it.q||'').replace(/\"/g,'&quot;')}"/></div><textarea data-k="text">${(it.text||'').replace(/</g,'&lt;')}</textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn danger" data-del="${i}">削除</button></div>`;
-                    }
-                    list.appendChild(row);
-                    row.querySelectorAll('input,textarea').forEach(el=> el.oninput = ()=>{ it[el.dataset.k]=el.value; saveDB(); });
-                    row.querySelector('[data-del]')?.addEventListener('click',()=>{ items.splice(i,1); saveDB(); enableQaEdit(true); renderQaList(); });
-                });
-                qaEditor.appendChild(list);
-            }
-        }
-
-        // ===== Interview =====
-        let IV_APP = null;
-        function ivApps(){ return Object.keys(DB.interview||{}); }
-        function renderIvApps(){
-            ivAppList.innerHTML='';
-            const apps=ivApps();
-            if(!apps.length){ ivAppList.innerHTML='<p class="muted">面談データがありません。</p>'; return; }
-            if(!IV_APP) IV_APP=apps[0];
-            apps.forEach(a=>{
-                const b=document.createElement('button');
-                b.className='app'+(IV_APP===a?' selected':'');
-                b.innerHTML=`<span>${a}</span>`;
-                b.onclick=()=>{ IV_APP=a; renderIvApps(); renderIvForm(); };
-                ivAppList.appendChild(b);
-            });
-        }
-        function ivParseColumns(text){
-            if(!text) return [];
-            const first = String(text).split(/\r?\n/).find(s => s.trim().length) || '';
-            const parts = first.includes('\t') ? first.split('\t') : first.split(',');
-            return parts.map(s=>s.trim()).filter(Boolean);
-        }
-        function renderIvForm(){
-            const box = ivFormBox;
-            if (!IV_APP){ box.innerHTML = '<p class="muted">アプリを選択してください。</p>'; return; }
-            const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'',manual:'',columns:[], flow:{index:0,answers:{},steps:[]}});
-
-            box.innerHTML = '';
-            if (!rec.columns || !rec.columns.length){
-                const p = document.createElement('div');
-                p.innerHTML = `
-                    <div class="note">下のテキストにシートのヘッダー行を貼り付け→「列を設定」。</div>
-                    <textarea id="ivColsRaw" placeholder="例：日時,氏名,アプリ,希望ジャンル,備考（カンマ/タブ区切りどちらでも可）" style="margin-top:8px;min-height:90px"></textarea>
-                    <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
-                box.appendChild(p);
-                $('#ivColsApply').onclick = ()=>{
-                    const cols = ivParseColumns($('#ivColsRaw').value);
-                    if(!cols.length){ showToast('列が読み取れませんでした'); return; }
-                    rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
-                };
-                return;
-            }
-
-            const pillWrap = document.createElement('div');
-            pillWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:6px 0';
-            rec.columns.forEach(c=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=c; pillWrap.appendChild(s); });
-            box.appendChild(pillWrap);
-
-            const inputs = document.createElement('div'); inputs.id='ivInputs';
-            rec.columns.forEach(c=>{
-                const row=document.createElement('div'); row.className='panel';
-                row.innerHTML = `<label class="muted">${c}</label><input data-col="${c}">`;
-                inputs.appendChild(row);
-            });
-            box.appendChild(inputs);
-
-            const controls = document.createElement('div'); controls.className='row'; controls.style.cssText='margin-top:8px;justify-content:flex-end';
-            controls.innerHTML = `
-                <button class="btn copy small" id="ivCopyRow2">コピー</button>
-                <button class="btn danger small" id="ivClearInputs2">リセット</button>
-                <button class="btn ghost small" id="ivResetCols2">行設定</button>
-                <button class="btn small" id="ivOpenSheet2">スプシ</button>`;
-            box.appendChild(controls);
-
-            const copyTSV = async ()=>{
-                const values = rec.columns.map(c => (document.querySelector(`[data-col="${c}"]`)?.value || ''));
-                const final = values.join('\t');
-                try{ await navigator.clipboard.writeText(final); showToast('コピーしました'); }catch{ showToast('コピーに失敗'); }
-            };
-            const clearAll = ()=>{
-                (rec.columns||[]).forEach(c=>{ const inp = document.querySelector(`[data-col="${c}"]`); if (inp) inp.value = ''; });
-                if (IV_APP === 'WAVE' && rec.flow){ rec.flow.index = 0; rec.flow.answers = {}; }
-                saveDB(); renderIvForm(); showToast('入力をリセットしました');
-            };
-
-            $('#ivCopyRow2').onclick = copyTSV;
-            $('#ivClearInputs2').onclick = clearAll;
-            $('#ivResetCols2').onclick = ()=>{
-                box.innerHTML = `
-                    <textarea id="ivColsRaw" style="min-height:90px">${rec.columns.join(', ')}</textarea>
-                    <div class="row" style="margin-top:8px"><button class="btn" id="ivColsApply">列を設定</button></div>`;
-                $('#ivColsApply').onclick = ()=>{
-                    const cols = ivParseColumns($('#ivColsRaw').value);
-                    if(!cols.length){ showToast('列が読み取れませんでした'); return; }
-                    rec.columns = cols; saveDB(); showToast('列を設定しました'); renderIvForm();
-                };
-            };
-            $('#ivOpenSheet2').onclick = ()=>{ if(rec.sheet) location.href = rec.sheet; else showToast('スプレッドシートURL未設定'); };
-
-            const syncAnswersToInputs = ()=>{
-                (rec.columns||[]).forEach(col=>{
-                    const val = rec.flow?.answers?.[col] ?? '';
-                    const inp = document.querySelector(`[data-col="${col}"]`);
-                    if (inp && val && !inp.value) inp.value = val;
-                });
-            };
-            if (IV_APP==='WAVE') syncAnswersToInputs();
-        }
-        function enableIvEdit(on){
-            ivEditor.style.display = on ? 'block' : 'none';
-            $('#ivSave').style.display = on ? 'inline-flex' : 'none';
-            $('#ivDiscard').style.display = on ? 'inline-flex' : 'none';
-            if(!on) return;
-
-            const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{index:0,answers:{},steps:[]}});
-
-            ivEditor.innerHTML = `
-                <input id="ivSheetUrl" placeholder="スプレッドシートURL" />
-                <textarea id="ivManual" placeholder="面談マニュアル本文" style="min-height:120px"></textarea>
-                <div class="note" style="margin-top:8px">WAVEの面談フロー（JSON）。<br>各ステップの <code>title/type/explain/options/column</code> を編集できます。</div>
-                <textarea id="ivFlowJson" placeholder="WAVE用フロー（JSON配列）" style="min-height:220px"></textarea>`;
-            $('#ivSheetUrl').value = rec.sheet || '';
-            $('#ivManual').value = rec.manual || '';
-            const steps = (rec.flow && Array.isArray(rec.flow.steps)) ? rec.flow.steps : [];
-            $('#ivFlowJson').value = JSON.stringify(steps, null, 2);
-        }
-
-        // ===== Copy & Share (テンプレ) =====
-        function applyTags(str){
-            const map = { '{{name}}': $('#tagName')?.value, '{{date}}': $('#tagDate')?.value, '{{time}}': $('#tagTime')?.value, '{{link}}': $('#tagLink')?.value };
-            let out = String(str ?? ''); for(const k in map){ const v = map[k]; if(v) out = out.split(k).join(v); } return out;
-        }
-        async function doCopy(){
-            const txt = applyTags($('#textArea').value);
-            try{ await navigator.clipboard.writeText(txt); showToast('コピーしました'); }
-            catch(e){ const ta = $('#textArea'); ta.readOnly = false; ta.select(); document.execCommand('copy'); ta.readOnly = true; showToast('コピーしました（互換）'); }
-        }
-        async function doShare(){
-            const txt = applyTags($('#textArea').value);
-            if(navigator.share){ try{ await navigator.share({ text: txt }); }catch(e){} } else { showToast('共有に未対応の端末です'); }
-        }
-
-        // ===== Header buttons =====
-        $('#installBtn').style.display='none'; let deferredPrompt=null;
-        window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('#installBtn').style.display='inline-flex'; });
-        $('#installBtn').onclick=async()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('#installBtn').style.display='none'; } else { showToast('iPhoneは共有→「ホーム画面に追加」'); } };
-        $('#backupBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(DB)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='noi-backup.json'; a.click(); };
-        $('#restoreBtn').onclick=()=> $('#restoreInput').click();
-        $('#restoreInput').addEventListener('change', async (e)=>{ const f=e.target.files?.[0]; if(!f) return; const txt=await f.text(); try{ const data=JSON.parse(txt); DB=data; saveDB(); showToast('読み込みました'); boot(); }catch{ showToast('JSONが不正です'); } });
-        $('#protectBtn').onclick = async ()=>{ const pass=prompt('共有用の合言葉を入力してください（相手には別ルートで伝えてね）'); if(!pass) return; const h=await sha256('noi-v1:'+pass); const link=location.origin+location.pathname+'#h='+h; try{ await navigator.clipboard.writeText(link); showToast('共有リンクをコピーしました'); }catch{ showToast('リンク: '+link); } };
-
-        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-        // ★ 修正点：リアルタイム更新時に画面全体を再描画する関数を追加 ★
-        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-        function renderAll() {
-            console.log('Data updated from Firestore, re-rendering UI...');
-            renderMegaTabs();
-            // 現在表示中のタブに応じて、必要な部分だけを再描画
-            const currentTab = CURRENT_TAB || 'tpl';
-            if (currentTab === 'tpl') {
-                renderTplApps();
-                renderTplEditor();
-            } else if (currentTab === 'qa') {
-                renderQaApps();
-                renderQaSeg();
-                renderQaList();
-            } else if (currentTab === 'interview') {
-                renderIvApps();
-                renderIvForm();
-            }
-        }
-
-        // ===== Init & Boot (アプリ起動処理) =====
-        function boot(){
-            const saved = localStorage.getItem('noi_tab'); const ok=['tpl','qa','interview'];
-            const initialTab = ok.includes(saved) ? saved : 'tpl';
-            switchTab(initialTab);
-            renderAll(); // 初期表示
-
-            // --- イベントリスナーを一度だけ設定 ---
-            // テンプレ
-            $('#prevBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step>0){ DB.templates.step--; saveDB(); renderTplEditor(); } };
-            $('#nextBtn').onclick=()=>{ const list=tplGroupList(); if(DB.templates.step<list.length-1){ DB.templates.step++; saveDB(); renderTplEditor(); } };
-            $('#copyBtn').onclick=doCopy; $('#shareBtn').onclick=doShare;
-            $('#tplEditor').style.display='block';
-            $('#tplAdd').onclick=()=>{ const m=DB.templates.data[DB.templates.app]; if(!m) return; m[DB.templates.group]=m[DB.templates.group]||[]; m[DB.templates.group].push({title:'新しいテンプレ', explain:'説明', text:'本文'}); saveDB(); renderTplEditor(); };
-
-            // Q&A
-            let qaEditing=false;
-            $('#qaEditToggle').onclick=()=>{ qaEditing=!qaEditing; enableQaEdit(qaEditing); };
-            $('#qaSave').onclick=()=>{ saveDB(); qaEditing=false; enableQaEdit(false); showToast('Q&Aを保存しました'); renderAll(); };
-            $('#qaDiscard').onclick=()=>{ loadDB(); qaEditing=false; enableQaEdit(false); renderAll(); };
-
-            // Interview
-            let ivEditing=false;
-            $('#ivEditToggle').onclick=()=>{ ivEditing=!ivEditing; enableIvEdit(ivEditing); };
-            $('#ivSave').onclick = ()=>{
-                const rec = DB.interview[IV_APP] || (DB.interview[IV_APP] = {sheet:'', manual:'', columns:[], flow:{ index:0, answers:{}, steps:[] }});
-                if ($('#ivSheetUrl')) rec.sheet = $('#ivSheetUrl').value;
-                if ($('#ivManual')) rec.manual = $('#ivManual').value;
-                if ($('#ivFlowJson')){
-                    try{
-                        const steps = JSON.parse($('#ivFlowJson').value || '[]');
-                        if (!Array.isArray(steps)) throw new Error('steps is not array');
-                        rec.flow = rec.flow || { index:0, answers:{}, steps:[] };
-                        rec.flow.steps = steps;
-                        const cols = steps.map(s=>s.column).filter(Boolean);
-                        if (cols.length) rec.columns = cols;
-                    }catch(e){ showToast('フローJSONの形式が不正です'); return; }
-                }
-                DB.interview[IV_APP] = rec; saveDB();
-                showToast('面談を保存しました'); enableIvEdit(false); renderIvForm();
-            };
-            $('#ivDiscard').onclick=()=>{ loadDB(); enableIvEdit(false); renderIvApps(); renderIvForm(); };
-        }
-
-        // --- Gate (合言葉処理) ---
-        expectedHash = getFromHashOrQuery('h');
-        updateGate(); // 初期チェック
-        gateBtn?.addEventListener('click', tryUnlock);
-        gatePass?.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
-
-        // --- 起動 ---
-        loadDB();
-        boot();
-
-        // ページ読み込み時にすでに解除済みなら、すぐに同期を開始
-        if (expectedHash && sessionStorage.getItem('noi_unlocked_' + expectedHash) === '1') {
-            startRealtimeWhenReady(expectedHash);
-        }
-    </script>
+    // PC chips
+    const pcm = document.querySelector('.pc-mac');
+    const pcw = document.querySelector('.pc-windows');
+    const chipM = document.getElementById('c-mac');
+    const chipW = document.getElementById('c-windows');
+    if(chipM && chipW){
+      chipM.addEventListener('click',()=>{ chipM.setAttribute('aria-pressed','true'); chipW.setAttribute('aria-pressed','false'); pcm.style.display='block'; pcw.style.display='none'; });
+      chipW.addEventListener('click',()=>{ chipM.setAttribute('aria-pressed','false'); chipW.setAttribute('aria-pressed','true'); pcm.style.display='none'; pcw.style.display='block'; });
+    }
+  </script>
 </body>
 </html>
