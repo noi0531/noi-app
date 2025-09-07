@@ -5,75 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NOIGRIT 署名マニュアル｜PDFに署名する全部入りガイド</title>
   <meta name="description" content="NOIGRIT向け 署名マニュアル。スマホ（iPhone/Android）・PC（Mac/Windows）・印刷手書きの3カテゴリで超詳細に解説。標準機能のみ。スマホ最適化・軽量表示。"/>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0b1220; --panel:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --accent:#38bdf8; --accent2:#22c55e;
-      --ng-y1:#fde047; --ng-y2:#f59e0b; --ng-stroke:#eab308;
-      --shadow:0 6px 16px rgba(0,0,0,.25);
-    }
+    :root{ --bg:#0b1220; --panel:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --accent:#38bdf8; --accent2:#22c55e; --ng-y1:#fde047; --ng-y2:#f59e0b; --ng-stroke:#eab308; --danger:#ef4444; }
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; padding:0; }
-    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif; color:var(--ink); background:linear-gradient(180deg,var(--bg),#0a1328 40%,var(--bg)); }
+    body{ font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif; color:var(--ink); background:#0b1220; }
 
-    header{ padding:calc(18px + env(safe-area-inset-top)) 16px 14px; background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:40; }
+    header{ padding:calc(18px + env(safe-area-inset-top)) 16px 14px; background:var(--panel); border-bottom:1px solid var(--line); position:relative; z-index:1; }
     .hero{ max-width:1100px; margin:0 auto; text-align:center; }
-
     .brand{ display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
-    .logo-badge{ display:inline-flex; align-items:center; justify-content:center; padding:.5em 1.2em; border-radius:14px;
-      background:linear-gradient(135deg, var(--ng-y1), var(--ng-y2)); color:#1f2937;
-      font-family:'Montserrat', sans-serif; font-weight:900; font-size:24px; letter-spacing:.1em;
-      border:1px solid var(--ng-stroke); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), var(--shadow);
-      text-transform:uppercase;
-    }
-    .brand h1{ margin:0; font-size:26px; letter-spacing:.02em; font-weight:700; font-family:'Montserrat', sans-serif; }
+    .logo-badge{ display:inline-flex; align-items:center; justify-content:center; padding:.5em 1.2em; border-radius:14px; background:linear-gradient(135deg, var(--ng-y1), var(--ng-y2)); color:#1f2937; font-weight:900; font-size:24px; letter-spacing:.1em; border:1px solid var(--ng-stroke); text-transform:uppercase; }
+    .brand h1{ margin:0; font-size:26px; font-weight:700; }
     .hero p{ margin:10px 0 0; color:var(--muted); font-size:15px; }
 
-    .tabs{ max-width:1100px; margin:12px auto 0; padding:10px 12px 8px; display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; border-top:1px solid rgba(255,255,255,.04); }
+    .tabs{ max-width:1100px; margin:12px auto 0; padding:10px; display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; border-top:1px solid rgba(255,255,255,.04); }
     .tabs::-webkit-scrollbar{ display:none; }
-    .tab{ appearance:none; border:none; cursor:pointer; padding:14px 18px; border-radius:999px; background:#0f2036; color:var(--ink); border:1px solid #253449; font-weight:800; flex:0 0 auto; white-space:nowrap; font-size:15px; line-height:1.2; }
-    .tab[aria-selected="true"]{ outline:2px solid color-mix(in oklab, var(--accent) 60%, white 0%); background:#142742; }
+    .tab{ appearance:none; border:none; cursor:pointer; padding:14px 18px; border-radius:999px; background:#0f2036; color:var(--ink); border:1px solid #253449; font-weight:800; flex:0 0 auto; white-space:nowrap; font-size:15px; }
+    .tab[aria-selected="true"]{ outline:2px solid #38bdf866; background:#142742; }
 
     main{ max-width:1100px; margin:16px auto 80px; padding:0 16px; }
-    .panel{ display:none; background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:20px; margin:16px 0; }
+    .panel{ display:none; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; margin:16px 0; }
     .panel[aria-hidden="false"]{ display:block; }
     .panel h2{ margin:0 0 10px; color:var(--accent); font-size:20px; }
     .panel .sub{ margin:0 0 12px; color:var(--muted); font-size:14px; }
 
-    .intro-grid{ display:grid; grid-template-columns:1fr; gap:14px; text-align:left; }
-    .notice{ border:1px solid #3b3b28; background:#171710; border-radius:12px; padding:14px; }
-    .notice h3{ margin:0 0 8px; color:#fde68a; font-size:16px; }
-    .notice ul{ margin:8px 0 0 18px; padding:0; }
+    .notice{ border:1px solid #3b3b28; background:#171710; border-radius:12px; padding:16px; margin-top:16px; }
+    .notice h3{ margin:0 0 12px; color:#fde047; font-size:16px; }
+    .notice ul{ margin:0; padding-left:20px; }
+    .notice li{ margin:6px 0; line-height:1.6; color:#e5e7eb; }
+    .notice b, .notice strong{ color: var(--danger); font-weight:800; }
 
     .subsel{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; justify-content:center; }
     .chip{ appearance:none; border:1px solid #2b3a50; background:#0e1d30; color:var(--ink); border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; font-size:14px; }
     .chip[aria-pressed="true"]{ outline:2px solid var(--accent2); background:#12324f; }
 
     .steps{ counter-reset:step; display:grid; gap:12px; }
-    .step{ position:relative; padding:14px 14px 14px 20px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(180deg, color-mix(in oklab, var(--accent) 8%, transparent), transparent); }
-    .step::before{ counter-increment:step; content:counter(step); position:absolute; left:10px; top:-12px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:var(--accent); color:#062030; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,.28); font-size:13px; }
+    .step{ border:1px solid #2a3b55; border-radius:10px; padding:12px; margin:14px 0; background:#0d1a2b; }
+    .step-title{ font-weight:800; margin-bottom:8px; font-size:15px; }
+    .step-title::before{ counter-increment:step; content:"STEP" counter(step) " "; font-weight:900; margin-right:4px; }
+    .step-body{ background:#071425; border:1px solid #11294a; border-radius:8px; padding:10px; font-size:14px; }
+    .arrow{ text-align:center; margin:6px 0; font-size:20px; color:#94a3b8; }
 
-    .block{ border:1px solid var(--line); border-radius:12px; padding:12px; margin:12px 0; background:#0d1a2b; }
-    .block h3{ margin:0 0 6px; font-size:15px; color:var(--accent2); }
-    .mini{ color:var(--muted); font-size:14px; line-height:1.7; }
-    .kbd{ display:inline-block; padding:3px 7px; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; background:#0d1a2b; }
-
-    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .sendbox{ border:1px solid #35507a; background:#0b203a; border-radius:12px; padding:12px; margin-top:20px; }
+    .sendbox h4{ margin:0 0 6px; font-size:14px; color:#8ec1ff; }
+    .sendbox code{ display:block; background:#071425; border:1px solid #11294a; padding:10px; border-radius:8px; font-family:ui-monospace, monospace; white-space:pre-wrap; color:#dbeafe; }
 
     @media (max-width:720px){
       .brand h1{ font-size:22px; }
       .logo-badge{ font-size:20px; }
       .panel{ padding:18px; }
-      .grid2{ grid-template-columns:1fr; }
-      .step{ padding:12px; }
-      .mini{ font-size:13.5px; }
+      .step-body{ font-size:13.5px; }
     }
 
-    .footer{ margin:32px auto 60px; max-width:1100px; color:var(--muted); font-size:12.5px; padding:0 16px; text-align:center; }
-    .sendbox{ border:1px solid #35507a; background:#0b203a; border-radius:12px; padding:12px; }
-    .sendbox h4{ margin:0 0 6px; font-size:14px; color:#8ec1ff; }
-    .sendbox code{ display:block; background:#071425; border:1px solid #11294a; padding:10px; border-radius:8px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; white-space:pre-wrap; word-break:break-word; color:#dbeafe; }
+    .footer{ margin:32px auto 60px; max-width:1100px; color:#94a3b8; font-size:12.5px; padding:0 16px; text-align:center; }
+
+    /* ===== モーダル・ギャラリー ===== */
+    .img-toggle{ color:#38bdf8; cursor:pointer; text-decoration:underline; }
+    .modal{ display:none; position:fixed; z-index:9999; inset:0; background:rgba(0,0,0,.85); }
+    .modal-inner{ position:absolute; inset:0; display:grid; grid-template-rows:auto 1fr auto; }
+    .modal-header{ display:flex; justify-content:flex-end; padding:10px 14px; }
+    .modal-close{ font-size:30px; color:#fff; cursor:pointer; line-height:1; }
+    .modal-body{ display:grid; place-items:center; padding:8px; }
+    .modal-body img{ max-width:92vw; max-height:76vh; border-radius:10px; }
+    .modal-footer{ display:flex; align-items:center; justify-content:center; gap:12px; padding:10px; }
+    .nav-btn{ border:1px solid #93c5fd; background:#1e293b; color:#e5e7eb; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:700; }
+    .counter{ color:#cbd5e1; font-size:13px; }
+    .thumbs{ display:flex; gap:6px; overflow-x:auto; padding:6px 10px; }
+    .thumbs img{ height:56px; border-radius:6px; opacity:.7; border:2px solid transparent; cursor:pointer; }
+    .thumbs img.active{ opacity:1; border-color:#38bdf8; }
   </style>
 </head>
 <body>
@@ -88,179 +87,195 @@
   </header>
 
   <div class="tabs" role="tablist" aria-label="NOIGRIT 署名カテゴリ">
-    <button class="tab" role="tab" aria-selected="true" aria-controls="p-intro" id="t-intro">使い方 / 注意事項</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-phone" id="t-phone">スマホで署名する場合</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-pc" id="t-pc">PCで署名する場合</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-print" id="t-print">その他（印刷/手書き）</button>
+    <button class="tab" type="button" role="tab" aria-selected="true"  aria-controls="p-intro"  id="t-intro">使い方 / 注意事項</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="p-phone" id="t-phone">スマホで署名する場合</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="p-pc"    id="t-pc">PCで署名する場合</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="p-print" id="t-print">その他（印刷/手書き）</button>
   </div>
 
   <main>
     <!-- INTRO -->
     <section class="panel" id="p-intro" role="tabpanel" aria-labelledby="t-intro" aria-hidden="false">
       <h2>NOIGRIT署名マニュアルの使い方</h2>
-      <div class="intro-grid">
-        <p class="sub">スマホ / PC / 印刷からお選びください。各ページの最後に送付方法があります。</p>
-        <div class="notice">
-          <h3>注意事項</h3>
-          <ul>
-            <li>ご記入いただくのは「<b>配信申込書兼承諾書</b>」のみです。</li>
-            <li>送付は「配信申込書兼承諾書」だけでなく <b>署名ページを含む全ページ</b> を添付してください。</li>
-            <li><b>誤字・脱字がないか</b> をご確認ください。</li>
-            <li><b>期日を過ぎると契約できない場合</b> があります。必ず期限内にご対応ください。</li>
-                <li><b>※未成年の場合は親権者兼法廷代理人の箇所も記入してください。</li>
-          </ul>
-        </div>
+      <p class="sub">スマホ / PC / 印刷からお選びください。各ページの最後に送付方法があります。</p>
+      <div class="notice">
+        <h3>注意事項</h3>
+        <ul>
+          <li>ご記入いただくのは「<b>配信申込書兼承諾書</b>」のみです。</li>
+          <li>送付は「配信申込書兼承諾書」だけでなく <b>署名ページを含む全ページ</b> を添付してください。</li>
+          <li><b>誤字・脱字がないか</b> をご確認ください。</li>
+          <li><b>期日を過ぎると契約できない場合</b> があります。必ず期限内にご対応ください。</li>
+          <li><b>※未成年の場合は親権者兼法定代理人の箇所も記入してください。</b></li>
+        </ul>
       </div>
     </section>
 
-    <!-- PHONE (iPhone/Android) -->
+    <!-- PHONE -->
     <section class="panel" id="p-phone" role="tabpanel" aria-labelledby="t-phone" aria-hidden="true">
       <h2>スマホで署名する場合</h2>
       <p class="sub">お使いの機種を選んでください。</p>
       <div class="subsel" role="group" aria-label="スマホ機種選択">
-        <button class="chip" id="c-iphone" aria-pressed="true">iPhone</button>
-        <button class="chip" id="c-android" aria-pressed="false">Android</button>
+        <button class="chip" id="c-iphone"  aria-pressed="true"  type="button">iPhone</button>
+        <button class="chip" id="c-android" aria-pressed="false" type="button">Android</button>
       </div>
+
+      <!-- iPhone -->
       <div class="phone-iphone">
-        <div class="steps" style="margin-top:10px;">
-          <div class="step"><b>PDFを開く：</b> プレビューで <span class="kbd">マークアップ</span>。またはファイルAppでPDF→右上 <span class="kbd">マークアップ</span>。</div>
-          <div class="step"><b>テキスト署名：</b> 右下「＋」→ <b>テキスト</b>。氏名・日付を入力。<span class="mini">aAでフォント/サイズ/色を調整、ドラッグで位置合わせ。</span></div>
-          <div class="step"><b>手書き署名：</b> 下部ツールからペン→指/Apple Pencilでサイン。<span class="mini">二本指ピンチで拡大すると精密。</span></div>
-          <div class="step"><b>複数ページ：</b> サムネイルから該当ページに移動し、同様に記入。</div>
-          <div class="step"><b>保存/共有：</b> 右上 <b>完了</b> → 共有→メール送信を選択し下記メールアドレスに送信を行う。</div>
-        </div>
-        <div class="grid2">
-          <div class="block">
-            <h3>補足</h3>
-            <ol class="mini">
-              <li>共有 → <b>プリント</b> を選択。</li>
-              <li>プレビューを二本指でピンチアウトして全画面化。</li>
-              <li>左上共有 → <b>ファイルに保存</b>。</li>
-            </ol>
+        <div class="steps">
+          <div class="step">
+            <div class="step-title">PDFを開く</div>
+            <div class="step-body">
+              メールに添付されているファイルを開く→「マークアップ」
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/iphone_step1_1.png,screenshots/iphone_step1_2.png" data-alt="iPhone マークアップ手順">(画像を参照)</span>
+            </div>
           </div>
-          <div class="block">
-            <h3>小ワザ</h3>
-            <ul class="mini">
-              <li>文字色は濃いグレーが紙でも自然。</li>
-              <li>長押しでテキスト枠を掴むと微調整しやすい。</li>
-            </ul>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">テキスト署名</div>
+            <div class="step-body">
+              二本の指でスライドし11ページ目へ→右下「＋」→「テキストを追加」→サイズ18ptで氏名/住所/メール/電話を入力
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/iphone_step2_1.png,screenshots/iphone_step2_2.png,screenshots/iphone_step2_3.png" data-alt="iPhone テキスト追加">(画像を参照)</span>
+            </div>
           </div>
-        </div>
-        <div class="sendbox">
-          <h4>送付方法</h4>
-          <code>アドレス：noigrit@gmail.com
-件名：【契約書署名済】
-本文：本名記載（フルネーム）</code>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">保存/共有</div>
+            <div class="step-body">
+              右上「完了」→「ファイルを保存」→メールアプリを起動し添付後、下記「送付方法」を参考にメール送信
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/iphone_step3_1.png" data-alt="iPhone STEP3 保存と送付">(画像を参照)</span>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Android（Acrobat想定） -->
       <div class="phone-android" style="display:none;">
-        <div class="steps" style="margin-top:10px;">
-          <div class="step"><b>PDFを開く：</b> Googleドライブにアップロード → タップして表示。</div>
-          <div class="step"><b>注釈で入力：</b> 画面下 <b>注釈</b>（鉛筆）→ <b>テキスト</b> を配置 → 氏名・日付を入力。</div>
-          <div class="step"><b>保存：</b> 右上 <b>保存</b>。<span class="mini">元ファイルを残したい場合は「コピーを保存」。</span></div>
-             <div class="step"><b>送付：保存したPDFを下記メールアドレスに送信。</b> </div>
-        </div>
-        <div class="grid2">
-          <div class="block">
-            <h3>補足</h3>
-            <p class="mini">機密性が高い場合はPCでローカル編集、または印刷/手書きを推奨。</p>
-              <p class="mini">箇所ごとのズレについてゃ拡大をしてドラックで調整。</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-title">PDFを開く（Acrobatで）</div>
+            <div class="step-body">
+              Googleドライブ→PDF右上「︙」→「アプリで開く」→「Adobe Acrobat」（未インストールなら導入）
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/android_step1_1.png,screenshots/android_step1_2.png,screenshots/android_step1_3.png" data-alt="Android STEP1 Acrobatで開く">(画像を参照)</span>
+            </div>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">テキスト入力</div>
+            <div class="step-body">
+              下部「塗りつぶしと署名」→「テキストを追加（Aa）」→ 氏名/住所/メール/電話を入力→左上「←」で戻る
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/android_step2_1.png,screenshots/android_step2_2.png" data-alt="Android STEP2 テキスト入力">(画像を参照)</span>
+            </div>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">保存と送付</div>
+            <div class="step-body">
+              Acrobatの一覧に編集済みPDFが表示→「共有」からメールに添付し、下記「送付方法」に従って送信
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/android_step3_1.png" data-alt="Android STEP3 保存と送付">(画像を参照)</span>
+            </div>
           </div>
         </div>
-        <div class="sendbox">
-          <h4>送付方法</h4>
-          <code>アドレス：noigrit@gmail.com
-件名：【契約書署名済】
+      </div>
+
+      <!-- スマホ共通の送付方法 -->
+      <div class="sendbox">
+        <h4>送付方法</h4>
+        <code>アドレス：noigrit@gmail.com
+件名：【TikTok契約書署名済み】
 本文：本名記載（フルネーム）</code>
-        </div>
       </div>
     </section>
 
-    <!-- PC (Mac/Windows) -->
+    <!-- PC -->
     <section class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc" aria-hidden="true">
       <h2>PCで署名する場合</h2>
       <p class="sub">お使いのOSを選んでください。</p>
       <div class="subsel" role="group" aria-label="PC OS選択">
-        <button class="chip" id="c-mac" aria-pressed="true">Mac</button>
-        <button class="chip" id="c-windows" aria-pressed="false">Windows</button>
+        <button class="chip" id="c-mac"     aria-pressed="true"  type="button">Mac</button>
+        <button class="chip" id="c-windows" aria-pressed="false" type="button">Windows</button>
       </div>
+
+      <!-- Mac -->
       <div class="pc-mac">
-        <div class="steps" style="margin-top:10px;">
-          <div class="step"><b>PDF取り込み：PDFをダウンロードする。</div>
-          <div class="step"><b>記入方法：ダウンロードしたPDFを開き、配信申し込み書兼承諾書を選択『フォーム入力のツールバー』をタップ。「申込日、氏名、住所、生年月日、アドレス。電話番号」にテキスト入力を行う。※未成年者の場合は親権者兼法定代理人のア所も記入</div>
-          <div class="step"><b>記入漏れ：入力内容の確認</div>
-          <div class="step"><b>送付：下記メールアドレル宛に記入したPDFを添付し送信を行う。</div>
-        </div>
-        <div class="grid2">
-          <div class="block">
-            <h3>補足</h3>
-            <ul class="mini">
-              <li>等幅寄りのフォントと濃いグレーで自然な見た目。</li>
-              <li>用紙サイズ（A4/Letter）に注意。印刷時のズレ防止。</li>
-            </ul>
+        <div class="steps">
+          <div class="step">
+            <div class="step-title">契約書(PDF)のダウンロード</div>
+            <div class="step-body">メールの添付PDFをローカルに保存（わかりやすい場所）
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/mac_step1_1.png,screenshots/mac_step1_2.png" data-alt="Mac STEP1 ダウンロード">(画像を参照)</span>
+            </div>
           </div>
-          <div class="block">
-            <h3>パスワード（任意）</h3>
-            <ol class="mini">
-              <li><span class="kbd">ファイル → 書き出す</span>。</li>
-              <li>フォーマット: PDF → <b>暗号化</b>にチェック → パスワード設定。</li>
-            </ol>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">契約書(PDF)の記入</div>
+            <div class="step-body">PDFを開き「配信申込書兼承諾書」→フォーム入力ツールで各項目を記入
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/mac_step2_1.png,screenshots/mac_step2_2.png" data-alt="Mac STEP2 入力">(画像を参照)</span>
+            </div>
           </div>
-        </div>
-        <div class="sendbox">
-          <h4>送付方法</h4>
-          <code>アドレス：noigrit@gmail.com
-件名：【契約書署名済】
-本文：本名記載（フルネーム）</code>
+          <div class="arrow">↓</div>
+          <div class="step"><div class="step-title">記入漏れ確認</div><div class="step-body">誤字・未入力がないか全ページを確認</div></div>
+          <div class="arrow">↓</div>
+          <div class="step"><div class="step-title">送付</div><div class="step-body">完成PDFをメールに添付して送信</div></div>
         </div>
       </div>
+
+      <!-- Windows -->
       <div class="pc-windows" style="display:none;">
-        <div class="steps" style="margin-top:10px;">
-          <div class="step"><b>PDFを開く：</b> 右クリック → <b>プログラムから開く → Microsoft Edge</b>。</div>
-          <div class="step"><b>テキスト署名：</b> 上部 <b>テキストの追加</b> → 氏名・日付を入力し、ドラッグで配置。</div>
-          <div class="step"><b>固定化：</b>『印刷』を押しMicrosoft print to PDFで保存 <b></div>
-          <div class="step"><b>送付：</b>記入事項を確認後下記メールアドレスにPDFを添付し送信を行う<b></div>
-        </div>
-        </div>
-        <div class="grid2">
-          <div class="block">
-            <h3>補足</h3>
-            <ul class="mini">
-              <li>フォント差を避けたい → 必ず「印刷→PDF」で固定。</li>
-              <li>同じ署名を複数ページ → 1度作成してコピー&ペースト。</li>
-            </ul>
+        <div class="steps">
+          <div class="step">
+            <div class="step-title">PDFを開く</div>
+            <div class="step-body">ファイルを右クリック→「プログラムから開く」→Microsoft Edge
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/win_step1_1.png" data-alt="Windows STEP1 Edgeで開く">(画像を参照)</span>
+            </div>
           </div>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">テキスト署名</div>
+            <div class="step-body">上部「テキストの追加」→氏名・日付など入力→ドラッグで位置調整
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/win_step2_1.png,screenshots/win_step2_2.png" data-alt="Windows STEP2 テキスト追加">(画像を参照)</span>
+            </div>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="step">
+            <div class="step-title">固定化</div>
+            <div class="step-body">「印刷」→「Microsoft Print to PDF」で保存（フォント差異防止）
+              <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/win_step3_1.png" data-alt="Windows STEP3 PDF保存">(画像を参照)</span>
+            </div>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="step"><div class="step-title">送付</div><div class="step-body">保存したPDFをメールに添付して送信</div></div>
         </div>
-        <div class="sendbox">
-          <h4>送付方法</h4>
-          <code>アドレス：noigrit@gmail.com
-件名：【契約書署名済】
+      </div>
+
+      <div class="sendbox">
+        <h4>送付方法</h4>
+        <code>アドレス：noigrit@gmail.com
+件名：【TikTok契約書署名済み】
 本文：本名記載（フルネーム）</code>
-        </div>
+      </div>
     </section>
+
     <!-- PRINT/HANDWRITE -->
     <section class="panel" id="p-print" role="tabpanel" aria-labelledby="t-print" aria-hidden="true">
       <h2>その他（印刷/手書き）</h2>
       <p class="sub">「手書き必須」や紙原本回収の指定がある相手に確実。</p>
       <div class="steps">
-        <div class="step"><b>データ準備：</b> PDFダウンロードしUSBに保存 or 専用アプリ(セブン=netprint、ファミマ/ローソン=PrintSmash）をインストール。</div>
-        <div class="step"><b>印刷：</b> こちらを参照(https://www.printing.ne.jp/support/landing/landing_pdfprint.html)</div>
-        <div class="step"><b>記入：</b> ボールペンで署名・日付。訂正は二重線＋訂正印の指示があるか事前確認。</div>
-        <div class="step"><b>スキャン：</b> <b>スキャン方法はこちらを参照(https://pdf.wondershare.jp/info/paper-to-pdf-convenience-store.html)スマホやUSBに取り込み後下記メールアドレスに添付し送信。</b><b></b></div>
+        <div class="step"><div class="step-title">データ準備</div><div class="step-body">PDFをダウンロードしてUSBへ、またはコンビニ印刷アプリを準備
+          <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/print_step1_1.png" data-alt="印刷 STEP1 準備">(画像を参照)</span>
+        </div></div>
+        <div class="arrow">↓</div>
+        <div class="step"><div class="step-title">印刷</div><div class="step-body">店頭の案内に従いPDFを印刷（A4推奨、濃度は標準）
+          <span class="img-toggle" onclick="openGallery(this)" data-images="screenshots/print_step2_1.png" data-alt="印刷 STEP2 印刷">(画像を参照)</span>
+        </div></div>
+        <div class="arrow">↓</div>
+        <div class="step"><div class="step-title">記入</div><div class="step-body">ボールペンで署名・日付。修正は二重線＋訂正印の有無を事前確認</div></div>
+        <div class="arrow">↓</div>
+        <div class="step"><div class="step-title">スキャン</div><div class="step-body">スマホ/スキャナでPDF化→メールに添付して送信</div></div>
       </div>
-      <div class="grid2">
-        <div class="block">
-          <h3>補足</h3>
-          <ul class="mini">
-            <li>曲がり防止：原稿台ガイドに合わせる。</li>
-            <li>容量軽減：白黒（文字）モード、300dpiで十分。</li>
-          </ul>
-        </div>
-      </div>
+
       <div class="sendbox">
         <h4>送付方法</h4>
         <code>アドレス：noigrit@gmail.com
-件名：【契約書署名済】
+件名：【TikTok契約書署名済み】
 本文：本名記載（フルネーム）</code>
       </div>
     </section>
@@ -268,8 +283,9 @@
 
   <div class="footer">© 2025 NOIGRIT 署名マニュアル. 本ページは一般的な実務ノウハウの提供を目的としています。</div>
 
+  <!-- JS：タブ & 機種/OS 切り替え + モーダル -->
   <script>
-    // === Minimal JS: enable tab switching & sub-choices ===
+    // タブ切り替え
     const tabs = Array.from(document.querySelectorAll('.tab'));
     const panels = Array.from(document.querySelectorAll('.panel'));
     function activateTop(id){
@@ -278,25 +294,102 @@
     }
     tabs.forEach(t=> t.addEventListener('click', ()=> activateTop(t.id.replace('t-',''))));
 
-    // Phone chips
+    // スマホ切替（iPhone/Android）
     const phoneI = document.querySelector('.phone-iphone');
     const phoneA = document.querySelector('.phone-android');
-    const chipI = document.getElementById('c-iphone');
-    const chipA = document.getElementById('c-android');
-    if(chipI && chipA){
-      chipI.addEventListener('click',()=>{ chipI.setAttribute('aria-pressed','true'); chipA.setAttribute('aria-pressed','false'); phoneI.style.display='block'; phoneA.style.display='none'; });
-      chipA.addEventListener('click',()=>{ chipI.setAttribute('aria-pressed','false'); chipA.setAttribute('aria-pressed','true'); phoneI.style.display='none'; phoneA.style.display='block'; });
+    const chipI  = document.getElementById('c-iphone');
+    const chipA  = document.getElementById('c-android');
+    if(chipI && chipA && phoneI && phoneA){
+      chipI.addEventListener('click',()=>{
+        chipI.setAttribute('aria-pressed','true'); chipA.setAttribute('aria-pressed','false');
+        phoneI.style.display='block'; phoneA.style.display='none';
+      });
+      chipA.addEventListener('click',()=>{
+        chipI.setAttribute('aria-pressed','false'); chipA.setAttribute('aria-pressed','true');
+        phoneI.style.display='none'; phoneA.style.display='block';
+      });
     }
 
-    // PC chips
-    const pcm = document.querySelector('.pc-mac');
-    const pcw = document.querySelector('.pc-windows');
+    // PC切替（Mac/Windows）
+    const pcm   = document.querySelector('.pc-mac');
+    const pcw   = document.querySelector('.pc-windows');
     const chipM = document.getElementById('c-mac');
     const chipW = document.getElementById('c-windows');
-    if(chipM && chipW){
-      chipM.addEventListener('click',()=>{ chipM.setAttribute('aria-pressed','true'); chipW.setAttribute('aria-pressed','false'); pcm.style.display='block'; pcw.style.display='none'; });
-      chipW.addEventListener('click',()=>{ chipM.setAttribute('aria-pressed','false'); chipW.setAttribute('aria-pressed','true'); pcm.style.display='none'; pcw.style.display='block'; });
+    if(chipM && chipW && pcm && pcw){
+      chipM.addEventListener('click',()=>{
+        chipM.setAttribute('aria-pressed','true'); chipW.setAttribute('aria-pressed','false');
+        pcm.style.display='block'; pcw.style.display='none';
+      });
+      chipW.addEventListener('click',()=>{
+        chipM.setAttribute('aria-pressed','false'); chipW.setAttribute('aria-pressed','true');
+        pcm.style.display='none'; pcw.style.display='block';
+      });
     }
+
+    // ===== モーダル・ギャラリー（1つを使い回す） =====
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-inner" role="dialog" aria-modal="true">
+        <div class="modal-header"><span class="modal-close" aria-label="閉じる">&times;</span></div>
+        <div class="modal-body"><img alt=""></div>
+        <div class="modal-footer">
+          <button class="nav-btn" data-dir="-1">← 前へ</button>
+          <span class="counter">1 / 1</span>
+          <button class="nav-btn" data-dir="1">次へ →</button>
+        </div>
+        <div class="thumbs"></div>`;
+    document.body.appendChild(modal);
+
+    let gallery = { urls:[], index:0, alt:'' };
+
+    function render() {
+      const img = modal.querySelector('.modal-body img');
+      const counter = modal.querySelector('.counter');
+      const thumbs = modal.querySelector('.thumbs');
+      img.src = gallery.urls[gallery.index];
+      img.alt = gallery.alt || 'スクリーンショット';
+      counter.textContent = (gallery.index+1) + ' / ' + gallery.urls.length;
+      thumbs.innerHTML = '';
+      gallery.urls.forEach((u,i)=>{
+        const t = document.createElement('img');
+        t.src = u; t.alt = 'thumb '+(i+1);
+        if(i===gallery.index) t.classList.add('active');
+        t.addEventListener('click', ()=>{ gallery.index=i; render(); });
+        thumbs.appendChild(t);
+      });
+    }
+    function show(delta){ gallery.index = (gallery.index + delta + gallery.urls.length) % gallery.urls.length; render(); }
+    function closeModal(){ modal.style.display='none'; gallery = { urls:[], index:0, alt:'' }; }
+
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelectorAll('.nav-btn').forEach(btn=> btn.addEventListener('click', ()=> show(parseInt(btn.dataset.dir,10))));
+    document.addEventListener('keydown', (e)=>{
+      if(modal.style.display==='block'){
+        if(e.key==='Escape') closeModal();
+        if(e.key==='ArrowRight') show(1);
+        if(e.key==='ArrowLeft') show(-1);
+      }
+    });
+
+    // クリック委譲（onclickが抜けていても動くように）
+    document.addEventListener('click', (e)=>{
+      const trigger = e.target.closest('.img-toggle');
+      if(!trigger) return;
+      openGallery(trigger);
+    });
+
+    // 公開関数：トリガー要素から data-images を読む
+    window.openGallery = function(trigger){
+      const urls = (trigger.dataset.images || '').split(',').map(s=>s.trim()).filter(Boolean);
+      if(!urls.length) return;
+      gallery.urls = urls;
+      gallery.index = 0;
+      gallery.alt = trigger.dataset.alt || '';
+      render();
+      modal.style.display='block';
+    };
   </script>
 </body>
 </html>
